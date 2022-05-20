@@ -4,6 +4,8 @@ Interface
 
 Procedure GenPageProgB( Pos, Data : LongInt ); Far;
 Procedure GenPageProgW( Pos, Data : LongInt ); Far;
+Procedure GenPageProgBAtmel( Pos, Data : LongInt ); Far;
+Procedure GenPageProgWAtmel( Pos, Data : LongInt ); Far;
 Procedure IntelSecProg( Pos, Data : LongInt ); Far;
 Procedure IntelSecProgW( Pos, Data : LongInt ); Far;
 Procedure IntelSecErase( SAddr : LongInt ); Far;
@@ -42,6 +44,7 @@ Begin
 End;
 
 {not tested yet}
+
 Procedure GenPageProgW( Pos, Data : LongInt );
 Var
 Attempt,
@@ -62,6 +65,54 @@ Begin
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
 End;
+
+Procedure GenPageProgBAtmel( Pos, Data : LongInt ); {Similar to GenPageProg}
+{The difference is the command set used to init a write cycle & wait delay}
+Var
+Attempt,
+Ld, X   : Byte;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FlashCmd( $80 );
+  FlashCmd( $20 );
+  MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
+  Wait( 750 );  {Wait min. 650 usec}
+
+  Ld := FiMemB( Data + 127 ) and $80; {Last data byte, bit 7}
+  Repeat
+   X := FiMemB( Pos + 127 );    {Read last byte written}
+  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+  X := FiMemB( Pos + 127 );    {Read last byte written}
+  Inc( Attempt );
+ Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
+ If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
+End;
+
+{not tested yet}
+Procedure GenPageProgWAtmel( Pos, Data : LongInt ); {Similar to GenPageProg}
+Var
+Attempt,
+Ld, X   : Byte;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FlashCmd( $80 );
+  FlashCmd( $20 );
+  MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
+  Wait( 750 ); {Min. 650 usec}
+  Ld := FiMemB( Data + 255 ) and $80; {Last data byte, bit 7}
+  Repeat
+   X := FiMemB( Pos + 255 );    {Read last byte written}
+  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+  X := FiMemB( Pos + 255 );    {Read last byte written}
+  Inc( Attempt );
+ Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
+ If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
+End;
+
 
 Procedure IntelResetB;
 Begin

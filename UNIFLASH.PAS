@@ -1,6 +1,7 @@
-{$M 4096, 4096, 4096}
-Uses Crt,Flash,Pci,Tools, GenFlash,
-     SST, Winbond, AMD, Intel, Atmel,
+{$M 16384, 4096, 4096}
+{$I-}
+Uses Crt,Flash,Pci,Tools, GenFlash, Atmel,
+     SST, Winbond, AMD, Intel,
      Catalyst, Macronix;
 
 
@@ -10,7 +11,7 @@ Emergency   : Boolean = False;
 Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
-Version     = '1.15';
+Version     = '1.16c';
 
 Var
 CurOp,
@@ -278,6 +279,7 @@ Begin
   FlashBlock( BIOS, Start, Size );
   WrtProgressBar( 'Verifying data' );
   VErr := False;
+{writeln(hl(X * ( Size shr 5 ) + FlashBase + Start),' ',hl(X * ( Size shr 5 ) + BIOS));}
   For X := 0 to 31 do
    Begin
     If CompLinBlocks( X * ( Size shr 5 ) + FlashBase + Start,
@@ -512,6 +514,14 @@ Begin
      Exit;
     End;
    BlockRead( IFile, BIOSBlk, 4096 );
+   if not askfor(0,'Do you want to preceed (Y/N)? ') then
+      begin
+      close(ifile);
+      GotoXY( 11, 20 );
+      ClrEol;
+      exit;
+      end;
+
    FlashBIOSImg( ( LongInt( Seg( BIOSBlk ) ) shl 4 ) + LongInt( Ofs( BIOSBlk ) ),
                  Pos - FlashBase, 4096 );
    SetMenuItemStatus( MainMenu, 2, True );
@@ -1003,16 +1013,21 @@ End;
 
 
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+var savefile : file;
+    savename : string;
 
 Begin
  ClrScr;
- GotoXY(11,3);
+ GotoXY(11,2);
  textcolor(yellow);
  Write('UniFlash ');
  textcolor(lightgreen);
  Write('V' + Version );
  textcolor(lightcyan);
- Write(' (C) 1997 Pascal van Leeuwen & Galkowski Adam ',#13,#10);
+ Write(' (C) 1998 Pascal van Leeuwen & Galkowski Adam ',#13,#10);
  textcolor(lightgray);
 
  X := 1;
@@ -1037,6 +1052,7 @@ Begin
      WrtCenter( '                ROM without any user intervention.' );
      WrtCenter( '-EXPERT         Enables some more advanced menu options' );
      WrtCenter( '-PCIOR          Flash PCI option ROM instead of system ROM' );
+     WrtCenter( '-DEBUG          Debugging mode. Gives some low-level info');
      WriteLn;
      Halt;
     End else
@@ -1057,12 +1073,14 @@ Begin
  AllocHimem;
 
  CMOSSize := GetCMOSSize;
+
+{Program the chipset that way it lets you to see the BIOS}
  RomEnable( Map );
 
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
 
- ROMBase := 0;  {standard system BIOS}
+ ROMBase :=0 ;  {standard system BIOS}
 
  {If PCI option ROM mode then scan for & select option ROM    }
  {NOTE: This is all experimental and uses a technique that    }
@@ -1111,7 +1129,7 @@ Begin
               If ( FIMemW( $80000000 + FIMemW( $80000018 ) ) = $4350 {PC} ) and
                  ( FIMemW( $80000000 + FIMemW( $80000018 ) + 2 ) = $5249 {IR} ) then
                Begin
-                {found PCI option ROM, add to list}  *)
+                {found PCI option ROM, add to list} *)
                 Inc( OPRCnt );
                 With OPRom[ OPRCnt ] do
                  Begin
@@ -1124,6 +1142,7 @@ Begin
                  End;
 (*               End;
              End; *)
+
            End;
           {Restore PCI device state}
           SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 );
@@ -1170,6 +1189,7 @@ Begin
      If ( A = #27 ) or ( SelA = '0' ) then
       Begin
        WriteLn;
+
        Halt;
       End;
      CurOp := Byte( SelA ) - 48;
@@ -1196,8 +1216,22 @@ Begin
 
  FlashInfo := FlashDetect;
 
+
  {Abort if option ROM is not a recognised flash ROM. This to avoid  }
  {the corruption of memory local to the PCI card as much as possible}
+if pcior then begin
+
+if askfor(2,'Do you want to save this BIOS to file? ') then begin
+                      write('            Name of the file: ');
+                      readln(savename);
+                      movelinblockb($80000000,$80000,$FFFF);
+                      assign(savefile,savename);
+                      rewrite(savefile,1);
+                      blockwrite(savefile,mem[$8000:0],$ffff);
+                      close(savefile);
+                      writeln('            Done.');
+                      end;
+end;
  If PCIOR and ( FlashError <> 0 ) then
   Err( 'Selected device''s option ROM is not a supported Flash ROM.' );
 
@@ -1205,6 +1239,7 @@ Begin
   Begin
    FlashSize := LongInt( FlashInfo^.Size ) shl 10;
    FlashBase := ROMBase;
+
    With FlashInfo^ do
     Case Flags and 3 of
      0   : Begin
@@ -1245,7 +1280,7 @@ Begin
     Err( 'Not enough free memory.' );
   End;
  textcolor(yellow);
- GotoXY( 14, 5 );
+ GotoXY( 14, 4 );
  Write( 'Flash ROM chip: ' );
  With FlashInfo^ do
   Begin
@@ -1258,7 +1293,7 @@ Begin
    If Debug then
     Write(' (' + Hb( Man1 ) + Hb( Dev1 ) +
           ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
-   GotoXY( 16, 6 );
+   GotoXY( 16, 5 );
    TextColor(yellow);
    Write( 'Organisation: ' );
    TextColor( 15 );
@@ -1313,7 +1348,12 @@ Begin
    Beep( 1000, 200 );
    Halt;
   End;
-
+ GotoXY( 11+6, 6 );
+ TextColor(yellow);
+ Write('PCI chipset: ');
+ TextColor( 15 );
+ Write( CurrentChipset);
+ GotoXY( 11, 7 );
  TextColor(yellow);
  Write( 'Last write status: ' );
  TextColor( 15 );
@@ -1327,7 +1367,7 @@ Begin
    Write( 'Vendor=', Hw( PiixMan ), ', Device=', Hw( PIIXId ), ' at ', Hb( PiixL shr 3 ), ':',
           Hb( PiixL and 7 ) );
    TextColor( yellow );
-   GotoXY( 22, 4 );
+   GotoXY( 22, 3 );
    Write( 'Memory: ' );
    TextColor( 15 );
    Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
@@ -1335,7 +1375,7 @@ Begin
    GotoXY( 20, 8 );
    Write( 'ROM base: ' );
    TextColor( 15 );
-   Write( Hl( ROMBase ) );
+   Write( Hl( ROMBase )+', memory dump at '+hl(rombase)+' --> ('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
   End;
 
  If PCIOr then

@@ -1,6 +1,6 @@
-                    UniFlash's version 1.15 documentation.
+                    UniFlash's version 1.16 documentation.
                     --------------------------------------
-               (C) 1997 Pascal Van Leeuwen and Galkowski Adam
+               (C) 1998 Pascal Van Leeuwen and Galkowski Adam
 
 0.0            DISCLAIMER
 -------------------------
@@ -48,23 +48,49 @@ NOTE by PvL: Brand name flashers have a tendency to be unstable (this is
 Here's the minimum configuration you need to run UniFlash:
        -At least a 386 (The whole thing works in flat real mode)
        -MS DOS 4.0 and higher
-       -A well known flash rom chip (SST,WinBond,Atmel,Intel)
-       -An Intel Triton chipset (fx,vx,hx,tx,...) or a
-        VIA Appollo chipset (experimental, not tested ...)
+       -A well known flash rom chip (SST,WinBond,Atmel,Intel,...)
+
+Here's a list of chipsets suported or going to be supported by Uniflash:
+
+Mfg         | Model(s)             | Comments
+-----------------------------------------------------------------------------
+Intel       | 430FX,HX,VX,TX,MX    | No comments It works in 99% of cases
+            | 440FX,LX (not tested)| (The 440FX/LX have not been yet tested,
+            |                      | but should work well)
+-----------------------------------------------------------------------------
+VIA         | Appollo series       | Not tested
+            | +our buddy the VXPRO |
+-----------------------------------------------------------------------------
+OPTi        | Vendetta             | Not tested
+-----------------------------------------------------------------------------
+SiS         | 559X series          | Not supported yet. Uniflash detects it,
+            | +the wondreful TXPRO2| but it doesn't handle them. (SiS doesn't
+            |                      | put his datasheets on free acces. You
+            |                      | have to register. It's free, but it
+            |                      | doesn't work for me)
+-----------------------------------------------------------------------------
+Ali         | Alladin series plus  | Not supported yet. For the datasheets,
+            | the lovely TXPRO     | same situation as for SiS, but it's
+            |                      | even worse.
+
+
 
 
 3.0            What flash chips are supported by UniFlash ?
 -----------------------------------------------------------
 
 UniFlash supports the following flash chips:
-(* means tested and functional, the rest has not been tested (yet),
-note that a lot of chips are very similar to one another though, so
-if one of them works then the rest should work fine too)
+(* means tested and functional,
+ # means tested, but doesn't work the way it should,
+ ? means not tested at all (note that a lot of chips are very similar
+to one another though, so if one of them works then the rest should work
+fine too))
+
 
                 AMD
                 ---
                 Am29F100T
-               *Am29F010
+               #Am29F010
                 Am29F080B
                 Am29F400AT
                 Am29F400BT
@@ -116,7 +142,7 @@ if one of them works then the rest should work fine too)
 
                 Atmel
                 -----
-                AT49BV010
+               *AT49BV010
                 AT49F1025
                 AT49x020 series
                 AT49F040
@@ -130,7 +156,7 @@ if one of them works then the rest should work fine too)
                 AT29xV020 series
                 AT29LV256
                 AT29xV040A series
-                AT29C010A
+               *AT29C010A
                 AT29C020
                 AT29C256
                 AT29C257
@@ -138,6 +164,7 @@ if one of them works then the rest should work fine too)
 
                 Intel
                 -----
+               ?28F010
                *28F001BX-T
                *28F001BN-T
                 28F001BX-B
@@ -149,7 +176,7 @@ if one of them works then the rest should work fine too)
 
                 Catalyst
                 --------
-                CAT28F150T
+               ?CAT28F150T
                 CAT28F150B
                 CAT28F001T
                 CAT28F001B
@@ -158,14 +185,21 @@ if one of them works then the rest should work fine too)
 
                 Macronix (experimental, still no datasheets :()
                 --------
-                MXIC28F1000AP
+               ?MXIC28F1000AP
                 MXIC28F1000P
 
+                Texas Instruments
+                -----------------
+                Texas Instruments chips will be recognised as AMD or INTEL
+chips. It seems unbelieveable, but TI uses the same Mfg&device codes as AMD
+and Intel ! But since the command set is nearly the same, it should work.
 
 4.0            Help! I don't understand the sources !!!
 -------------------------------------------------------
 
 If you have problems understanding something mail us (address at the end).
+Have a look also on the ADDCHIP.FAQ file. It explains how to add new chips
+plus some details.
 
 
 5.0            Expert mode
@@ -192,7 +226,7 @@ peripheral support to enable you to flash in a working BIOS in case something
 went wrong.
 
 To make an emergency disk one would do the following:
--make a system disk using "format a: /S"
+-make a *DOS* system disk (NOT Win'95) using "format a: /S"
 -copy uniflash to that disk
 -copy a working bios image (preferably a backup that was made while the system
  was still a-ok) to the disk
@@ -224,6 +258,10 @@ long continuous beep: some error occured, press any key to retry operation
 
 If you want to help us in adding support for new chips, in testing the whole
 thing or bugfixing, mail us BOTH!!, we'll put your name in credits at the end.
+We want your opinions & experiences to make flashing BIOS an easy and safe
+operation, where you doesn't need tons of flashers (if you multiply the 
+number of chipsets by the number of flash rom memories available, you'll 
+understand better what we're talking about).
 
 7.0            Credits
 ---------------------------------------
@@ -258,17 +296,34 @@ email  : pvanleeuwen@compuserve.com
 - Galkowski Adam
 email  : 100665.2705@compuserve.com
 
-BTW: New versions should be on
-     http://ourworld.compuserve.com/homepages/pvanleeuwen/uniflash.htm
-     The source code can be found there, too.
+BTW: New versions should be on:
+1)   http://ourworld.compuserve.com/homepages/pvanleeuwen/uniflash.htm
+
+2)   http://www.ping.be/bios/   (A page by Wim Bervoets, a very good page
+for maniacs of flashing, I suggest you to have a look there)
+
 
 9.0            Revision info
 ----------------------------
-1.15           -Fixed problems with AMD flash chips (I hope)
+1.16c          -Made the detection routine more accurate
+1.16b          -Removed some (debugging?) code that messed up detection
+1.16           -Fixed a stupid bug in the chip detection part, which made it
+               impossible to identify Atmel chips, for example.
+               -Tried to add TI chips and after long hours of work and of
+               downloading datasheets figured out that TI chips are just
+               "remarked" AMD & Intel chips (the same Mfg & Id numbers),
+               so TI chips will be recognised as AMD or Intel ones.
+               -Made the source code clearer. Wrote a FAQ explaining how
+               to add your own chips.
+               -Added the Intel 28F010/12V and 28F020/12V chips
+               -Translation of the whole thing to french. The english 1.16
+               version equals french 1.00FRENCH version
+
+1.15           -Fixed problems with AMD flash chips
                -Added VIA 82C570 chipset support
                -Tested Intel 28F001BX-T/28F001BN-T support
-                (needs some further testing though ...)
-               -Cleanup up (non-XMS) extended memory allocation
+               TO DO before final release of V1.15: fix extended memory
+                     detection, does not work ok on a friends' system ...
 1.14           -Added Macronix support
                -Added SST 28EE011 flash chip
                -Added AMD Am28F010, Am28F010A, Am28F020, Am28F020A, Am28F256
@@ -294,3 +349,20 @@ BTW: New versions should be on
                 chips
                -Added VIA chipset support
 1.0            -First public release
+
+
+
+
+10.0           Compatibility
+-----------------------------
+
+Here is a list of tested & working motherboards. Please add yours when
+Uniflash runs flawlessly on your system.
+
+Mfg           | Model + revision  | Chipset used | Flash ROM chip used
+--------------------------------------------------------------------------
+ASUSTeK       | T2P4 rev 2 & 3.10 | Intel HX     | SST 29EE010/5V
+Expertboard   | 8661 rev ?        | Intel VX     | WinBond W29EE011/5V
+Soyo          | 5TA2 rev ?        | Intel FX     | SST 29EE010/5V
+Shuttle       | Hot569 rev 2      | Intel TX     | Atmel 29C010A/5V
+

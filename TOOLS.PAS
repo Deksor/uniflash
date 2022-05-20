@@ -49,7 +49,7 @@ Procedure WrtProgressBar( Msg : String );
 Procedure ClearProgressBar;
 Procedure Beep( Hz, Ms : Word );
 Procedure Wait( MiSec : LongInt );
-
+Function AskFor(l : byte;txt : string) : boolean;
 Implementation
 
 Uses Crt;
@@ -378,9 +378,7 @@ End;
 
 Procedure AllocHimem;
 Var
-Npo2  : LongInt;
-X, D  : Byte;
-Alias : Boolean;
+Done : Boolean;
 
 Begin
  If XMSLeft <> -2 then Exit;
@@ -388,49 +386,28 @@ Begin
 {is in use and that there is a gap between system memory & option ROM/RAM !!}
  XMSPos := $100000;
  XMSLeft := 0;
- Npo2 := XMSPos;
- Asm CLI End;
  Repeat
-  D := FIMemB( XMSPos );
-  X := D xor $55;
-  FOMemB( XMSPos, X );
-  If ( FIMemB( XMSPos ) <> X ) then Break;
-  If XMSPos = NPo2 then
-   Alias := ( FIMemB( 0 ) = X )
-  else Alias := False;
-  X := D xor $AA;
-  FOMemB( XMSPos, X );
-  If ( FIMemB( XMSPos ) <> X ) then Break;
-  If XMSPos = NPo2 then
-   Alias := Alias and ( FIMemB( 0 ) = X );
-  If Alias then Break;
-
-  FOMemB( XMSPos, D );
-  XMSPos := XMSPos + 4095;
-
-  D := FIMemB( XMSPos );
-  X := D xor $55;
-  FOMemB( XMSPos, X );
-  If ( FIMemB( XMSPos ) <> X ) then Break;
-  If XMSPos = NPo2 then
-   Alias := ( FIMemB( 4095 ) = X )
-  else Alias := False;
-  X := D xor $AA;
-  FOMemB( XMSPos, X );
-  If ( FIMemB( XMSPos ) <> X ) then Break;
-  If XMSPos = NPo2 then
+  Done := True;
+  FOMemB( XMSPos, $55 );
+  If FIMemB( XMSPos ) = $55 then
    Begin
-    Alias := Alias and ( FIMemB( 4095 ) = X );
-    Npo2 := Npo2 shl 1;
+    FOMemB( XMSPos, $AA );
+    If FIMemB( XMSPos ) = $AA then
+     Begin
+      FOMemB( XMSPos + 4095, $55 );
+      If FIMemB( XMSPos + 4095 ) = $55 then
+       Begin
+        FOMemB( XMSPos + 4095, $AA );
+        If FIMemB( XMSPos + 4095 ) = $AA then
+         Begin
+          Done := False;
+          XMSLeft := XMSLeft + 4096;
+          XMSPos := XMSPos + 4096;
+         End;
+       End;
+     End;
    End;
-  If Alias then Break;
-  FOMemB( XMSPos, D );
-
-  Inc( XMSPos );
-  XMSLeft := XMSLeft + 4096;
- Until False;
- FOMemB( XMSPos, D );
- Asm STI End;
+ Until Done;
  XMSPos := $100000;
 End;
 
@@ -831,6 +808,28 @@ Asm
         JNZ     @@1
         POPF
 End;
+
+Function AskFor(l : byte;txt : string) : boolean;
+var x,y,x2,y2 : byte;
+answer : char;
+begin
+Askfor:=false;
+x:=wherex;
+y:=wherey;
+gotoxy(13,y+1+l);
+write(txt);
+repeat
+answer:=readkey;
+until (upcase(answer)='Y') or (upcase(answer)='N') or (upcase(answer)='O')
+       or (upcase(answer)='N');
+If (upcase(answer)='Y') or (upcase(answer)='O') then askfor:=true;
+write(#13#10);
+x2:=wherex;
+y2:=wherey;
+gotoxy(13,y+1+l);
+clreol;
+gotoxy(x,y);
+end;
 
 Begin
  MicroSec := 312785 div CalibrateWait;

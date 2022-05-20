@@ -29,6 +29,7 @@ Man1, Dev1,
 Man2, Dev2 : Byte;
 CurCInfo   : ChipInfo;
 ROMBase    : LongInt;
+Rand,Rand2 : byte;
 
 Procedure FlashCmd( Cmd : Byte );
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
@@ -95,7 +96,8 @@ End;
 
 Function FlashDetect : PChipInfo;
 Var
-MinB,MaxB : Byte;
+MinB,MaxB,Tries : Byte;
+Conditions: boolean;
 
 Function DetectLoop( Method : Byte; Var Man, Dev : Byte ) : Boolean;
 Var
@@ -103,13 +105,17 @@ M, D, X   : Byte;
 Done,
 Found     : Boolean;
 
+
 Begin
+wait(600);
  DetectLoop := True;
  Found := False;
  For X := MinB to MaxB do
   Begin
    If X > 0 then ROMBase := ( - ( LongInt( 1 ) shl X ) );
    Done := False;
+
+
    Repeat
     Asm CLI End;
     If Method = 0 then
@@ -123,25 +129,38 @@ Begin
       FlashCmd( $90 );
      End;
     Wait( 20 );
-    M := FIMemB( ROMBase );
+    M := FIMemB( ROMBase);
     D := FIMemB( ROMBase + 1 );
+
+{exec('c:\command.com','');}
+ {   FOMemW( ROMBase, $FFFF );
     FOMemW( ROMBase, $FFFF );
-    FOMemW( ROMBase, $FFFF );
-    FOMemW( ROMBase, $0000 );
+    FOMemW( ROMBase, $0000 );}
     FlashCmd( $F0 ); {Avoid leaving the chip in ID mode}
+
+if method=0 then
+            begin
+            FOMemW( ROMBase, $FFFF );
+            FOMemW( ROMBase, $FFFF );
+            FOMemW( ROMBase, $0000 );
+            end;
+
     Wait( 20 );
     Asm STI End;
     If ( ( M <> FIMemB( ROMBase ) ) or
        ( D <> FIMemB( ROMBase + 1 ) ) ) and
        ParityOdd( D ) and ParityOdd( M ) then
      Begin
+
       If not Found then
        Begin
         Man := M and $7F;
         Dev := D and $7F;
         CurManuf := ManuRoot;
         Found := False;
+    (*    man:=curmanuf^.manuf; *) {Used for debugging ???? Shouldn't be there, anyway}
         Repeat
+
          With CurManuf^ do
           Begin
            If ( Manuf = Man ) and
@@ -170,6 +189,7 @@ Begin
          Begin
           Inc( CurCInfo.Count );
           ROMBase := ROMBase - ( LongInt( CurCInfo.Size ) shl 10 );
+
          End else
          Begin
           CurCInfo.Size := CurCInfo.Size * CurCInfo.Count;
@@ -197,12 +217,11 @@ Begin
  Dev1 := $FF;
  Man2 := $FF;
  Dev2 := $FF;
-
+ Conditions:=false;
  FlashError := 0;
  FlashDetect := @CurCInfo;
  FillChar( CurCInfo, SizeOf( CurCInfo ), 0 );
  CurCInfo.Count := 1;
-
  If ROMBase = 0 then
   Begin
    MinB := 15;
@@ -212,9 +231,23 @@ Begin
    MinB := 0;
    MaxB := 0;
   End;
+  randomize;
+ rand:=random(2);
+ tries:=0;
+{ If not ( DetectLoop( rand , Man1, Dev1 ) or
+          DetectLoop( rand + 1, Man2, Dev2 ) ) then}
 
- If not ( DetectLoop( 0, Man1, Dev1 ) or
-          DetectLoop( 1, Man2, Dev2 ) ) then
+{ The loop below is *VERY* tricky. The DetectLoop proc is called until}
+{ the chip is detected or the number of unsuccessful tries (255) is reached}
+repeat
+ rand:=random(2);
+inc(tries);
+if rand+1=2 then rand2:=1 else rand2:=0;
+conditions:= (( DetectLoop( rand , Man1, Dev1 ) or
+                DetectLoop( rand2 , Man2, Dev2 )));
+until (conditions) or (tries=255);
+
+if not conditions then
   Begin
    FlashDetect := Nil; {not identified}
    CurManuf := Nil;

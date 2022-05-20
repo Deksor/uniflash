@@ -14,6 +14,7 @@ Var
 PiixID,
 PiixMan : Word;
 PiixL   : Byte;
+CurrentChipset : string;
 
 Procedure OPortD( Prt : Word; Val : LongInt );
 Function IPortD( Prt : Word ) : LongInt;
@@ -95,6 +96,17 @@ Mask : LongInt;
 Begin
  If PiixMan = $8086 then
   Begin
+  CurrentChipset:='Intel ';
+  Case PiixId of
+       $122D : CurrentChipset:=CurrentChipset+'Triton 430FX';
+       $7030 : CurrentChipset:=CurrentChipset+'Triton 430VX';
+       $1250 : CurrentChipset:=CurrentChipset+'Triton 430HX';
+       $7100 : CurrentChipset:=CurrentChipset+'Triton 430TX';
+       $1235 : CurrentChipset:=CurrentChipset+'Mobile 430MX';
+       $1237 : CurrentChipset:=CurrentChipset+'Natoma 440FX';
+       $04A3 : CurrentChipset:=CurrentChipset+'Mercury/Neptune 434LX/NX';
+       $7180 : CurrentChipset:=CurrentChipset+'Triton 440LX with AGP';
+       end;
    {INTEL}
    If Map then
     Begin
@@ -113,6 +125,12 @@ Begin
  If PiixMan = $1106 then
   Begin
    {VIA}
+   CurrentChipset:='VIA ';
+  Case PiixId of
+       $0576 : CurrentChipset:=CurrentChipset+'Apollo VP-1';
+       $0586 : CurrentChipset:=CurrentChipset+'Apollo VP-2';
+       end;
+
    If PiixID = $576 then
     Begin
      {VIA 82C570 chipset}
@@ -148,6 +166,7 @@ Begin
    {OPTi}
    {NOTE: This is for the OPTi 82C750 'Vendetta' chipset and may or}
    {      may not work on other OPTi chipsets                      }
+   CurrentChipset:='OPTi 82C750 Vendetta';
    If Map then
     Begin
      PIIXReg := GetPCIRegD( $00, PiixL shr 3, PiixL and $7, $44 );
@@ -164,7 +183,46 @@ Begin
      SetPCIRegD( $00, PiixL shr 3, PiixL and $7, $48, PIIXReg2 );
     End;
   End;
+
+If PiixMan=$1039 then  {SiS}
+   begin
+   CurrentChipset:='SiS ';
+   Case PiixId of
+        $5597 : CurrentChipset:=CurrentChipset+'5597 +VGA (SuperTX)';
+        $0496 : CurrentChipset:=CurrentChipset+'496/497 (486)';
+        end;
+   CurrentChipset:=CurrentChipset+' >>>NOT SUPPORTED YET<<<';
+   if Map then
+              begin
+              end
+          else
+              begin
+              end;
+   end;
+
+If PiixMan=$1060 then  {UMC}
+   begin
+   CurrentChipset:='UMC ';
+   Case PiixId of
+        $E881,
+        $0881,
+        $8881 : CurrentChipset:=CurrentChipset+'8881 (486)';
+        end;
+   CurrentChipset:=CurrentChipset+' >>>NOT SUPPORTED YET<<<';
+   if Map then
+              begin
+              end
+          else
+              begin
+              end;
+   end;
+
+
 End;
+
+
+
+
 
 begin
  PIIXL:=LocatePIIX;      { Sets address of PIIX }

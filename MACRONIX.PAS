@@ -40,6 +40,9 @@ Begin
            Size := 128;
            Name := ConstPtr( 'MXIC28F1000AP/12V' );
           End;
+    $7F : Begin
+
+          End;
     else Exit;
    End;
   End;

@@ -2,9 +2,7 @@ Unit Macronix; { Unit to communicate with Macronix chips }
 {v1.21 Removed 2 non-existing chips and added new chips}
 Interface
 
-{v1.24 added 4B,D5 to MX28F1000P - another conflict - $D5 has MX29F080/5V}
 {MX29LV008B Device ID CONFLICT WITH MX29F022B}
-{v1.27 Some H.T. chip (45) probably conflict with MX29F004T/5V}
 
 Implementation
 
@@ -174,9 +172,7 @@ Begin
            Size := 128;
            Name := ConstPtr( 'MX28F1000/12V' )
           End;
-    $1A,
-    $4B,
-    $D5 : Begin {4B,D5 v1.24}
+    $1A : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := MxSecProg;
@@ -420,7 +416,7 @@ Begin
             $4F : Name := ConstPtr( 'MX29LV040/3V' );
            End;
           End;
-{    $D5,} {v1.24}
+    $D5,
     $38 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}

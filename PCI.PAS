@@ -36,7 +36,7 @@ Procedure RomEnable( Map : boolean);
 
 implementation
 
-Uses Tools;
+Uses Tools,Flash;
 
 { PortD[ x ] := y }
 Procedure OPortD( Prt : Word; Val : LongInt ); Assembler;
@@ -109,7 +109,7 @@ end;
 
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $52 ] of String[ 24 ] = {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $53 ] of String[ 24 ] = {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -156,7 +156,7 @@ NbName    : ARRAY[ 1 .. $52 ] of String[ 24 ] = {16->24 v1.21}
 {2C}          'VT3133', {v1.20} {???}
 {2D}          'VT8751', {v1.27}
 {2E}          'VT8753(A)/8754', {v1.27}
-{2F}          'M1489 not supported', {v1.26}
+{2F}          'M1489', {v1.26}
 {30}          'M1521', {v1.26}
 {31}          'M1531(B)', {v1.26}
 {32}          'M1541/1542', {v1.22}
@@ -191,9 +191,10 @@ NbName    : ARRAY[ 1 .. $52 ] of String[ 24 ] = {16->24 v1.21}
 {4F}          'Vesuvius V1-LS', {v1.25}
 {50}          'Geode GX1', {v1.25}
 {51}          'OPTi 82C750', {v1.26}
-{52}          'HiNT VXPro-II North'); {v1.26}
+{52}          'HiNT VXPro-II North', {v1.26}
+{53}          'UMC UM8881F'); {v1.28}
 
-SbName    : ARRAY[ 1 .. $21 ] of String[ 21 ] =
+SbName    : ARRAY[ 1 .. $22 ] of String[ 21 ] =
 {1}         ( 'i82378ZB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -226,7 +227,8 @@ SbName    : ARRAY[ 1 .. $21 ] of String[ 21 ] =
 {1E}          'Vesuvius V3-LS', {v1.25}
 {1F}          'Geode CS5530(A)', {v1.25}
 {20}          'OPTi 82C750', {v1.26}
-{21}          'HiNT VXPro-II South'); {v1.26}
+{21}          'HiNT VXPro-II South', {v1.26}
+{22}          'UMC UM8886BF'); {v1.28}
 
 LPCName   : array[1..$2] of String[21]= {v1.27}
             ( 'ITE IT8700F/05F',
@@ -481,7 +483,10 @@ Begin
  If NorthMan = $10B9 {ALi} then
   Begin
    case NorthId of
-    $1489: NbId := $2F; {M1489 cannot be supported} {v1.26}
+    $1489: begin
+             NorthFunc := $0300; {ALi FinALi}
+             NbId := $2F; {M1489} {v1.26}
+           end;
     $1521: NbId := $30; {M1521} {v1.26}
     $1531: NbId := $31; {M1531} {v1.26}
     $1541: NbId := $32; {M1541} {v1.22}
@@ -519,6 +524,12 @@ Begin
   Begin
    case NorthId of
     $8011: NbId := $52; {HiNT VXPro-II}
+   end;
+  End else
+ If NorthMan = $1060 {UMC} then {v1.28}
+  Begin
+   case NorthId of
+    $8881: NbId := $53; {UMC UM8881}
    end;
   End;
 
@@ -647,6 +658,13 @@ Begin
     $8012: SbId:=$21; {HiNT VXPro-II}
    end;
   End;
+ If SouthMan = $1060 {UMC} then {v1.28}
+  Begin
+   SouthFunc:=$1400;
+   case SouthId of
+    $886A: SbId:=$22; {UMC UM8886BF}
+   end;
+  End;
 
  {Id chipset as a whole}
  CurrentChipset := '';
@@ -708,7 +726,7 @@ Begin
   $27 : If SbId = $11 then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
   $2D : If SbId = $11 then CurrentChipset := 'VIA ProSavage P4M266'; {v1.27}
   $2E : If SbId = $11 then CurrentChipset := 'VIA P4X266(A)/P4X333'; {v1.27}
-  $2F : CurrentChipset := 'ALi FinALi 486 not supported!'; {v1.26}
+  $2F : CurrentChipset := 'ALi FinALi 486'; {v1.26}
   $30 : If SbId = $12 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
   $31 : If SbId = $13 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
   $32 : If SbId = $13 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
@@ -797,30 +815,98 @@ Begin
 
  {Chipset northbridge stuff}
  Case Hi( NorthFunc ) of
-  $01 : Begin {older VIA chipsets}
-         If Map then
-          Begin
-           Port[ $A8 ] := $11;
-           PIIXReg := Port[ $A9 ];
-           Port[ $A8 ] := $11;
-           Port[ $A9 ] := PIIXReg or $40; {ROM Write enable}
-          End else
-          Begin
-           Port[ $A8 ] := $11;
-           Port[ $A9 ] := PIIXReg;
-          End;
+  $01 : begin {older VIA chipsets}
+         if Map then
+          begin
+           Port[$A8]:=$11;
+           PIIXReg:=Port[$A9];
+           LogWrite('VIA old method: internal reg $11 = '+_Str(PIIXReg)); {v1.28}
+           Port[$A8]:=$11;
+           Port[$A9]:=PIIXReg or $40; {ROM Write enable}
+           Port[$A8]:=$11;
+           LogWrite('VIA old method: internal reg $11 changed to '+_Str(Port[$A9])); {v1.28}
+          end else
+          begin
+           Port[$A8]:=$11;
+           LogWrite('VIA old method: restoring internal reg $11 from '+_Str(Port[$A9])); {v1.28}
+           Port[$A8]:=$11;
+           Port[$A9]:=PIIXReg;
+          end;
         End;
   $02 : Begin {SiS 85C496+497 chipset} {v1.21}
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0 );
+           LogWrite('SiS old method: reg $D0 = '+_Str(PIIXReg)); {v1.28}
            {write enable, 384K enable}
            SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0, PIIXReg or $F8 );
+           LogWrite('SiS old method: reg $D0 changed to '+_Str(GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0 )));
           End else
           Begin
+           LogWrite('SiS old method: restoring reg $D0 from '+_Str(GetPCIRegD( $00, NorthPos shr 3,
+            NorthPos and $7, $D0 ))); {v1.28}
            SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0, PIIXReg );
           End;
         End;
+  $03 : begin {ALi FinALi 486 M1489/1487} {v1.28}
+         if Map then
+          begin
+            ROMBase:=$FFFF0000;
+            Banked:=True;
+            Port[$22]:=$03;
+            Port[$23]:=$C5;
+
+            Port[$22]:=$12;
+            PIIXReg:=Port[$23];
+            LogWrite('ALi old method: internal reg $12 = '+_Str(PIIXReg));
+            Port[$22]:=$12;
+            Port[$23]:=PIIXReg or $11;
+            Port[$22]:=$12;
+            LogWrite('ALi old method: internal reg $12 changed to '+_Str(Port[$23]));
+
+            Port[$22]:=$21;
+            PIIXReg2:=Port[$23];
+            LogWrite('ALi old method: internal reg $21 = '+_Str(PIIXReg2));
+            Port[$22]:=$21;
+            Port[$23]:=PIIXReg2 or $20;
+            Port[$22]:=$21;
+            LogWrite('ALi old method: internal reg $21 changed to '+_Str(Port[$23]));
+
+            Port[$22]:=$2B;
+            PIIXReg3:=Port[$23];
+            LogWrite('ALi old method: internal reg $2B = '+_Str(PIIXReg3));
+            Port[$22]:=$2B;
+            Port[$23]:=PIIXReg3 or $20;
+            Port[$22]:=$2B;
+            LogWrite('ALi old method: internal reg $2B changed to '+_Str(Port[$23]));
+
+            Port[$22]:=$03;
+            Port[$23]:=$00;
+          end
+         else
+          begin
+            Port[$22]:=$03;
+            Port[$23]:=$C5;
+
+            Port[$22]:=$12;
+            LogWrite('ALi old method: restoring internal reg $12 from '+_Str(Port[$23]));
+            Port[$22]:=$12;
+            Port[$23]:=PIIXReg;
+
+            Port[$22]:=$21;
+            LogWrite('ALi old method: restoring internal reg $21 from '+_Str(Port[$23]));
+            Port[$22]:=$21;
+            Port[$23]:=PIIXReg2;
+
+            Port[$22]:=$2B;
+            LogWrite('ALi old method: restoring internal reg $2B from '+_Str(Port[$23]));
+            Port[$22]:=$2B;
+            Port[$23]:=PIIXReg3;
+
+            Port[$22]:=$03;
+            Port[$23]:=$00;
+          end;
+        end;
  End;
 
  {Chipset southbridge stuff}
@@ -961,7 +1047,7 @@ Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
            LogWrite('SiS method: reg $40 = '+_Str(PIIXReg)); {v1.23}
            {Lower & extended BIOS enable}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or $3 );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg and $FFFFFFFB or $B{or $3} );
            LogWrite('SiS method: reg $40 changed to '+_Str(GetPCIRegD($00,SouthPos shr 3,SouthPos and $7,$40))); {v1.23}
            case Lo(SouthFunc) of
             $01: Begin {internal reg. 80h}
@@ -1195,7 +1281,7 @@ Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 );
            LogWrite('Utron method: reg $60 = '+_Str(PIIXReg));
            {write & 128k enable}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg or $802 );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg and $FFFFEFFF or $2{or $802} ); {v1.28}
            LogWrite('Utron method: reg $60 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 )));
           End else
           Begin
@@ -1204,11 +1290,25 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg );
           End;
         End;
+  $14 : Begin {UMC method} {v1.28}
+         If Map then
+          Begin
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+           LogWrite('UMC method: reg $44 = '+_Str(PIIXReg));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg and $BFFFFFFF);
+          End else
+          Begin
+           LogWrite('UMC method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $44 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
+          End;
+        End;
+
  End;
 
  case Hi(LPCFunc) of {v1.27}
    $01: begin
-          if map then
+          if Map then
            begin
              ITEUnlock(LPCBase);
              PIIXReg:=LPCRead(LPCBase,$24);
@@ -1216,13 +1316,13 @@ Begin
              {512K enable, write enable}
              LPCWrite(LPCBase,$24,PIIXReg or $7C);
              LogWrite('ITE LPC method: reg $24 changed to '+_Str(LPCRead(LPCBase,$24)));
-             LPCWrite(LPCBase,$02,LPCRead($4E,$02) or 2);
+             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
            end else
            begin
              ITEUnlock(LPCBase);
              LogWrite('ITE LPC method: restoring reg $24 from '+_Str(LPCRead(LPCBase,$24)));
              LPCWrite(LPCBase,$24,PIIXReg);
-             LPCWrite(LPCBase,$02,LPCRead($4E,$02) or 2);
+             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
            end;
         end;
  end;

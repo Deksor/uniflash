@@ -29,21 +29,20 @@ Begin
  AddMsg( Lid, 16, 'Achtung: Alles wird geloescht! ' );
  AddMsg( Lid, 17, ' Einstellungen. Weiter [Y,N]?' );
  AddMsg( Lid, 18, ' Dateiname: ' );
- AddMsg( Lid, 19, 'Dateiname f¸r Bootblock: ' );
+ AddMsg( Lid, 19, 'Dateiname fÅr Bootblock: ' );
  AddMsg( Lid, 20, 'Flashe Datei in das FLASH ROM [Y,N]?' );
  AddMsg( Lid, 21, '         ACHTUNG! Sie verlieren alle BIOS Einstellungen. Weiter [Y,N]?' );
  AddMsg( Lid, 22, 'Geloescht ' );
  AddMsg( Lid, 23, ' BYTES von CMOS RAM.' );
  AddMsg( Lid, 24, 'Fehler beim Loeschen von CMOS RAM - eventuell (teilweise) SCHREIBGESCHUETZT.'#7 );
- {25 veraltet}
+ AddMsg( Lid, 25, '-REBOOT         Reboot after flashing (use together with -E)' ); {v1.28}
  AddMsg( Lid, 26, 'Fehler beim Schreiben in das CMOS RAM - eventuell (teilweise) SCHREIBGESCHUETZT.'#7 );
  AddMsg( Lid, 27, 'CMOS Daten aus Backup wiederherstellen [Y,N]?' );
  AddMsg( Lid, 28, ' BYTES von CMOS RAM geschrieben.'#7 );
  AddMsg( Lid, 29, 'Vermisse Dateiname mit Option -' );
- AddMsg( Lid, 30, '-H oder -?        Zeigt die Hilfe an' );
+ AddMsg( Lid, 30, '-H oder -?      Zeigt die Hilfe an' );
  AddMsg( Lid, 31, '-E fname        Flasht Bios Abbild von Datei fname in das Flash' );
- AddMsg( Lid, 32, '                ROM ohne jeglichen Eigriff durch Benutzer.' );
-{ AddMsg( Lid, 33, '-EXPERT         Schaltet einige spezielle Menue-Optionen frei' );}
+ AddMsg( Lid, 32, '                ROM ohne jeglichen Eigriff durch Benutzer' );
  AddMsg( Lid, 33, '-LOG            Aktiviert Protokollierung in UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Flasht PCI Options ROM statt des System ROM' );
  AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
@@ -75,14 +74,14 @@ Begin
  AddMsg( Lid, 61, '                 PCI Chipsatz: ' );
  AddMsg( Lid, 62, '           Letzter Schreibstatus: ' );
  AddMsg( Lid, 63, 'nicht verfuegbar' );
-(* AddMsg( Lid, 64, '                South bridge: ' );
- AddMsg( Lid, 65, 'Hersteller=' );
- AddMsg( Lid, 66, ', Geraet=' );
+ AddMsg( Lid, 64, 'Unable to read file!'#7 ); {v1.28}
+ AddMsg( Lid, 65, 'Unable to write file!'#7 ); {v1.28}
+(* AddMsg( Lid, 66, ', Geraet=' );
  AddMsg( Lid, 67, ' von ' ); *)
  AddMsg( Lid, 68, 'Speicher: ' );
  AddMsg( Lid, 69, 'ROM Basis: ' );
  AddMsg( Lid, 70, ', Speicher Abbild von ' );
- AddMsg( Lid, 71, '              Options ROM f¸r: ' );
+ AddMsg( Lid, 71, '              Options ROM fÅr: ' );
  AddMsg( Lid, 72, 'Geraet an ' );
  AddMsg( Lid, 73, 'Schreibe ESCD (PnP Daten) in Datei' );
  AddMsg( Lid, 74, 'Flashe ESCD (PnP Daten) Datei in Flash ROM' );
@@ -115,13 +114,13 @@ Begin
  AddMsg( Lid, 101, 'CMOS Submenue Ø' ); {v1.23}
 { AddMsg( Lid, 100, 'BIOS Hersteller: ' );
  AddMsg( Lid, 101, '   BIOS Modell: ' );
- AddMsg( Lid, 102, '  Zubehˆrnummer: ' );
+ AddMsg( Lid, 102, '  Zubehîrnummer: ' );
  AddMsg( Lid, 103, '    Identifikationsnummer: ' );
  AddMsg( Lid, 104, 'Hersteller Identifikationsnummer: ' );}
  AddMsg( Lid, 105, 'YN' );   {Ja Nein}
  AddMsg( Lid, 106, '-FORCE Option muss gefolgt werden von 4 hex Ziffern' );
- AddMsg( Lid, 107, '-CHIPLISTE       Liste der unterst¸tzten Flash Chips' );
- AddMsg( Lid, 108, '-FORCE xxxx     Force benutzt Routinen f¸r Chip xxxx (4 hex Ziffern)' );
+ AddMsg( Lid, 107, '-CHIPLIST       Liste der unterstÅtzten Flash Chips' );
+ AddMsg( Lid, 108, '-FORCE xxxx     Force benutzt Routinen fÅr Chip xxxx (4 hex Ziffern)' );
  AddMsg( Lid, 109, '-SAVE fname     schreibt verwendetes Bios in Datei fname' );
  AddMsg( Lid, 110, 'Dieses programm kann nicht unter Windows laufen.' ); {v1.22}
  AddMsg( Lid, 111, 'PCI Bus nicht gefunden oder antwortet nicht.' ); {v1.22}
@@ -144,9 +143,12 @@ Begin
  AddMsg( Lid, 128, 'Waehle Fortgeschrittenen Untermenue...' ); {v1.23}
  AddMsg( Lid, 129, 'Beende UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Zurueck zum Hauptmenue' ); {v1.23}
- AddMsg( Lid, 131, '-CMOSS fname    Sichert CMOS in Datei fname' ); {v1.25}
- AddMsg( Lid, 132, '-CMOSR fname    Restauriert CMOS Einstellungen aus Datei fname' ); {v1.25}
+ AddMsg( Lid, 131, '-CMOSS/R fname  Save/restore CMOS settings to/from file fname' ); {v1.28}
+ AddMsg( Lid, 132, '-BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)' ); {v1.28}
  AddMsg( Lid, 133, '-CMOSC          Loescht CMOS Einstellungen' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
  AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
+ AddMsg( Lid, 136, '-REPAIR         Repair erased chip ID (Winbond and SST chips)'); {v1.28}
+ AddMsg( Lid, 137, '-REPAIR must be preceded by -FORCE parameter with correct ID'); {v1.28}
+ AddMsg( Lid, 138, 'Only Winbond and SST chips can be repaired'); {v1.28}
 End.

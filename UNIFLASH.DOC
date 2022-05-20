@@ -1,4 +1,4 @@
-                     UniFlash version 1.27 documentation
+                     UniFlash version 1.28 documentation
                      -----------------------------------
                    (C) 2002 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -115,7 +115,7 @@ Here's a list of chipsets suported by Uniflash:
           | i860                 |
           | E7500                |
 ----------|----------------------|--------------------------------------------
- VIA      | Appollo Master       | Only VP2 has been tested so far
+ VIA      | Appollo Master       |
           | Apollo VP            |
           |*Apollo VPX           |
           |*Apollo VP2           |
@@ -131,7 +131,7 @@ Here's a list of chipsets suported by Uniflash:
           | Apollo KX133         |
           |*Apollo KT133(A)      |
           | ProSavage KM133(A)   |
-          | Apollo KT266(A)      |
+          |*Apollo KT266(A)      |
           | Apollo Pro 266       | These North Bridges are detected, but
           | ProSavage P4M266     | aren't used in any VIA's chipset (??):
           | P4X266(A)/P4X333     | VT8653, VT8662, VT8615, VT8361, VT3133
@@ -155,24 +155,23 @@ Here's a list of chipsets suported by Uniflash:
           | 540                  | device ID $0008 (SiS 540 and 630 can have
           | 600                  | either $0008 or $0018 - it can be
           |*620                  | configured(!!!) through registers.
-          |*630                  | SiS 5591/5592 works, 501/5101/5501 doesn't
+          |*630                  |
           | 635                  |
           | 640                  | Boards with the new chipsets (540 and 630
           | 645                  | and up) have often ITE IT8705F LPC Super IO
           | 645DX                | (also called SiS 950 sometimes) which
           | 650                  | allows to use regular Flash ROM on LPC bus.
-          | 730                  |
+          | 730                  | It's tested and works.
           |*735                  |
           | 740                  |
 ----------|----------------------|--------------------------------------------
- ALi      |&FINALi 486 no support| FINALi 486 not supported because it doesn't
-          |*Aladdin Pro II       | map Flash ROM to 4GB
+ ALi      |*FinALi 486           | FinALi has very weird Flash ROM access but
+          |*Aladdin Pro II       | finally it works correctly.
           | Aladdin III          | All chipsets with M1533/M1543/M1535 South
           | Aladdin IV/IV+       | Bridge should work.
           |*Aladdin V            | Unlisted chipsets are not fully detected,
           | Aladdin Pro IV       | but should work if they use M1533/43/35 or
           | ALiMAGiK 1           | M1523 South Bridge.
-          |                      | Aladdin Pro II was tested and works OK.
 ----------|----------------------|--------------------------------------------
  SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
           |                      | South Bridge (UDMA-66 support)
@@ -202,6 +201,8 @@ Here's a list of chipsets suported by Uniflash:
  HiNT     | VXPro-II             | Used on some PC Chips boards (like M559)
           |                      | I think that it's Utron UC85C501/502
           |                      | Not tested
+----------|----------------------|--------------------------------------------
+ UMC      |*UM8881F+UM8886BF     | Don't have any datasheets, tested and works
 ------------------------------------------------------------------------------
 
 PC100 BXCel is relabelled ALi Aladdin Pro II on PC Chips M726 motherboard.
@@ -274,7 +275,7 @@ UniFlash supports the following flash chips:
   Am29F800(B)B                    | 1024KB
   Am29F160DT                      | 2048KB
   Am29F160DB                      | 2048KB
-  Am29F002(N)(B)T                 | 256KB
+ *Am29F002(N)(B)T                 | 256KB
   Am29F002(N)(B)B                 | 256KB
   Am29F004BT                      | 512KB
   Am29F004BB                      | 512KB
@@ -406,6 +407,7 @@ UniFlash supports the following flash chips:
   ----                            |
  *M21561 = Macronix MX28F1000P    | 128KB
  *M21032T = Macronix MX28F1000P   | 128KB
+ *M20271H = Macronix MX28F1000P   | 128KB
 ----------------------------------|-------------------------------------------
   Hyundai                         |
   -------                         |
@@ -579,7 +581,7 @@ UniFlash supports the following flash chips:
   29VF010                         | 128KB
   29VF020                         | 256KB
   29VF040                         | 512KB
-  49LF020                         | 256KB
+ *49LF020                         | 256KB
   49LF030                         | 384KB
   49LF040                         | 512KB
   49LF080                         | 1024KB
@@ -808,9 +810,9 @@ long continuous beep: some error occured, press any key to retry operation
 
 5.2            Command-line parameters
 --------------------------------------
-UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI]
-          [-SAVE fname|-CHIPLIST|-FORCE xxxx][-LOG][-MONO]
-          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT]
+UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI|-BASE xxxxx]
+          [-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]
+          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]
 
 -H or -?        Shows command-line parameters (this list)
 -E fname        Flashes bios image from file fname to Flash ROM without any
@@ -820,16 +822,45 @@ UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI]
 -AMI            Use AMI Flash Interface
 -CHIPLIST       Show list of supported flash chips with their numbers
 -FORCE xxxx     Force using routines for chip xxxx (4 hex digits)
+-BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)
+-REPAIR         Repair erased chip ID (Winbond and SST chips)
 -SAVE fname     Write current bios image to file fname
 -CMOSS fname    Save current CMOS settings to file fname
 -CMOSR fname    Restore CMOS settings from file fname
 -CMOSC          Clears CMOS settings
 -QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)
+-REBOOT         Reboot after flashing (use together with -E)
 
 Parameters are executed in the same order as they are entered on the command
 line - so you can use e.g. "uniflash -cmoss cmos.bak -cmosc" to save CMOS
 settings to file called cmos.bak and then clear the CMOS.
 Some parameters can't be used together - e.g. -AMI can't be used with -PCIOR.
+
+-E: Flashes BIOS image from file fname including bootblock without
+    any user input
+-PCIOR: Selects ROM on a PCI device instead of system ROM. Works only with
+        some cards. You can optionally specify the device you want to use.
+        (e.g. -PCIOR 0 3 1 = BUS 0, DEVICE 3, FUNCTION 1)
+-AMI: Uses interface supported by some AMI BIOSes instead of detecting the
+      chipset and writing to chipset registers to disable write protection.
+      (I haven't seen this working anywhere yet...)
+-CHIPLIST: Displays a list of supported chips with their IDs which are needed
+           for use with -FORCE parameter.
+-FORCE: Disable Flash ROM autodetection and set chip type to the one specified
+        by following ID (4 hex digits) - see -CHIPLIST parameter.
+-BASE: Set ROM base address manually and allow running without PCI bus.
+       Useful for memory-mapped flash programming cards with old systems.
+-REPAIR: ID on some Winbond and SST chips can be changed which can cause the
+         chip not being recognized by any software (including BIOS - AMI BIOS
+         does not work in that chip, Award BIOS displays Unknown Flash Type).
+         This option can change the ID on these chips. Because UniFlash does
+         not know the correct ID, you must specify it using -FORCE parameter.
+-SAVE: Save current BIOS to file fname.
+-CMOSS: Save current CMOS settings to file fname. CMOS memory size is detected
+        automatically.
+-CMOSR: Restore CMOS settings from file fname. CMOS memory size is detected
+        automatically.
+-CMOSC: Clear CMOS memory.
 
 
 6.0            How to support UniFlash?
@@ -876,6 +907,37 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.28       -fixed -SAVE paramter (it was completely broken)
+           -display Chipset and Flash ROM when only -QUIT parameter specified
+           -fixed bug causing reset of ITE LPC Super I/Os (resulting in floppy
+            and COM&LPT ports not working until reboot)
+           -fixed Macronix chip detection
+           -fixed Atmel AT29Cxxx detection (again, it really works now)
+           -fixed Atmel programming routine (chip remained unprotected)
+           -fixed some SiS chipset support
+           -fixed Utron 128KB support (again)
+           -fixed showing SUCCESS when bootblock mismatch and user answered NO
+           -fidex the detection routine erased vendor and device IDs from some
+            Winbond and SST chips (detected properly once but then unknown,
+            BIOS displayed "Unknown Flash Type" message)
+           -added repair feature to repair the erased IDs (-repair parameter)
+           -added support for ALi FinALi 486 chipset
+           -enable/disable menu items after redetect with/without Flash ROM
+           -verify now shows unchanged areas
+           -removed $4B and $D5 IDs for Macronix MX28F1000P (they were there
+            because of the detection bug which is now fixed)
+           -added logging for north bridge methods
+           -added support for UMC UM8881F+UM8886BF chipset (no datasheets,
+            reverse engineering used)
+           -fixed hang when running under Award BootBlock BIOS with
+            uninitialized or absent graphics card
+           -added user friendly filename editing, default file names when
+            saving a file and file browser when opening a file (press ENTER on
+            the prompt, TAB to change drive)
+           -added I/O error checking for all file operations
+           -added -REBOOT patameter to reboot after flashing using -E
+           -added -BASE parameter to set ROM base address manually and allow
+            UniFlash to run without PCI bus
 1.27       -added -MONO parameter for monochrome monitors
            -enhanced -PCIOR functionality, you can now manually specify
             a device by its BUS, DEVICE and FUNCTION numbers (decimal)
@@ -1160,10 +1222,8 @@ When sending reports that something doesn't work, always send the log file!
 9.1            KNOWN BUGS
 -------------------------
  - Intel 28F004-T doesn't work
- - PCI Option ROM Flashing (-pcior parameter) doesn't work - the Flash ROM
-   seems to be write protected (not responding to commands) and I don't know
-   how to disable the protection - please help me if you know!
- - 256KB BIOSes doesn't work on some i430VX/HX boards (AWDFLASH works!)
+ - PCI Option ROM Flashing (-pcior parameter) doesn't work on many cards
+ - 256KB BIOSes don't work on some i430VX/HX boards (AWDFLASH works!)
  - Winbond W49F002U doesn't work - looks like write protected (sometimes???)
  - Some VIA and AMD chipsets don't work - maybe because non-standard flash
    write protection on some boards.
@@ -1172,6 +1232,7 @@ When sending reports that something doesn't work, always send the log file!
    128K Flash ROM). On PC Partner VIB8x4DS board with VIA Apollo VPX, UniFlash
    flashes the SyncMOS F29C51002T chip OK but then hangs with garbage on
    screen. This problem appears to be associated with SyncMOS Flash ROMs only.
+ - Many Abit boards do not work - looks like undocumented write protection
 
 
 9.2            What's missing
@@ -1236,6 +1297,19 @@ PC Chips      | M571              | SiS 5598      | Winbond W29EE011/5V
 PC Partner    | P5VB3+ Rev. B     | Apollo MVP3   | AMD Am29F010A/5V
 Mercury/Kobian| KOB 630E FSFx r1.1| SiS630+IT8705F| EON EN29F002T/5V
 ECS           | K7S5A             | SiS735+IT8705F| Winbond W49F002U/5V
+PowerTech     | MB532 v1.0        | Intel 430FX   | SST 29EE010/5V
+Matsonic      | MS6260S rev.1.6A  | Aladdin V     | ASD AE29F1008/5V
+PC Partner    | TXB820DS          | Intel 430TX   | Atmel AT29C010A/5V
+PC Chips      | M570 v1.3         | SiS 5591+5595 | Atmel AT29C010A/5V
+Gemlight/DTK  | GMB-P57IPS-V1     | Intel 430TX   | Winbond W29EE011/5V
+PC Chips      | M918 V1.2A        | FinALi 486    | H.T. M21032T/12V
+PC Chips      | M918 V1.2A        | FinALi 486    | Macronix MX28F1000P/12V
+PC Chips      | M918 V1.2A        | FinALi 486    | Winbond W29EE011/5V
+PC Chips      | M918 V1.2A        | FinALi 486    | Atmel AT29C010A/5V
+GVC/BCM       | FR500             | SiS 5598      | AMD Am29F002(N)(B)T/5V
+Asus          | A7V266-E          | Apollo KT266A | SST 49LF020/3V
+PC Chips      | M537DMA           | Apollo VPX    | H.T. M20271H/12V
+QDI           | BrillianX 1       | Intel 440BX   | SST 29EE020/5V
 
 
 11.0            Beta testing stuff

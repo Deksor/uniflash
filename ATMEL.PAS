@@ -35,8 +35,7 @@ Ld, X   : Byte;
 Begin
  Attempt := 0;
  Repeat
-  FlashCmd( $80 );
-  FlashCmd( $20 );
+  FlashCmd( $A0 ); {v1.28}
   MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
   Wait( 10000 );  {Wait 10ms} {v1.22 750us->10ms}
 

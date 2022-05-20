@@ -43,7 +43,6 @@ CurCInfo   : ChipInfo;
 ROMBase    : LongInt;
 
 Procedure FlashCmd( Cmd : Byte );
-Procedure FlashCmdW( Cmd : Byte ); {v1.21}
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
 Function FlashDetect : PChipInfo;
 Procedure FlashProgram( Pos, Data : LongInt );
@@ -58,13 +57,6 @@ Begin
  FOMemB( ROMBase + $5555, $AA );
  FOMemB( ROMBase + $2AAA, $55 );
  FOMemB( ROMBase + $5555, Cmd );
-End;
-
-Procedure FlashCmdW( Cmd : Byte );
-Begin
- FOMemW( ROMBase + $5555, $AA );
- FOMemW( ROMBase + $2AAA, $55 );
- FOMemW( ROMBase + $5555, Cmd );
 End;
 
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
@@ -128,10 +120,15 @@ ROMFound        : Boolean;
 
   Procedure ResetROM;
   Begin
+    FlashCmd( $F0 ); {v1.28}
+    Wait(1000); {v1.28}
     FOMemB( ROMBase, $FF );
     FOMemB( ROMBase, $FF );
+    Wait(1000); {v1.28}
     FOMemB( ROMBase, $00 );
-    FlashCmd( $F0 ); {disable for Macronix chips? like v1.24 BETA}
+    Wait(1000); {v1.28}
+    FlashCmd( $F0 );
+    Wait(1000); {v1.28}
   End;
 
 
@@ -144,17 +141,19 @@ ROMFound        : Boolean;
     Done := False;
 
     repeat
-     resetrom;
      M0:=FIMemB(ROMBase);
      D0:=FIMemB(ROMBase+1);
      asm CLI end;
      SendIdCmd;
      {Get mfg. code}
-     Delay(10); {v1.27 fix Atmel detection}
      M := FIMemB( ROMBase );
      if M = $7F then M := FIMemB( ROMBase + $100 ); {Mfg. ID for EON}
      if (M=$7F) and (FIMemB(ROMBase+$3)=$1F) then M:=$7F; {Mfg. ID for IMT}
-
+     if M=$C2 then {v1.28 fix Macronix }
+      begin
+        ResetROM;
+        SendIdCmd;
+      end;
      {Get dev. code}
      D := FIMemB( ROMBase + 1 );
      if D = $7F then D := FIMemB( ROMBase + $101 ); {Dev. ID for EON}
@@ -251,9 +250,29 @@ Begin
                 ( LongInt( Size div Count ) shl 10 ) *
                 ( ( Pos - ROMBase ) div ( LongInt( Size div Count ) shl 10 ) );
     End;*)
-   Asm CLI End;
-   CurCInfo.Progr( Pos, Data );
-   Asm STI End;
+   if Banked then {v1.28}
+    begin
+      if (Pos>=0) and (Pos<LongInt(CurCInfo.Size)*512) then
+       begin
+         SetBank(2);
+         Asm CLI End;
+         CurCInfo.Progr( ROMBase+Pos, Data );
+         Asm STI End;
+       end
+      else
+       begin
+         SetBank(1);
+         Asm CLI End;
+         CurCInfo.Progr( Pos, Data );
+         Asm STI End;
+       end;
+    end
+   else
+    begin
+      Asm CLI End;
+      CurCInfo.Progr( Pos, Data );
+      Asm STI End;
+    end;
    ROMBase := SaveRB; {Restore ROMBase}
   End;
 End;
@@ -275,9 +294,29 @@ Begin
                 ( LongInt( Size div Count ) shl 10 ) *
                 ( ( Pos - ROMBase ) div ( LongInt( Size div Count ) shl 10 ) );
     End;*)
-   Asm CLI End;
-   CurCInfo.Erase( Pos );
-   Asm STI End;
+   if Banked then {v1.28}
+    begin
+      if (Pos>=0) and (Pos<LongInt(CurCInfo.Size)*512) then
+       begin
+         SetBank(2);
+         Asm CLI End;
+         CurCInfo.Erase( ROMBase+Pos );
+         Asm STI End;
+       end
+      else
+       begin
+         SetBank(1);
+         Asm CLI End;
+         CurCInfo.Erase( Pos );
+         Asm STI End;
+       end;
+    end
+   else
+    begin
+      Asm CLI End;
+      CurCInfo.Erase( Pos );
+      Asm STI End;
+    end;
    ROMBase := SaveRB; {Restore ROMBase}
   End;
 End;

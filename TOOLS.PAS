@@ -24,18 +24,19 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.27';
+Version    = '1.28';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
 Mono       : Boolean = False; {v1.27}
+Banked     : Boolean = False; {v1.28}
+FirstBank  : Boolean = True;  {v1.28}
 var Wait:WaitProc;
 
 Function ConstPtr( Const S : String ) : Pointer;
 Function FIMemB( Addr : LongInt ) : Byte;
 Function FIMemW( Addr : LongInt ) : Word;
 Procedure FOMemB( Addr : LongInt; Data : Byte );
-Procedure FOMemW( Addr : LongInt; Data : Word );
 Function Hb( B : Byte ) : String;
 Function Hw( W : Word ) : String;
 Function Hl( L : Longint ) : String;
@@ -72,6 +73,11 @@ procedure LogStart; {v1.23}
 procedure LogEnd; {v1.23}
 procedure Text_Color(Color:Byte); {v1.27}
 procedure Text_Background(Color:Byte); {v1.27}
+procedure SetBank(Bank:Byte); {v1.28}
+function NoVideo:Boolean; {v1.28}
+procedure FInput(var Name:String;DefaultName:String;MaxLen:Byte); {v1.28}
+function BrowseFile:String; {v1.28}
+function IntToStr(I:LongInt):String; {v1.28}
 
 Implementation
 
@@ -99,6 +105,23 @@ End;
 
 Function FIMemB( Addr : LongInt ) : Byte; Assembler;
 Asm
+ CMP    Banked,1                       {v1.28}
+ JNE    @Finish
+ DB     66h
+ MOV    BX,WORD PTR Addr               {MOV EBX,Addr}
+ DB     66h
+ CMP    BX,0FFFFh                      {CMP EBX,0FFFFh}
+ DW     0000h
+ JBE    @Bank2
+ DB     66h,81h,0FBh,00h,00h,0FFh,0FFh {CMP EBX,0FFFF0000h}
+ JB     @Finish
+ JMP    @BankFinish
+@Bank2:
+ DB     66h,81h,0C3h,00h,00h,0FFh,0FFh {ADD EBX,0FFFF0000h}
+@BankFinish:
+ DB     66h
+ MOV    WORD PTR Addr,BX               {MOV Addr,EBX}
+@Finish:
  XOR    AX,AX
  MOV    ES,AX
  DB     66H
@@ -117,22 +140,31 @@ End;
 
 Procedure FOMemB( Addr : LongInt; Data : Byte ); Assembler;
 Asm
+ CMP    Banked,1                       {v1.28}
+ JNE    @Finish
+ DB     66h
+ MOV    BX,WORD PTR Addr               {MOV EBX,Addr}
+ DB     66h
+ CMP    BX,0FFFFh                      {CMP EBX,0FFFFh}
+ DW     0000h
+ JBE    @Bank2
+ DB     66h,81h,0FBh,00h,00h,0FFh,0FFh {CMP EBX,0FFFF0000h}
+ JB     @Finish
+ JMP    @BankFinish
+@Bank2:
+ DB     66h,81h,0C3h,00h,00h,0Fh,00h   {ADD EBX,0F0000h}
+@BankFinish:
+ DB     66h
+ AND    BX,0FFFFh                      {AND EBX,0FFFFFh}
+ DB     0Fh,00h,66h
+ MOV    WORD PTR Addr,BX               {MOV Addr,EBX}
+@Finish:
  XOR    AX,AX
  MOV    ES,AX
  DB     66H
  MOV    SI,WORD PTR Addr    {MOV ESI,Addr}
  MOV    AL,Data
  DB     26H,67H,88H,06H     {MOV ES:[ESI],AL}
-End;
-
-Procedure FOMemW( Addr : LongInt; Data : Word ); Assembler;
-Asm
- XOR    AX,AX
- MOV    ES,AX
- DB     66H
- MOV    SI,WORD PTR Addr    {MOV ESI,Addr}
- MOV    AX,Data
- DB     26H,67H,89H,06H     {MOV ES:[ESI],AX}
 End;
 
 { Convert byte to hex string }
@@ -530,6 +562,25 @@ End;
 
 Procedure MoveLinBlockB( Src, Dest, Size : LongInt ); Assembler;
 Asm
+ CMP    Banked,1                       {v1.28}
+ JNE    @Finish
+ DB     66h
+ MOV    BX,WORD PTR Dest               {MOV EBX,Dest}
+ DB     66h
+ CMP    BX,0FFFFh                      {CMP EBX,0FFFFh}
+ DW     0000h
+ JBE    @Bank2
+ DB     66h,81h,0FBh,00h,00h,0FFh,0FFh {CMP EBX,0FFFF0000h}
+ JB     @Finish
+ JMP    @BankFinish
+@Bank2:
+ DB     66h,81h,0C3h,00h,00h,0Fh,00h   {ADD EBX,0F0000h}
+@BankFinish:
+ DB     66h
+ AND    BX,0FFFFh                      {AND EBX,0FFFFFh}
+ DB     0Fh,00h,66h
+ MOV    WORD PTR Dest,BX               {MOV Dest,EBX}
+@Finish:
  XOR    AX,AX
  MOV    ES,AX
  DB     66H
@@ -795,9 +846,9 @@ End;
 
 Procedure ClearProgressBar;
 Begin
- gotoxy( 11, 19 ); ClrEol;
- gotoxy( 11, 20 ); ClrEol;
- gotoxy( 11, 21 ); ClrEol;
+ GotoXY( 11, 19 ); ClrEol;
+ GotoXY( 11, 20 ); ClrEol;
+ GotoXY( 11, 21 ); ClrEol;
 End;
 
 Procedure WrtProgressBar( Msg : String );
@@ -1168,6 +1219,482 @@ asm
   popf                      {POPFD}             {Restore EFLAGS register}
 end;
 
+procedure SetBank(Bank:Byte); {for ALi FinALi 486} {v1.28}
+var A:Byte;
+begin
+  if FirstBank=(Bank=1) then Exit;
+  Port[$22]:=$03;
+  Port[$23]:=$C5;
+
+  Port[$22]:=$2B;
+  A:=Port[$23];
+  Port[$22]:=$2B;
+  if Bank=1 then Port[$23]:=A or $20 else Port[$23]:=A and $DF;
+
+  Port[$22]:=$03;
+  Port[$23]:=$00;
+  FirstBank:=Bank=1;
+end;
+
+function NoVideo:Boolean;assembler; {v1.28}
+asm
+  mov ah,0Fh
+  mov al,0FFh
+  int 10h
+  cmp al,0FFh
+  je  @novideo
+  xor ax,ax
+  jmp @quit
+@novideo:
+  mov ax,1
+@quit:
+end;
+
+procedure FInput(var Name:String;DefaultName:String;MaxLen:Byte); {v1.28}
+var S:String;
+    Ch:Char;
+    Default:Boolean;
+    A,Pos,StartX:Byte;
+begin
+  ClrKbBuf;
+  S:=DefaultName;
+  Default:=DefaultName<>'';
+  Pos:=Length(S)+1;
+  StartX:=WhereX;
+  Write(S);
+  repeat
+    Ch:=_ReadKey;
+    if Ch=#27 then
+     begin
+       Name:='';
+       Exit;
+     end;
+    if Ch=#13 then
+     begin
+       if (S='') and (DefaultName='') then
+        begin
+          S:=BrowseFile;
+          Write(S);
+          Pos:=Length(S)+1;
+        end
+       else Break;
+     end;
+    if Ch=#8 then
+     begin
+       if (Length(S)>0) and (Pos>1) then
+        begin
+          Dec(Pos);
+          Delete(S,Pos,1);
+          Write(#8' '#8);
+          for A:=Pos to Length(S) do Write(S[A]);
+          Write(' ');
+          GotoXY(StartX+Pos-1,WhereY);
+          Default:=False;
+        end;
+       Continue;
+     end;
+    if Ch=#0 then
+     begin
+       Ch:=_ReadKey;
+       case Ch of
+        #75:if Pos>1 then Dec(Pos);
+        #77:if Pos<=Length(S) then Inc(Pos);
+        #71:Pos:=1;
+        #79:Pos:=Length(S)+1;
+        #83:begin
+              if (Length(S)>0) and (Pos<=Length(S)) then
+               begin
+                 Delete(S,Pos,1);
+                 Write(' '#8);
+                 for A:=Pos to Length(S) do Write(S[A]);
+                 Write(' ');
+                 GotoXY(StartX+Pos-1,WhereY);
+                 Default:=False;
+               end;
+              Continue;
+            end;
+       end;
+       if (Ch=#75) or (Ch=#77) or (Ch=#71) or (Ch=#79) then
+        begin
+          GotoXY(StartX+Pos-1,WhereY);
+          Default:=False;
+        end;
+       Continue;
+     end;
+    if (Length(S)>=MaxLen) or (Ord(Ch)<32) then Continue;
+    if Default then
+     begin
+       S:='';
+       for A:=1 to Length(DefaultName) do Write(#8' '#8);
+       Pos:=1;
+       Default:=False;
+     end;
+    Insert(Ch,S,Pos);
+    for A:=Pos to Length(S) do Write(S[A]);
+    Inc(Pos);
+    GotoXY(StartX+Pos-1,WhereY);
+  until False;
+  Name:=S;
+end;
+
+function UpCaseStr(S:String):String; {v1.28}
+var S0:String;
+    A:Byte;
+begin
+  S0:='';
+  for A:=1 to Length(S) do S0:=S0+UpCase(S[A]);
+  UpCaseStr:=S0;
+end;
+
+function LowCaseStr(S:String):String; {v1.28}
+var S0:String;
+    A:Byte;
+begin
+  S0:='';
+  for A:=1 to Length(S) do if (S[A]>='A') and (S[A]<='Z') then S0:=S0+Chr(Ord(S[A])+32) else S0:=S0+S[A];
+  LowCaseStr:=S0;
+end;
+
+function Zero2Name(S:String):String; {v1.28}
+var S0:String;
+begin
+  if (Pos(#0,S)<>0) and (S[1]<>'.') then S[Pos(#0,S)]:='.';
+  while Pos(#0,S)<>0 do Delete(S,Pos(#0,S),1);
+  Zero2Name:=S;
+end;
+
+function Min(A,B:LongInt):LongInt; {v1.28}
+begin
+  if A<B then Min:=A else Min:=B;
+end;
+
+function BrowseFile:String; {v1.28}
+var SR:SearchRec;
+    A,Count,CurPos,PagePos,OldPos,StackPos,FreeSpace:Word;
+    P:Pointer;
+    PP:LongInt absolute P;
+    Ch:Char;
+    Stack:array[1..256] of Word;
+    X,Y,DrivePos:Byte;
+    Path,Drives:String;
+const PageSize=13;
+type FileName=array[1..12] of Char;
+
+ procedure StoreName(Name:String;Position:Word;Dir:Boolean);
+ var S:String;
+     A:Byte;
+ begin
+   if Name='..' then Name:=#1+'..'#0#0#0#0#0#0#0#0#0 else
+    begin
+      if Dir then S:=#1#0#0#0#0#0#0#0#0#0#0#0 else S:=#255#0#0#0#0#0#0#0#0#0#0#0;
+      A:=Pos('.',Name);
+      if A=0 then Move(Name[1],S[2],Length(Name)) else
+       begin
+         Move(Name[1],S[2],A-1);
+         Move(Name[A+1],S[10],Length(Name)-A);
+       end;
+      Name:=S;
+    end;
+   Move(Name[1],Pointer(PP+Position*SizeOf(FileName))^,Length(Name));
+ end;
+
+ function GetName(Pos:Word;Full:Boolean):String;
+ var S:String;
+ begin
+   S:=#0#0#0#0#0#0#0#0#0#0#0#0;
+   if Full then Move(Pointer(PP+Pos*SizeOf(FileName))^,S[1],12)
+    else Move(Pointer(PP+Pos*SizeOf(FileName)+1)^,S[1],11);
+   if S[9]<>#0 then S:=Copy(S,1,8)+#0+Copy(S,9,Length(S)-9);
+   GetName:=S;
+ end;
+
+ procedure DobosSort;
+ var Step,I:LongInt;
+     OK:Boolean;
+     S:String;
+     A:Byte;
+
+   procedure ExChange(X,Y:Word);
+   var A:FileName;
+   begin
+     Move(Pointer(PP+X*SizeOf(FileName))^,A,SizeOf(A));
+     Move(Pointer(PP+Y*SizeOf(FileName))^,Pointer(PP+X*SizeOf(FileName))^,SizeOf(FileName));
+     Move(A,Pointer(PP+Y*SizeOf(FileName))^,SizeOf(FileName));
+   end;
+
+ begin
+   Step:=Count;
+   if Zero2Name(GetName(1,False))='..' then A:=2 else A:=1;
+   repeat
+     OK:=True;
+     Step:=(Step*4) div 5;
+     if Step<1 then Step:=1;
+     for I:=Step+A to Count do
+     if (GetName(I,True)<GetName(I-Step,True)) then
+      begin
+        ExChange(I,I-Step);
+        OK:=False;
+      end;
+   until (OK) and (Step=1);
+ end;
+
+ procedure DispFile(Name:String;Active,NextLine:Boolean);
+ var A:Byte;
+ begin
+   if Active then Text_Background(Blue) else Text_Background(Black);
+   Write(' '+Name);
+   for A:=1 to 13-Length(Name) do Write(' ');
+   if NextLine then WriteLn;
+   Text_Background(Black);
+ end;
+
+ procedure ReadDir;
+ begin
+   FindFirst('*.*',AnyFile and not VolumeID,SR);
+   A:=1;
+   while (DOSError=0) and (A<FreeSpace div 12) do
+    begin
+      if SR.Name<>'.' then
+       begin
+         if SR.Attr and Directory<>Directory then StoreName(LowCaseStr(SR.Name),A,False)
+          else StoreName(UpCaseStr(SR.Name),A,True);
+         Inc(A);
+       end;
+      FindNext(SR);
+    end;
+   Count:=A-1;
+   CurPos:=1;
+   PagePos:=1;
+   OldPos:=1;
+   DobosSort;
+ end;
+
+ function GetDrive:Byte;assembler;
+ asm mov ah,$19; int 21h; end;
+
+ procedure SetDrive(A:Byte);assembler;
+ asm mov ah,$0E; mov dl,a; int $21; end;
+
+ function ValidDrive(Dr:Char):Boolean;
+ var S,S1: string[40];
+     B,B1: Byte;
+     R: Registers;
+     NumFloppy:Byte;
+ begin
+  ValidDrive:=False;
+  if Dr<'A' then Exit;
+  if Dr='A' then
+   begin
+     R.AH:=$15;
+     R.DL:=0;
+     Intr($13,R);
+     if ((R.Flags) and fCarry=fCarry) or (R.AH=0) then ValidDrive:=False else ValidDrive:=True;
+     Exit;
+   end;
+  if Dr='B' then
+   begin
+     R.AH:=$15;
+     R.DL:=1;
+     Intr($13,R);
+     if ((R.Flags) and fCarry=fCarry) or (R.AH=0) then ValidDrive:=False else ValidDrive:=True;
+     Exit;
+   end;
+  B:=GetDrive;
+  SetDrive(Byte(Dr)-65);
+  B1:=GetDrive;
+  SetDrive(B);
+  if Byte(Dr)-65<>B1 then Exit;
+  S:=Dr+':\'#0;
+  R.ax:=$2900;
+  R.ds:=Seg(S);
+  R.si:=Ofs(S[1]);
+  R.es:=Seg(S1);
+  R.di:=Ofs(S1);
+  Intr($21,R);
+  if R.ax<>$FF then ValidDrive:=True else ValidDrive:=False;
+ end;
+
+ procedure ChangeDrive(Drive:Char);
+ var OldDir:String;
+     A:Byte;
+ begin
+   GetDir(0,OldDir);
+   ChDir(Drive+':\');
+   if IOResult<>0 then
+    begin
+      ChDir(OldDir);
+      Exit;
+    end;
+   ReadDir;
+   Window(2,9,17,23);
+   Text_Background(Black);
+   ClrScr;
+   for A:=PagePos to Min(PagePos+PageSize,Count) do DispFile(GetName(A,False),A=CurPos,True);
+   Window(25,22,80,22);
+ end;
+
+begin
+  FreeSpace:=Min(MaxAvail,65520);
+  GetMem(P,FreeSpace);
+  StackPos:=1;
+
+  ReadDir;
+
+  Text_Background(Black);
+  X:=WhereX;
+  Y:=WhereY;
+  CursorOff;
+  Window(2,9,17,22);
+  ClrScr;
+  Window(2,9,17,23);
+  for A:=PagePos to Min(PagePos+PageSize,Count) do DispFile(GetName(A,False),A=CurPos,True);
+
+  repeat
+    Ch:=_ReadKey;
+    if Ch=#27 then
+     begin
+       Window(2,9,17,22);
+       ClrScr;
+       BrowseFile:='';
+       Break;
+     end;
+    if Ch=#13 then
+     begin
+       if Copy(GetName(CurPos,True),1,1)=#255 then
+        begin
+          Window(2,9,17,22);
+          ClrScr;
+          BrowseFile:=Zero2Name(GetName(CurPos,False));
+          Break;
+        end;
+       ChDir(Zero2Name(GetName(CurPos,False)));
+       if Zero2Name(GetName(CurPos,False))='..' then
+        begin
+          ReadDir;
+          if StackPos>1 then
+           begin
+             Dec(StackPos);
+             PagePos:=Stack[StackPos];
+             Dec(StackPos);
+             CurPos:=Stack[StackPos];
+           end
+          else
+           begin
+             PagePos:=1;
+             CurPos:=1;
+           end;
+        end
+       else
+        begin
+          Stack[StackPos]:=CurPos;
+          Inc(StackPos);
+          Stack[StackPos]:=PagePos;
+          Inc(StackPos);
+          ReadDir;
+        end;
+       Window(2,9,17,22);
+       ClrScr;
+       Window(2,9,17,23);
+       OldPos:=CurPos;
+       for A:=PagePos to Min(PagePos+PageSize,Count) do DispFile(GetName(A,False),A=CurPos,True);
+     end;
+    if Ch=#9 then
+     begin
+       Window(25,22,80,22);
+       GetDir(0,Path);
+       Drives:='';
+       for Ch:='A' to 'Z' do if ValidDrive(Ch) then
+        begin
+          Drives:=Drives+Ch;
+          if UpCase(Path[1])=Ch then DrivePos:=Length(Drives);
+        end;
+       repeat
+         GotoXY(1,1);
+         for A:=1 to Length(Drives) do
+          begin
+            if A=DrivePos then Text_Background(Green) else Text_Background(Black);
+            Write(' '+Drives[A]+' ');
+          end;
+         Ch:=_ReadKey;
+         case Ch of
+          #0:case _ReadKey of
+              'K':if DrivePos>1 then Dec(DrivePos);
+              'M':if DrivePos<Length(Drives) then Inc(DrivePos);
+             end;
+          #27:Break;
+          #9,#13:begin
+                   ChangeDrive(Drives[DrivePos]);
+                   Break;
+                 end;
+          'a'..'z','A'..'Z':begin
+                     ChangeDrive(UpCase(Ch));
+                     Break;
+                   end;
+         end;
+       until False;
+       GotoXY(1,1);
+       Text_Background(Black);
+       ClrEol;
+       Window(2,9,17,23);
+     end;
+    if Ch=#0 then
+     begin
+       OldPos:=CurPos;
+       case _ReadKey of
+        'I':if CurPos<=PageSize then CurPos:=1 else CurPos:=CurPos-PageSize;
+        'Q':if CurPos>Integer(Count)-PageSize then CurPos:=Count else CurPos:=CurPos+PageSize;
+        'H':if CurPos>1 then Dec(CurPos);
+        'P':if CurPos<Count then Inc(CurPos);
+        'G':CurPos:=1;
+        'O':CurPos:=Count;
+       end;
+     end;
+    if (Count=0) or (CurPos=OldPos) then Continue;
+    if (CurPos<=PagePos+PageSize) and (CurPos>=PagePos) then
+     begin
+       GotoXY(1,OldPos-PagePos+1);
+       DispFile(GetName(OldPos,False),False,False);
+       GotoXY(1,WhereY+(Integer(CurPos)-OldPos));
+       DispFile(GetName(CurPos,False),True,False);
+     end
+    else
+     begin
+       if CurPos>PagePos+PageSize then Inc(PagePos);
+       if CurPos>PagePos+PageSize then
+        begin
+          while CurPos>PagePos+PageSize do PagePos:=PagePos+PageSize;
+          Dec(PagePos);
+        end;
+       if CurPos<PagePos then Dec(PagePos);
+       if CurPos<PagePos then
+        begin
+          if PagePos>PageSize then
+           begin
+             while CurPos<PagePos do if PagePos>PageSize then PagePos:=PagePos-PageSize else PagePos:=0;
+             Inc(PagePos);
+           end else PagePos:=1;
+        end;
+       if Count-PagePos<PageSize then PagePos:=Count-PageSize;
+       Window(2,9,17,22);
+       ClrScr;
+       Window(2,9,17,23);
+       for A:=PagePos to Min(PagePos+PageSize,Count) do DispFile(GetName(A,False),A=CurPos,True);
+     end;
+  until False;
+
+  FreeMem(P,FreeSpace);
+  Window(1,1,80,25);
+  GotoXY(X,Y);
+  CursorOn;
+  ClrKbBuf;
+end;
+
+function IntToStr(I:LongInt):String; {v1.28}
+var S:String;
+begin
+  Str(I,S);
+  IntToStr:=S;
+end;
 
 Begin
  If not Windows and not EMM386 and TSCPresent then {v1.22}

@@ -126,5 +126,5 @@ begin
  AmiFlashProtect;
 end;
 
-
+{begin}
 end.

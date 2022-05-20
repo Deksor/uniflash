@@ -1,4 +1,4 @@
-                     UniFlash version 1.22 documentation
+                     UniFlash version 1.23 documentation
                      -----------------------------------
                    (C) 2001 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -60,6 +60,11 @@ NOTE by PvL: Brand name flashers have a tendency to be unstable (this is
              so far, leaving me no other choice than to hot-flash) so if
              you happen to be the lucky owner of one of the TESTED flash
              chips I can really recommend using UNIFLASH instead ...
+NOTE by Rainbow:
+AWDFLASH IS REALLY BAD. When I was flashing BIOS on Abit SA6R, the verify
+failed. I retried flashing about 20 times, then it succeeded. But motherboard
+died after reboot. Luckily, after powering down and back up, BootBlock BIOS
+worked and I was able to flash the BIOS correctly from there.
 
 
 2.0            What hardware do I need for UniFlash ?
@@ -72,97 +77,103 @@ Here's the minimum configuration you need to run UniFlash:
        -Known Flash ROM chip (see section 3.0)
        -Supported chipset (see below) - note that all of them are PCI based
 
+,----------------------------------------------------------------------------,
+| Don't forget to disable "Flash write protect" - either in system BIOS or   |
+| using a jumper on the motherboard.                                         |
+`----------------------------------------------------------------------------'
+
 Here's a list of chipsets suported by Uniflash:
  * means tested and functional,
  # means tested, but doesn't work the way it should
- unmarked chips are not tested
+ unmarked chipsets are not tested
 
 ,----------------------------------------------------------------------------,
-| Mfg       | Chipset(s)           | Comments                                |
-`-----------|----------------------|-----------------------------------------'
-  Intel     |*430FX                | No comments It works in 99% of cases
-            |*430HX                | 450 & 434 not tested
-            |*430VX                | 440GX and 440FX untested
-            |*430TX                |
-            |*430MX                |
-            | 440FX                |
-            |*440LX/EX             |
-            | 450KX/GX             |
-            | 434LX/NX             |
-            |*440BX/ZX             |
-            | 440GX                |
-            | i810                 | Hub architecture chipsets (i8xx) are
-            | i810E                | not tested.
-            | i810E2               |
-            | i815                 |
-            | i815E(P)             |
-            | i815EM               |
-            | i820                 |
-            | i820E                |
-            | i840                 |
-            | i850                 |
-            | i860                 |
-------------|----------------------|------------------------------------------
-  VIA       | Appollo Master       | Only VP2 has been tested so far
-            | Apollo VP            |
-            | Apollo VPX           |
-            |*Apollo VP2           |
-            | Apollo VP3           |
-            | Apollo MVP3          |
-            | Apollo P6            |
-            | Apollo MVP4          | <- Support for newer VIA chipsets in
-            | Apollo Pro           |    version 1.20 (they're all untested)
-            | Apollo Pro Plus/133  |
-            | Apollo Pro 133A      | There may be problems with chipsets
-            | Apollo ProMedia      | using VT8233 south bridge because I
-            | Apollo Pro 133Z/PM133| don't have full data sheet for this chip.
-            | Apollo KX133         | (KT266 and Pro 266)
-            | Apollo KT133(A)      | These North Bridges are detected, but
-            | Apollo KT266         | aren't used in any VIA's chipset (??):
-            | Apollo Pro 266       | VT8653, VT8662, VT8615, VT8361, VT3133
-------------|----------------------|------------------------------------------
-  AMD       |*AMD 640 (same as VIA | Works just fine
-            | Apollo VP2)          |
-            | AMD 750              | UniFlash supports true AMD chipsets since
-            | AMD 760              | version 1.20. Their registers are very
-            | AMD 760MP            | similar to VIA. All are untested.
-            |                      | AMD 760 should work with both VIA and
-            |                      | AMD south bridges.
-------------|----------------------|------------------------------------------
-  OPTi      | Vendetta             | Not tested (currently disabled)
-------------|----------------------|------------------------------------------
-  SiS       | 85C496+497           | I got the datasheets, but not from SiS.
-            | 501/5101/5501        |
-            | 5511                 | These chipsets are really crappy - to
-            | 5571                 | support 12 chipsets, I needed to write
-            | 5591/5592            | 5 different methods of enabling Flash ROM
-            | 5596                 | write access. (The more code, the more
-            | 5597/5598/5581/5120  | bugs :-)
-            | 530                  | All SiS South Bridges have the same
-            | 540                  | device ID $0008 (SiS 540 and 630 can have
-            | 600                  | either $0008 or $0018 - it can be
-            | 620                  | configured(!!!) through registers.
-            | 630                  | Everything untested...
-------------|----------------------|------------------------------------------
-  ALi       |*Aladdin Pro II       | I got M1543 datasheets from ALi, so
-            | (M1621+M1543)        | this one is supported now. All chipsets
-            | Aladdin V            | with M1543 south bridge should work,
-            | (M1541+M1543)        | but they aren't identified for now.
-            |                      | Alladin Pro II was tested and works OK.
-------------|----------------------|------------------------------------------
-  SMSC      | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
-            |                      | South Bridge (UDMA-66 support)
-            |                      | Untested.
-------------|----------------------|------------------------------------------
-  Winbond/  | W83C553F South Bridge| I don't know if this one was ever used.
-  Symphony  |                      | (No known chipset with this SB)
-  Labs      |                      | Untested, of course.
-------------|----------------------|------------------------------------------
-  ITE       | IT8871F/2F and       | Don't know where used, untested.
-            | IT8888F South Bridges| (No known chipset with these SBs)
+| Mfg     | Chipset(s)           | Comments                                  |
+`---------|----------------------|-------------------------------------------'
+ Intel    |*430FX                | No comments It works in 99% of cases
+          |*430HX                | 450 & 434 not tested
+          |*430VX                | 440GX and 440FX untested
+          |*430TX                |
+          |*430MX                |
+          | 440FX                |
+          |*440LX/EX             |
+          | 450KX/GX             |
+          | 434LX/NX             |
+          |*440BX/ZX             |
+          | 440GX                |
+          | i810                 | Hub architecture chipsets (i8xx) are
+          | i810E                | not tested.
+          | i810E2               |
+          | i815                 |
+          | i815E(P)             |
+          | i815EM               |
+          | i820                 |
+          | i820E                |
+          | i830MP               |
+          | i840                 |
+          | i850                 |
+          | i860                 |
+----------|----------------------|--------------------------------------------
+ VIA      | Appollo Master       | Only VP2 has been tested so far
+          | Apollo VP            |
+          | Apollo VPX           |
+          |*Apollo VP2           |
+          | Apollo VP3           |
+          | Apollo MVP3          |
+          | Apollo P6            |
+          | Apollo MVP4          | <- Support for newer VIA chipsets in
+          | Apollo Pro           |    version 1.20 (they're all untested)
+          | Apollo Pro Plus/133  |
+          | Apollo Pro 133A      | There may be problems with chipsets
+          | Apollo ProMedia      | using VT8233 south bridge because I
+          | Apollo Pro 133Z/PM133| don't have full data sheet for this chip.
+          | Apollo KX133         | (KT266 and Pro 266)
+          | Apollo KT133(A)      | These North Bridges are detected, but
+          | Apollo KT266         | aren't used in any VIA's chipset (??):
+          | Apollo Pro 266       | VT8653, VT8662, VT8615, VT8361, VT3133
+----------|----------------------|--------------------------------------------
+ AMD      |*AMD 640 (same as VIA | Works just fine
+          | Apollo VP2)          |
+          | AMD 750              | UniFlash supports true AMD chipsets since
+          | AMD 760              | version 1.20. Their registers are very
+          | AMD 760MP            | similar to VIA. All are untested.
+          |                      | AMD 760 should work with both VIA and
+          |                      | AMD (does it really exist?) south bridges.
+----------|----------------------|--------------------------------------------
+ OPTi     | Vendetta             | Not tested (currently disabled)
+----------|----------------------|--------------------------------------------
+ SiS      | 85C496+497           | I got the datasheets, but not from SiS.
+          | 501/5101/5501        |
+          | 5511                 | These chipsets are really crappy - to
+          | 5571                 | support 12 chipsets, I needed to write
+          | 5591/5592            | 5 different methods of enabling Flash ROM
+          | 5596                 | write access. (The more code, the more
+          | 5597/5598/5581/5120  | bugs :-)
+          | 530                  | All SiS South Bridges have the same
+          | 540                  | device ID $0008 (SiS 540 and 630 can have
+          | 600                  | either $0008 or $0018 - it can be
+          | 620                  | configured(!!!) through registers.
+          | 630                  | Everything untested...
+----------|----------------------|--------------------------------------------
+ ALi      |*Aladdin Pro II       | I got M1543 datasheets from ALi, so
+          | (M1621+M1543)        | this one is supported now. All chipsets
+          | Aladdin V            | with M1543 south bridge should work,
+          | (M1541+M1543)        | but they aren't identified for now.
+          |                      | Aladdin Pro II was tested and works OK.
+----------|----------------------|--------------------------------------------
+ SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
+          |                      | South Bridge (UDMA-66 support)
+          |                      | Untested.
+----------|----------------------|--------------------------------------------
+ Winbond/ | W83C553F South Bridge| I don't know if this one was ever used.
+ Symphony |                      | (No known chipset with this SB)
+ Labs     |                      | Untested, of course.
+----------|----------------------|--------------------------------------------
+ ITE      | IT8871F/2F and       | Don't know where used, untested.
+          | IT8888F South Bridges| (No known chipset with these SBs)
 ------------------------------------------------------------------------------
 
-PC100 BXCel is relabelled ALi Alladin Pro II on PC Chips M726 motherboard.
+PC100 BXCel is relabelled ALi Aladdin Pro II on PC Chips M726 motherboard.
 
 The version 1.16d+ includes support for AMI's Flash Interface. It allows you
 to flash even if you have an unknown chipset (new AMI WinBIOS is necessary to
@@ -170,10 +181,10 @@ use this feature). Uniflash will automatically try to use this feature if
 there's no chipset detected. You can force using this mode, even if your
 chipset is recognised by giving the -AMI parameter.
 
-WARNING: AMI Flash interface doesn't work on some PC Chips boards. This can
-cause UniFlash to hang at startup, when no known chipset is found (or when you
-use -AMI parameter on PC Chips M726). No data will be corrupted, you just need
-to push RESET button.
+WARNING: AMI Flash interface doesn't work on some boards. This can cause
+UniFlash to hang at startup, when no known chipset is found (or when you use
+-AMI parameter on PC Chips M726). No data will be corrupted, you just need to
+push RESET button.
 
 
 
@@ -278,6 +289,7 @@ UniFlash supports the following flash chips:
   ASD                             |
   ---                             |
  *AE29F1008 = Winbond W29EE011    | 128KB
+ *AE29F2008 = Winbond W29C020(C)  | 256KB
 ----------------------------------|-------------------------------------------
   Atmel                           |
   -----                           |
@@ -481,6 +493,10 @@ UniFlash supports the following flash chips:
   MX29L1611G                      | 2048KB
   MX29L3211                       | 4096KB
 ----------------------------------|-------------------------------------------
+  Megawin                         |
+  -------                         |
+  MM29F040 = AMD Am29F040(B)/5V   | 512KB
+----------------------------------|-------------------------------------------
   Micron                          |
   ------                          |
   MT28F004-T = Intel 28F004-T     | 512KB
@@ -668,7 +684,7 @@ UniFlash supports the following flash chips:
   W29C040                         | 512KB
   W29EE512                        | 64KB
   W29C101/102                     | 128KB
-  W49F002U                        | 256KB
+ #W49F002U                        | 256KB
   W49V002(A)                      | 256KB
   W49V002F(A) (Firmware Hub)      | 256KB
   W29F102 or W49F102              | 128KB
@@ -687,7 +703,7 @@ plus some details.
 
 
 5.0            ADVANCED submenu
---------------------------
+-------------------------------
 
 There's ADVANCED submenu in UniFlash, which contains possibly dangerous
 functions. If you're just a user don't enter it (unless you have to ...). This
@@ -756,6 +772,7 @@ understand better what we're talking about).
 
 Ondrej Zary (Rainbow Software) - Continues to develop this program after the
 authors (below) stopped the development. Done all that is new after v1.17b.
+Added tons of Flash ROMs and chipsets, fixed a lot of bugs.
 
 Pascal van Leeuwen - Made first design, chipset handling routines, a primitive
 write function for SST, WINBOND and INTEL, added flat real mode, etc...
@@ -780,9 +797,25 @@ web    : http://www.geocities.com/rnbw1
 (new versions should be on all the addresses)
 e-mail : rnbw@geocities.com
 
+When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.23       -added Italian language support (by Enrico Antongiovanni)
+           -added timeout to GenPageProgB and GenPageProgW (to prevent hangs
+            with boot block protection enabled on Winbond Flash ROMs)
+           -added auto-logging feature (-LOG parameter)
+           -added support for Intel 830MP and 845 chipsets
+           -new keyboard handler doesn't use BIOS - this allows UniFlash to
+            work correctly under Award BootBlock BIOS (tested)
+           -added simple help on the bottom of screen in menu
+           -added new program/erase routines for Winbond Sectored Flash ROMs
+            (may fix Winbond W29F002U?)
+           -tried to fix but still not fixed SiS 501/5101/5501 support
+           -some VIA reverse engineering (reserved registers seems to be used)
+            but new VIA/AMD chipsets still not working (if you have "Flash
+            Write Protect" option in BIOS, your chipset will work when you
+            disable it)
 1.22       -added error messages: running under Windows, PCI bus not found
            -fixed Flash ROM write protect enable/disable - fixed possible
             chipset register corruption
@@ -802,7 +835,7 @@ e-mail : rnbw@geocities.com
            -Nils Emil P. Larsen tested these Bulk Erase/Need Blanking chips,
             they're working CAT28F010, MX28F1000P, Intel 28F010 and also H.T.
             M21561 (which is actually MX28F1000P)
-           -added support for Intel 860 chipset (Xeon) and ALi Alladdin V
+           -added support for Intel 860 chipset (Xeon) and ALi Aladdin V
            -added support for 1MB Flash ROMs with VIA VT82C596(A|B) and
             VT82C686(A) South Bridges
            -doesn't exit when no Flash ROM detected in PCI Option ROM mode
@@ -930,7 +963,7 @@ e-mail : rnbw@geocities.com
             after it was abandoned for two years
            -added support for i440BX/ZX and i440GX chipsets
            -added support for ALi M1543 south bridge and ALi M1621 north
-            bridge (ALi Alladin Pro II chipset)
+            bridge (ALi Aladdin Pro II chipset)
            -added some info about ASD chips into this DOC
            -added support for Intel 82802AB(4Mb)/AC(8Mb)Firmware Hubs
            -added support for Atmel AT49F002(N)T chip
@@ -995,12 +1028,27 @@ e-mail : rnbw@geocities.com
 
 9.1            KNOWN BUGS
 -------------------------
- - "Redetect Flash ROM" option in the main menu is not implemented
  - Intel 28F004-T doesn't work
  - PCI Option ROM Flashing (-pcior parameter) doesn't work - the Flash ROM
    seems to be write protected (not responding to commands) and I don't know
    how to disable the protection - please help me if you know!
- - There are problems detecting Flash ROM on VIA chipsets
+ - 256KB BIOSes doesn't work on some i430VX/HX boards (AWDFLASH works!)
+ - Winbond W49F002U doesn't work - looks like write protected
+ - Newer VIA and AMD chipsets don't work - Flash ROM can't be detected. I
+   found no bug in the code, sent e-mails to VIA but they are ignoring them
+
+
+9.2            What's missing
+-----------------------------
+ - "Redetect Flash ROM" option in the main menu is not implemented
+ - Boot Block on Winbond W29C020 can be flashed even if the Boot Block
+   protection is enabled on the chip - AMIFLASH v8.15.02 can do it but
+   UniFlash can't (I don't know how to do it)
+ - Support for ServerWorks, UMC, new VIA, new AMD and new SiS chipsets because
+   datasheets are unavailable (I sent e-mails to ServerWorks, UMC and SiS, but
+   they didn't bother to reply)
+ - Support for some exotic Flash ROMs like Intel 82802AA 2mbit Firmware Hub or
+   Bright BM29FS040 (no datasheets available)
 
 
 10.0           Compatibility tests
@@ -1008,21 +1056,22 @@ e-mail : rnbw@geocities.com
 
 Here is a list of tested & working motherboards/Flash ROM chip combinations.
 
-Manufacturer  | Model + revision  | Chipset      | Flash ROM chip used
---------------------------------------------------------------------------
-ASUSTeK       | T2P4 rev 2 & 3.10 | Intel 430HX  | SST 29EE010/5V
-Expertboard   | 8661              | Intel 430VX  | Winbond W29EE011/5V
-Soyo          | 5TA2              | Intel 430FX  | SST 29EE010/5V
-Shuttle       | Hot569            | Intel 430TX  | Atmel 29C010A/5V
-Shuttle       | Hot565            | Intel 430TX  | Winbond W29EE011/5V
-Shuttle       | Hot603            | AMD 640      | Winbond W29EE011/5V
-ASUSTeK       | P2B rev 1.10      | Intel 440BX  | Winbond W29EE011/5V
-PC Chips      | M726 v3.4A        | Alladin Pro 2| ASD AE29F1008/5V
-Abit          | BX6 rev. 2        | Intel 440BX  | AMIC A29002T/5V
-MicroStar MSI | MS-5120 ver 1     | Intel 430FX  | Winbond W29EE011/5V
-Abit          | BX6-R2            | Intel 440BX  | Winbond W29C020/5V
-DFI           | P2-XLX            | Intel 440LX  | Winbond W29EE011/5V
-FIC           | PT-2006           | Intel 430VX  | Intel 28F001/12V
+Manufacturer  | Model + revision  | Chipset       | Flash ROM chip used
+---------------------------------------------------------------------------
+ASUSTeK       | T2P4 rev 2 & 3.10 | Intel 430HX   | SST 29EE010/5V
+Expertboard   | 8661              | Intel 430VX   | Winbond W29EE011/5V
+Soyo          | 5TA2              | Intel 430FX   | SST 29EE010/5V
+Shuttle       | Hot569            | Intel 430TX   | Atmel 29C010A/5V
+Shuttle       | Hot565            | Intel 430TX   | Winbond W29EE011/5V
+Shuttle       | Hot603            | AMD 640       | Winbond W29EE011/5V
+ASUSTeK       | P2B rev 1.10      | Intel 440BX   | Winbond W29EE011/5V
+PC Chips      | M726 v3.4A        | Aladdin Pro 2 | ASD AE29F1008/5V
+Abit          | BX6 rev. 2        | Intel 440BX   | AMIC A29002T/5V
+MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Winbond W29EE011/5V
+Abit          | BE6-R2            | Intel 440BX   | Winbond W29C020/5V
+DFI           | P2-XLX            | Intel 440LX   | Winbond W29EE011/5V
+FIC           | PT-2006           | Intel 430VX   | Intel 28F001/12V
+PC Chips      | M726 v3.4A        | Aladdin Pro 2 | Winbond W29C020/5V
 
 
 11.0            Beta testing stuff
@@ -1059,5 +1108,20 @@ and chipset manufacturers for their support (in random order):
             Niel Smith, Application Engineering Manager, ALI USA
             Henry Ho at Macronix International Co., Ltd.
             Michael Solinas at Silicon Storage Technology, Inc. (SST), USA
+            Phillip Chang at Megawin Technology Co., Ltd.
+
+
+Thanks goes to Intel - all datasheets are freely available on their web page
+upon release of new hardware. The companies in the list below should take this
+as an example of developer support.
+
+I would like NOT to THANK TO following COMPANIES for providing NO SUPPORT
+for independent developers and NOT REPLYING TO E-MAILS:
+
+            VIA Technologies (2 e-mails, 1 reply about www.viaarena.com)
+            Silicon Integrated Systems (SiS)
+            United Microelectronics Corporation (UMC)
+            ServerWorks (3 e-mails, no reply)
+
 
 ============================== END OF DOCUMENT ===============================

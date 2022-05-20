@@ -28,8 +28,8 @@ Uses Tools, Crt, Flash;
 
 Procedure GenPageProgB( Pos, Data : LongInt );
 Var
-Attempt,
-Ld, X   : Byte;
+Attempt, Ld, X : Byte;
+TimeOut : Word; {v1.23}
 
 Begin
  Attempt := 0;
@@ -39,9 +39,17 @@ Begin
   Wait( 5000 {300});  {Wait 5ms} {v1.22 300us->5ms}
 
   Ld := FiMemB( Data + {127}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
+  TimeOut := 1000;
   Repeat
    X := FiMemB( Pos + {127}CurCInfo.PgSize - 1 );    {Read last byte written}
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+   Wait( 50 );
+   Dec( TimeOut );
+  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 ) or ( TimeOut<1 );
+  if TimeOut < 1 then {v1.23}
+   Begin
+     FlashError := 2;
+     Exit;
+   End;
   X := FiMemB( Pos + {127}CurCInfo.PgSize - 1 );    {Read last byte written}
   Inc( Attempt );
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
@@ -52,19 +60,27 @@ End;
 
 Procedure GenPageProgW( Pos, Data : LongInt );
 Var
-Attempt,
-Ld, X   : Byte;
+Attempt, Ld, X : Byte;
+TimeOut : Word; {v1.23}
 
 Begin
  Attempt := 0;
  Repeat
   FlashCmd( $A0 );
   MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
-  Wait( 5000 {300});  {Wait 5ms} {v1.22 300us->5ms}
+  Wait( 8000 {300});  {Wait 5ms} {v1.22 300us->5ms}
   Ld := FiMemB( Data + {255}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
+  TimeOut := 1000;
   Repeat
    X := FiMemB( Pos + {255}CurCInfo.PgSize - 1 );    {Read last byte written}
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+   Wait( 50 );
+   Dec( TimeOut );
+  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 ) or ( TimeOut<1 );
+  if TimeOut < 1 then {v1.23}
+   Begin
+     FlashError := 2;
+     Exit;
+   End;
   X := FiMemB( Pos + {255}CurCInfo.PgSize - 1 );    {Read last byte written}
   Inc( Attempt );
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
@@ -549,5 +565,5 @@ Begin
  IntelResetW;
 End;
 
-Begin
+{Begin}
 End.

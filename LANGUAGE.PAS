@@ -1,28 +1,23 @@
 Unit Language;
 
 Interface
+const LangCount: Byte = 0;
+var   CurLang  : Byte;
 
 Function Msg( Id : Word ) : String;
 Function RegisterLanguage( Name : String ) : Byte;
 Procedure AddMsg( LId : Byte; MId : Word; Msg : String );
-Function GetLangCount : Byte;
 Function GetLangName( LangId : Byte ) : String;
-Procedure SetLanguage( LangId : Byte );
 
 Implementation
 
-Const
-MaxLangCount = 4;
-MaxMsgCount  = 120;
-LangCount    : Byte = 0;
-
 Type
-LangDef = ARRAY[ 1 .. MaxMsgCount ] of ^String;
+LangDef = ARRAY[ 1 .. 130 ] of ^String;
 
 Var
-MsgPtrs   : ARRAY[ 1 .. MaxLangCount ] of ^LangDef;
-LangNames : ARRAY[ 1 .. MaxLangCount ] of ^String;
-CurLang   : Byte;
+MsgPtrs   : ARRAY[ 1 .. 4 ] of ^LangDef;
+LangNames : ARRAY[ 1 .. 4 ] of ^String;
+{CurLang   : Byte;}
 
 Function Msg( Id : Word ) : String;
 Begin
@@ -76,19 +71,10 @@ Asm
  MOV ES:[DI+BX+2],AX
 End;
 
-Function GetLangCount : Byte;
-Begin
- GetLangCount := LangCount;
-End;
-
 Function GetLangName( LangId : Byte ) : String;
 Begin
  GetLangName := LangNames[ LangId ]^;
 End;
 
-Procedure SetLanguage( LangId : Byte );
-Begin
- CurLang := LangId;
-End;
-
+{Begin}
 End.

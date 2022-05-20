@@ -44,6 +44,7 @@ Begin
  AddMsg( Lid, 31, '-E bnaam        Flasht bios image vanuit bestand bnaam automatisch' );
  AddMsg( Lid, 32, '                naar de flash ROM chip zonder verdere tussenkomst' );
 { AddMsg( Lid, 33, '-EXPERT         Geeft toegang tot uitgebreidere menu opties' );}
+ AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Flash naar een optie ROM op een PCI kaart' );
 { AddMsg( Lid, 35, '-DEBUG          Debugging mode. Toont meer systeem gegevens' );}
  AddMsg( Lid, 36, '-AMI            Forceer het gebruik van de AMI FLASH INTERFACE' );
@@ -64,7 +65,7 @@ Begin
  AddMsg( Lid, 51, '              Flash ROM chip: ' );
  AddMsg( Lid, 52, 'ONBEKEND' );
  AddMsg( Lid, 53, '                 Organisatie: ' );
- AddMsg( Lid, 54, 'nvt' );
+ AddMsg( Lid, 54, 'nvt (Is write protect disabled?)' ); {v1.23}
  AddMsg( Lid, 55, 'sectored: ' );
  AddMsg( Lid, 56, ' pagina''s van ' );
  AddMsg( Lid, 57, ' bytes' );
@@ -110,6 +111,8 @@ Begin
  AddMsg( Lid, 97, '' ); {->18}
  AddMsg( Lid, 98, 'Foutieve bestandsgrootte - moet exact ' );
  AddMsg( Lid, 99, ' bytes zijn !'#7 );
+ AddMsg( Lid, 100, 'Redetect Flash ROM' ); {v1.23}
+ AddMsg( Lid, 101, 'CMOS submenu ¯' ); {v1.23}
 { AddMsg( Lid, 100, 'BIOS Mfg: ' );
  AddMsg( Lid, 101, '   BIOS Model: ' );
  AddMsg( Lid, 102, '  Part number: ' );
@@ -122,4 +125,23 @@ Begin
  AddMsg( Lid, 109, '-SAVE bnaam     Schrijf huidige bios image naar bestand bnaam' );
  AddMsg( Lid, 110, 'This program can''t be run under Windows.' ); {v1.22}
  AddMsg( Lid, 111, 'PCI bus not found or not responding.' ); {v1.22}
+ AddMsg( Lid, 112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
+ AddMsg( Lid, 113, 'Flash ESCD (Plug & Play) data from file to Flash ROM' ); {v1.23}
+ AddMsg( Lid, 114, 'Clear ESCD (Plug & Play) data in Flash ROM' ); {v1.23}
+ AddMsg( Lid, 115, 'Flash BIOS image from file to Flash ROM including BootBlock' ); {v1.23}
+ AddMsg( Lid, 116, 'Write BootBlock to file' ); {v1.23}
+ AddMsg( Lid, 117, 'Flash BootBlock from file to Flash ROM' ); {v1.23}
+ AddMsg( Lid, 118, 'Save current CMOS settings to file' ); {v1.23}
+ AddMsg( Lid, 119, 'Restore CMOS settings from file' ); {v1.23}
+ AddMsg( Lid, 120, 'Clear CMOS settings' ); {v1.23}
+ AddMsg( Lid, 121, 'Restore backup CMOS settings from memory' ); {v1.23}
+ AddMsg( Lid, 122, 'Write backup BIOS image from memory to file' ); {v1.23}
+ AddMsg( Lid, 123, 'Flash BIOS image from file to Flash ROM (without BootBlock)' ); {v1.23}
+ AddMsg( Lid, 124, 'Flash backup BIOS image from memory to Flash ROM' ); {v1.23}
+ AddMsg( Lid, 125, 'Detect Flash ROM type and read its contents to backup in memory' ); {v1.23}
+ AddMsg( Lid, 126, 'Enter CMOS settings submenu...' ); {v1.23}
+ AddMsg( Lid, 127, 'Enter ESCD (PnP) submenu...' ); {v1.23}
+ AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
+ AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
+ AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}
 End.

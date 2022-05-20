@@ -1,4 +1,5 @@
 {$R-}
+{$I-}
 Unit Tools;
 
 Interface
@@ -9,7 +10,8 @@ WaitProc   = Procedure( MicroSec: LongInt ); {v1.22}
 PMenuItem  = ^MenuItem;
 MenuItem   = Record
               X, Y   : Byte;
-              Descr  : String[80];
+              Descr  : String[60]; {v1.23 80->60}
+              Help   : String[79]; {v1.23}
               Flags  : Byte;
               Action : Record
                         Case Integer of
@@ -22,8 +24,10 @@ MenuItem   = Record
              End;
 
 Const
+Version    = '1.23';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
+Logging    : Boolean = False; {v1.23}
 var Wait:WaitProc;
 
 Function ConstPtr( Const S : String ) : Pointer;
@@ -46,7 +50,7 @@ Procedure MoveLinBlockW( Src, Dest, Size : LongInt );
 Procedure FillLinBlockD( Dest, Size : LongInt; Data : Byte );
 Function CompLinBlocks( Block1, Block2, Size : LongInt ) : Boolean;
 Procedure SetMenuItemStatus( Menu : PMenuItem; YVal : Byte; Act : Boolean );
-Function AddMenuItem( Txt : String; RY : Byte; Flg : Byte;
+Function AddMenuItem( Txt, Hlp : String; RY, Flg : Byte;
                       Proc : Pointer; Nxt : PMenuItem ) : PMenuItem;
 Procedure RunMenu( Menu : PMenuItem );
 Procedure WrtProgressBar( Msg : String );
@@ -57,10 +61,15 @@ function zero2str(s,o : word) : string;
 {procedure cwriteln(c1,c2 : byte; s1,s2 : string);
 procedure cwrite(c1,c2 : byte; s1,s2 : string);}
 function strcomp(s1,s2 : string; b : byte) : boolean;
+function _ReadKey:Char; {v1.23}
+function _Str(I:LongInt):String; {v1.23}
+procedure LogWrite(S:String); {v1.23}
+procedure LogStart; {v1.23}
+procedure LogEnd; {v1.23}
 
 Implementation
 
-Uses Crt;
+Uses Crt,Dos;
 
 Const
 MTop    = 10{9}; {v1.22}
@@ -73,6 +82,9 @@ XMMRtn    : LongInt;
 CurMenu   : PMenuItem;
 MicroSec  : Word;
 TSC,uSec  : LongInt; {v1.22}
+Ext       : Char; {v1.23}
+History   : String[2]; {v1.23}
+Shift     : Boolean; {v1.23}
 
 Function ConstPtr( Const S : String ) : Pointer;
 Begin
@@ -579,7 +591,7 @@ Asm
 @@2:
 End;
 
-Function AddMenuItem( Txt : String; RY : Byte; Flg : Byte;
+Function AddMenuItem( Txt, Hlp : String; RY, Flg : Byte;
                       Proc : Pointer; Nxt : PMenuItem ) : PMenuItem;
 Var
 This : PMenuItem;
@@ -591,6 +603,7 @@ Begin
    X := ( 78 - Length( Txt ) ) shr 1;
    Y := RY;
    Descr := ' ' + Txt + ' ';
+   Help := Hlp;
    Flags := Flg;
    Action.T := Proc;
    Next := Nxt;
@@ -668,20 +681,26 @@ Begin
     With CurItem^ do
      Begin
       GotoXY( X, Y + MTop );
-      If ( Flags and 1 ) <> 0 then TextColor( 15 ) else TextColor( 7 );
-      TextBackGround( 0 );
+      If ( Flags and 1 ) <> 0 then TextColor( White ) else TextColor( LightGray );
+      TextBackGround( Black );
       Write( Descr );
      End;
     With NewItem^ do
      Begin
       GotoXY( X, Y + MTop );
-      If ( Flags and 1 ) <> 0 then TextColor( 15 ) else TextColor( 7 );
-      TextBackGround( 12 );
+      If ( Flags and 1 ) <> 0 then TextColor( White ) else TextColor( LightGray );
+      TextBackGround( LightRed );
       Write( Descr );
+      GotoXY( 1,25 ); {v1.23}
+      If ( Flags and 1 ) <> 0 then TextColor( LightGreen ) else TextColor( Green );
+      TextBackGround( Black );
+      ClrEol; {v1.23}
+      Write( Help ); {v1.23}
+      GotoXY( X, Y + MTop ); {v1.23}
      End;
     CurItem := NewItem;
    End;
-  A := ReadKey;
+  A := _ReadKey; {v1.23}
   Case A of
    #27 : Done := True;
    #13 : If CurItem^.Action.T = Nil then Done := True
@@ -723,7 +742,7 @@ Begin
             End;
           End;
    #0  : Begin
-          A := ReadKey;
+          A := _ReadKey; {v1.23}
           Case A of
            #80 : If CurItem^.Next <> Nil then NewItem := CurItem^.Next;
            #72 : If CurItem^.Prev <> Nil then NewItem := CurItem^.Prev;
@@ -876,6 +895,116 @@ textcolor(c2);
 write(s2);
 end;}
 
+function Time:String; {v1.23}
+var Hour,Min,Sec,Sec100:Word;
+    S,S1:String;
+begin
+  GetTime(Hour,Min,Sec,Sec100);
+  Str(Hour,S);
+  if Length(S)<2 then S:='0'+S;
+  S1:=S;
+  Str(Min,S);
+  if Length(S)<2 then S:='0'+S;
+  S1:=S1+':'+S;
+  Str(Sec,S);
+  if Length(S)<2 then S:='0'+S;
+  S1:=S1+':'+S;
+  Str(Sec100,S);
+  if Length(S)<2 then S:='0'+S;
+  S1:=S1+'.'+S;
+  Time:=S1;
+end;
+
+function _Str(I:LongInt):String;
+var S:String;
+begin
+ Str(I,S);
+ _Str:=S;
+end;
+
+procedure LogWrite(S:String); {v1.23}
+var F : Text;
+begin
+ if Logging then
+  Begin
+   Assign( F, 'UNIFLASH.LOG');
+   Append( F );
+   if IOResult <> 0 then ReWrite( F );
+   WriteLn( F, Time,': ',S);
+   Close(F);
+  End;
+end;
+
+procedure LogStart; {v1.23}
+var S:String;
+    A:Byte;
+begin
+ S:='';
+ for A:=0 to ParamCount do S:=S+ParamStr(A)+' ';
+ Delete(S,Length(S),1);
+ LogWrite('UniFlash v'+Version+' started: '+S);
+end;
+
+procedure LogEnd; {v1.23}
+var F : Text;
+    A : Byte;
+begin
+ if Logging then
+  Begin
+   Assign( F, 'UNIFLASH.LOG');
+   Append( F );
+   for A := 1 to 78 do Write(F, '-');
+   WriteLn(F);
+   Close(F);
+  End;
+end;
+
+procedure ClrKbBuf; {v1.23}
+begin
+  MemW[$40:$1A]:=MemW[$40:$80]; {Next char := Buffer beginning}
+  MemW[$40:$1C]:=MemW[$40:$80]; {First free char := Buffer beginning}
+end;
+
+function _ReadKey:Char; {v1.23}
+var A,Z:Byte;
+const KeyTable:string[127]=#27'1234567890-='#8#9'qwertyuiop[]'#13#0'asdfghjkl;''`'#0'\zxcvbnm,./'#0'*'#0' '#0;
+ KeyTableShift:string[127]=#27'!@#$%^&*()_+'#8#9'QWERTYUIOP{}'#13#0'ASDFGHJKL:"~'#0'|ZXCVBNM<>?'#0#0#0' '#0;
+begin
+  ClrKbBuf;
+  if Ext<>#0 then
+   begin
+     _ReadKey:=Ext;
+     Ext:=#0;
+     Exit;
+   end;
+  A:=Port[$60];
+  if (History[1]<>History[2]) and (Char(A)=History[2]) then
+   begin
+    for Z:=1 to 250 do
+     begin
+       Delay(1);
+       if A<>Port[$60] then Break;
+     end;
+   end
+  else Delay(50);
+  repeat
+    A:=Port[$60];
+    if (A=42) or (A=54) then begin Shift:=True; Continue; end;
+    if (A=170) or (A=182) then begin Shift:=False; Continue; end;
+    if (A>127) then History[2]:=#0;
+    if (A>58) and (A<128) then
+     begin
+       Ext:=Char(A);
+       _ReadKey:=#0;
+       History[1]:=History[2];
+       History[2]:=Char(A);
+       Exit;
+     end;
+  until (A<128) and (A>0) and (KeyTable[A]<>#0);
+  if Shift then _ReadKey:=KeyTableShift[A] else _ReadKey:=KeyTable[A];
+  History[1]:=History[2];
+  History[2]:=Char(A);
+end;
 
 function strcomp(s1,s2 : string; b : byte) : boolean;
 var i : byte;

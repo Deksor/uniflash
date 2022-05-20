@@ -1,4 +1,5 @@
-{$M 32384, 4096, 4096}
+{.$M 32384, 4096, 4096}
+{$M 8192, 0, 16384}
 {$I-}
 {$S-}
 {$R-}
@@ -9,7 +10,7 @@ Uses Crt, Dos,
      Flash, Pci, Tools, GenFlash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
-     Language, English, French, Dutch;
+     Language, English, French, Dutch, Italian;
 
 
 Const
@@ -17,7 +18,6 @@ Emergency   : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
 AutoSave    : Boolean = False;
-Version     = '1.22';
 ForceId     : Boolean = False;
 
 Var
@@ -82,7 +82,7 @@ Begin
  GotoXY(13,Y+1+l);
  Write(Txt);
  repeat
-  Answer:=UpCase( ReadKey );
+  Answer:=UpCase( _ReadKey );
  until ( Answer = AnswYes ) or ( Answer = AnswNo );
  AskFor2:= Answer = AnswYes;
  WriteLn;
@@ -327,6 +327,7 @@ X : LongInt;
 Begin
  Repeat
   FlashBlock( BIOS, Start, Size );
+  LogWrite('Flashing '+_Str(Size)+'b long BIOS image to '+_Str(Start)); {v1.23}
   WrtProgressBar( Msg( 3 ) );
   VErr := False;
   For X := 0 to 31 do
@@ -345,7 +346,7 @@ Begin
     GotoXY( 2, 22 );
     If Emergency then Sound( 1000 ) else Write( #7 );
     Write( Msg( 4 ) );
-    Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+    Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
     If Emergency then NoSound;
     GotoXY( 11, 22 );
     ClrEol;
@@ -357,7 +358,9 @@ Begin
    Beep(  500, 100 );
    Beep( 1000, 100 );
    Beep( 1500, 100 );
+   LogWrite('Flashing completed successfully'); {v1.23}
   End;
+ if VErr then LogWrite('Flashing failed'); {v1.23}
 End;
 
 
@@ -366,6 +369,8 @@ Var
 X, Pos : LongInt;
 
 Begin
+ if BB then LogWrite('Flashing BIOS including BootBlock')
+  else LogWrite('Flashing BIOS without BootBlock'); {v1.23}
  X := 0;
  While ( X < FileSize( IFile ) ) do
   Begin
@@ -391,7 +396,7 @@ Begin
      TextColor( 12 );
      GotoXY( 2, 22 );
      Write( Msg( 5 ) );
-     Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
      GotoXY( 2, 22 );
      ClrEol;
      If A = AnswNo then
@@ -449,6 +454,7 @@ Begin
 
  GotoXY( 11, 20 );
  ClrEol;
+ LogWrite('BIOS image saved to file '+IName); {v1.23}
 End;
 
 
@@ -481,7 +487,7 @@ Begin
      TextColor( 12 );
      GotoXY( 11, 22 );
      Write( Msg( 9 ) );
-     Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
      GotoXY( 11, 22 );
      ClrEol;
      If A = AnswNo then
@@ -497,7 +503,7 @@ Begin
      TextColor( 12 );
      GotoXY( 11, 22 );
      Write( Msg( 10 ) );
-     Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
      GotoXY( 11, 22 );
      ClrEol;
      If A = AnswNo then
@@ -582,7 +588,7 @@ Begin
       ClrEol;
       exit;
       end;
-
+   LogWrite('Flashing '+Typ+' data from '+IName); {v1.23}
    FlashBIOSImg( ( LongInt( Seg( BIOSBlk ) ) shl 4 ) + LongInt( Ofs( BIOSBlk ) ),
                  Pos - FlashBase, 4096 );
    SetMenuItemStatus( MainMenu, 2, True );
@@ -623,11 +629,12 @@ Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 16 ), Typ, Msg( 17 ) );
- Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+ Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 11, 22 );
  ClrEol;
  If A = AnswYes then
   Begin
+   LogWrite('Clearing '+Typ+' data in Flash ROM'); {v1.23}
    FillChar( BIOSBlk, 4096, $FF );
    FlashBIOSImg( ( LongInt( Seg( BIOSBlk ) ) shl 4 ) + LongInt( Ofs( BIOSBlk ) ),
                  Pos - FlashBase, 4096 );
@@ -685,6 +692,7 @@ Begin
 
  GotoXY( 11, 20 );
  ClrEol;
+ LogWrite(Typ+' data saved to '+IName); {v1.23}
 End;
 
 Procedure WritePnP; Far;
@@ -723,6 +731,7 @@ Begin
 
  GotoXY( 11, 20 );
  ClrEol;
+ LogWrite('BootBlock backup saved to '+IName);
 End;
 
 Procedure FlashBootBlk; Far;
@@ -761,7 +770,7 @@ Begin
    TextColor( 12 );
    GotoXY( 11, 22 );
    Write( Msg( 10 ) );
-   Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+   Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
    GotoXY( 11, 22 );
    ClrEol;
    If A = AnswNo then
@@ -773,6 +782,7 @@ Begin
     End;
 
    BlockRead( IFile, BIOSBlk, 8192 );
+   LogWrite('Flashing BootBlock from '+IName); {v1.23}
    FlashBIOSImg( ( LongInt( Seg( BIOSBlk ) ) shl 4 ) + LongInt( Ofs( BIOSBlk ) ),
                  $FFFFE000 - FlashBase, 8192 );
    SetMenuItemStatus( MainMenu, 2, True );
@@ -802,11 +812,12 @@ Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 20 ) );
- Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+ Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 11, 22 );
  ClrEol;
  If A = AnswYes then
   Begin
+   LogWrite('Flashing backup BIOS to Flash ROM'); {v1.23}
    FlashBIOSImg( OldBIOS, 0, FlashSize - 8192 );
    SetMenuItemStatus( MainMenu, 2, False );
   End;
@@ -851,7 +862,7 @@ Begin
  TextColor( 12 );
  GotoXY( 2, 22 );
  Write( Msg( 21 ) );
- Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+ Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 2, 22 );
  ClrEol;
  If A = AnswYes then
@@ -884,6 +895,7 @@ Begin
    ClrEol;
    SetMenuItemStatus( MainMenu, 4, True );
   End;
+ LogWrite('CMOS settings cleared'); {v1.23}
 End;
 
 
@@ -918,6 +930,7 @@ Begin
  Close( IFile );
  GotoXY( 11, 20 );
  ClrEol;
+ LogWrite('CMOS settings saved to '+IName); {v1.23}
 End;
 
 {Read CMOS data from disk}
@@ -976,6 +989,7 @@ Begin
   End;
  GotoXY( 11, 20 );
  ClrEol;
+ LogWrite('CMOS settings restored from '+IName); {v1.23}
 End;
 
 
@@ -988,7 +1002,7 @@ Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 27 ) );
- Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+ Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 11, 22 );
  ClrEol;
  If A = AnswYes then
@@ -1015,16 +1029,18 @@ Begin
     End else
     Begin
      Write( Msg( 26 ) );
-     ReadKey;
+     _ReadKey;
     End;
    GotoXY( 11, 22 );
    ClrEol;
   End;
  SetMenuItemStatus( MainMenu, 4, False );
+ LogWrite('CMOS settings restored from backup in memory'); {v1.23}
 End;
 
 Procedure MyExitProc; Far;
 Begin
+ LogWrite('Exiting UniFlash...');
  If PCIOrEn then
   Begin
    SetPCIRegD( ORBus, ORDev, ORFun, $04, PCIReg4 );
@@ -1032,6 +1048,8 @@ Begin
   End;
  TextColor( LightGray );
  RomEnable( Unmap );
+ LogWrite('Turning off logging, shutting down to real mode');
+ LogEnd;
  FlatRealOff;
  ExitProc := OldExitProc;
  Y := WhereY;
@@ -1053,6 +1071,7 @@ Begin
  WriteLn;
  WriteLn;
  textcolor(lightred);
+ LogWrite( Msg ); {v1.23}
  WrtCenter( #7 + Msg );
  textcolor(lightgray);
  If Emergency then Sound( 1000 );
@@ -1124,7 +1143,7 @@ begin
   if not Redir and ( Count >= Hi( WindMax ) ) then
    Begin
     Write( '-- More --' );
-    ReadKey;
+    _ReadKey;
     WriteLn;
     Count:=0;
    End;
@@ -1163,7 +1182,7 @@ Begin
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
  TextColor(LightGray);
 
- SetLanguage( 1 ); {default = English}
+ CurLang := 1; {default = English}
  If ( ParamCount > 0 ) then
   Begin
    PStr := OpStr( ParamStr( 1 ) );
@@ -1173,16 +1192,16 @@ Begin
      WriteLn;
      WrtCenter( 'Languages supported in this version:' );
      WriteLn;
-     For X := 1 to GetLangCount do
+     For X := 1 to LangCount do
       WrtCenter( Char( X + Ord( '0' ) ) + '. ' + GetLangName( X ) );
      WriteLn;
      WrtCenter( 'Use UNIFLASH /x [other options] where x is the language number.' );
      WriteLn;
      Halt;
     End;
-   If PStr[ 1 ] in [ '1' .. Char( GetLangCount + Byte( '0' ) ) ] then
+   If PStr[ 1 ] in [ '1' .. Char( LangCount + Byte( '0' ) ) ] then
     Begin
-     SetLanguage( Byte( PStr[ 1 ] ) - Byte( '0' ) ); {Set language}
+     CurLang := Byte( PStr[ 1 ] ) - Byte( '0' ); {Set language}
      X := 2;
     End else X := 1;
   End;
@@ -1205,7 +1224,7 @@ Begin
      WriteLn;
      WriteLn;
      WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
-     WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx]' );
+     WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]' );
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
@@ -1220,6 +1239,7 @@ Begin
     End else
    If PStr = 'PCIOR' then PCIOR := True else
    If PStr = 'AMI' then WantToUseAmi := True else
+   If PStr = 'LOG' then Logging := True else {v1.23}
    If PStr = 'CHIPLIST' then
     Begin
      WriteLnStd( '' );
@@ -1267,17 +1287,21 @@ Begin
    Inc( X );
   End;
 
+ LogStart; {v1.23}
+
  If Windows then Err( Msg( 110 ) ); {v1.22}
 
  If not LocatePIIX then { Sets address of PIIX } {v1.22 moved here}
   Err( Msg( 111 ) ); {v1.22}
+
+ LogWrite( 'Chipset detected: ' + CurrentChipset ); {v1.23}
 
  InitXMS; {Init memory subsystem. Should be done before FlatRealOn}
  If XMSLeft = -1 then
   Err( Msg( 37 ) );
 
  If not FlatRealOn then
-  Err( Msg( 38 ) );
+  Err( Msg( 38 ) ) else LogWrite('Flat Real Mode initialized'); {v1.23}
 
  {Allocate high memory if XMS not present}
  AllocHimem;
@@ -1370,7 +1394,7 @@ Begin
      GotoXY( 19, WhereY - 1 );
      SelA := '0';
      Repeat
-      A := ReadKey;
+      A := _ReadKey;
       If ( A >= '0' ) and ( A <= Char( 48 + OPRCnt ) ) then
        Begin
         SelA := A;
@@ -1405,9 +1429,13 @@ Begin
      ClrScr;
      Window( 1, 1, 80, 25 );
      GotoXY( 1, 3 );
-
+     LogWrite( 'PCI expansion ROM at '+Hb(ORBus)+':'+Hb(ORDev)+':'+Hb(ORFun)+' selected' ); {v1.23}
     End else Err( Msg( 45 ) );
-  End else RomEnable( Map ); {Program the chipset so it lets you see the BIOS}
+  End else
+   Begin
+    RomEnable( Map ); {Program the chipset so it lets you see the BIOS}
+    LogWrite( 'System ROM selected' ); {v1.23}
+   End;
 
  If ForceId then
   Begin
@@ -1488,9 +1516,17 @@ Begin
      If Count > 1 then Write( Count, ' x ' );
      Write( Manuf^, ' ', Name^ );
     End;
-   If ForceId then Write( ' (forced)' );
+   If ForceId then
+    begin
+      Write( ' (forced)' );
+      LogWrite('Flash ROM chip forced: '+Manuf^+' '+Name^); {v1.23}
+    end
+   else
+    if FlashError=0 then LogWrite('Flash ROM chip detected: '+Manuf^+' '+Name^) {v1.23}
+     else LogWrite( 'Flash ROM chip not detected' ); {v1.23}
    GotoXY( 1, 5 ); {v1.21}
    Write(' (' + Hb( Man1 ) + Hb( Dev1 ) + ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
+   LogWrite('Flash ROM ID: '+Hb(Man1)+HB(Dev1)+','+Hb(Man2)+Hb(Dev2)); {v1.23}
 
    GotoXY( 2, 6 );
    TextColor(yellow);
@@ -1540,6 +1576,7 @@ Begin
 
  If Emergency then
   Begin
+   LogWrite('Entering emergency mode');
    If FlashError <> 0 then Err( Msg( 60 ) );
    Beep( 1000, 500 ); {single beep, start reading}
    Assign( IFile, EmFName );
@@ -1602,34 +1639,34 @@ Begin
 
  textcolor(WHITE);
 
- PnPDMIMenu := AddMenuItem( Msg( 73 ), 0, 1, @WritePnp,
-               AddMenuItem( Msg( 74 ), 1, 1, @FlashPnp,
-               AddMenuItem( Msg( 75 ), 2, 1, @ClearPnp,
+ PnPDMIMenu := AddMenuItem( Msg( 73 ), Msg( 112 ), 0, 1, @WritePnp,
+               AddMenuItem( Msg( 74 ), Msg( 113 ), 1, 1, @FlashPnp,
+               AddMenuItem( Msg( 75 ), Msg( 114 ), 2, 1, @ClearPnp,
 (*               AddMenuItem( Msg( 76 ), 4, 1, @WriteDMI,
                AddMenuItem( Msg( 77 ), 5, 1, @FlashDMI,
                AddMenuItem( Msg( 78 ), 6, 1, @ClearDMI,*)
-               AddMenuItem( Msg( 79 ), 4, 1, Nil, Nil ) ) ) ) {) ) )};
+               AddMenuItem( Msg( 79 ), Msg( 130 ), 4, 1, Nil, Nil ) ) ) ) {) ) )};
 
- AdvMenu := AddMenuItem( Msg( 82 ), 0, 1, @FlashBIOSBB,
-            AddMenuItem( Msg( 83 ), 1, 1, @WriteBootBlk,
-            AddMenuItem( Msg( 84 ), 2, 1, @FlashBootBlk,
-            AddMenuItem( Msg( 79 ), 4, 1, Nil, Nil ) ) ) );
+ AdvMenu := AddMenuItem( Msg( 82 ), Msg( 115 ), 0, 1, @FlashBIOSBB,
+            AddMenuItem( Msg( 83 ), Msg( 116 ), 1, 1, @WriteBootBlk,
+            AddMenuItem( Msg( 84 ), Msg( 117 ), 2, 1, @FlashBootBlk,
+            AddMenuItem( Msg( 79 ), Msg( 130 ), 4, 1, Nil, Nil ) ) ) );
 
- CMOSMenu := AddMenuItem( Msg( 80 ), 0, 1, @SaveCMOS,
-             AddMenuItem( Msg( 81 ), 1, 1, @RestoreCMOS,
-             AddMenuItem( Msg( 88 ), 2, 1, @ClearCMOS,
-             AddMenuItem( Msg( 89 ), 3, 0, @WrtOldCMOS,
-             AddMenuItem( Msg( 79 ), 5, 1, Nil, Nil ) ) ) ) );
+ CMOSMenu := AddMenuItem( Msg( 80 ), Msg( 118 ), 0, 1, @SaveCMOS,
+             AddMenuItem( Msg( 81 ), Msg( 119 ), 1, 1, @RestoreCMOS,
+             AddMenuItem( Msg( 88 ), Msg( 120 ), 2, 1, @ClearCMOS,
+             AddMenuItem( Msg( 89 ), Msg( 121 ), 3, 0, @WrtOldCMOS,
+             AddMenuItem( Msg( 79 ), Msg( 130 ), 5, 1, Nil, Nil ) ) ) ) );
 
- MainMenu := AddMenuItem( Msg( 85 ), 0, 1, @WriteBIOSImg,
-             AddMenuItem( Msg( 86 ), 1, 1, @FlashBIOS,
-             AddMenuItem( Msg( 87 ), 2, 0, @FlashOldBIOS,
-             AddMenuItem( 'Redetect Flash ROM', 3, 0, @RedetectFlashROM,
-             AddMenuItem( 'CMOS submenu ¯', 4, 3, CMOSMenu,
-             AddMenuItem( Msg( 90 ), 5, 3, PnPDMIMenu,
-             AddMenuItem( Msg( 91 ), 6, 3, AdvMenu,
+ MainMenu := AddMenuItem( Msg( 85 ),  Msg( 122 ), 0, 1, @WriteBIOSImg,
+             AddMenuItem( Msg( 86 ),  Msg( 123 ), 1, 1, @FlashBIOS,
+             AddMenuItem( Msg( 87 ),  Msg( 124 ), 2, 0, @FlashOldBIOS,
+             AddMenuItem( Msg( 100 ), Msg( 125 ), 3, 0, @RedetectFlashROM,
+             AddMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
+             AddMenuItem( Msg( 90 ),  Msg( 127 ), 5, 3, PnPDMIMenu,
+             AddMenuItem( Msg( 91 ),  Msg( 128 ), 6, 3, AdvMenu,
 {             AddMenuItem( Msg( 92 ), 7, 1, @BIOSInfo,}
-             AddMenuItem( Msg( 93 ), 8, 1, Nil, Nil ) ) ) ) ) ) ) );
+             AddMenuItem( Msg( 93 ),  Msg( 129 ), 8, 1, Nil, Nil ) ) ) ) ) ) ) );
 
  If FlashInfo = Nil then
   Begin
@@ -1650,7 +1687,7 @@ Begin
    SetMenuItemStatus( MainMenu, 5, False );
    SetMenuItemStatus( MainMenu, 6, False );
   End;
-
+ LogWrite('UniFlash running in interactive mode'); {v1.23}
  VErr := False;
  Repeat
   RunMenu( MainMenu );
@@ -1659,7 +1696,7 @@ Begin
     TextColor( 12 );
     GotoXY( 11, 22 );
     Write( Msg( 94 ) );
-    Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+    Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
     GotoXY( 11, 22 );
     ClrEol;
    End;

@@ -6,17 +6,17 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Procedure Unprotect( SAddr : LongInt ); { Rainbow }
+Procedure Unprotect( SAddr : LongInt ); {v1.18}
 Begin
  FOMemB((SAddr and $FFFF0000)-$3FFFFE,0); {Disable Write-Lock}
 End;
 
-Procedure Protect( SAddr : LongInt ); { Rainbow }
+Procedure Protect( SAddr : LongInt ); {v1.18}
 Begin
  FOMemB((SAddr and $FFFF0000)-$3FFFFE,1); {Enable Write-Lock}
 End;
 
-Procedure IntelSecEraseU( SAddr : LongInt ); Far; { Rainbow }
+Procedure IntelSecEraseU( SAddr : LongInt ); Far; {v1.18}
 Begin
  {Unprotect}
  Unprotect( SAddr );
@@ -25,7 +25,7 @@ Begin
  Protect( SAddr );
 End;
 
-Procedure IntelSecProgU( Pos, Data : LongInt ); Far; { Rainbow }
+Procedure IntelSecProgU( Pos, Data : LongInt ); Far; {v1.18}
 Begin
  {Unprotect}
  Unprotect( Pos );
@@ -219,7 +219,7 @@ Begin
            Size := 256;
            Name := ConstPtr( '28F002-B series (12V/5V)' );
           End;
-    $2D : Begin { Rainbow }
+    $2D : Begin {v1.18}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProgU;
@@ -230,7 +230,7 @@ Begin
            Size := 512; {4Mb}
            Name := ConstPtr( '82802AB/3.3V (Firmware Hub)' );
           End;
-    $2C : Begin { Rainbow }
+    $2C : Begin {v1.18}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProgU;

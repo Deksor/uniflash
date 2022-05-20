@@ -64,7 +64,7 @@ Begin
            Progr := AtWordProg;
            Erase := AtBulkErase;
           End;
-    $08 : Begin { Rainbow }
+    $08 : Begin {v1.18}
            Name := ConstPtr( 'AT49F002(N)T/5V' ); { N has no RESET pin }
            Flags := 2; {bulk erase}
            PgSize := 128; { whatever }

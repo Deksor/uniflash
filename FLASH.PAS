@@ -10,7 +10,7 @@ ChipInfo   = Record
               Name    : ^String;
               Erase   : Fl_Erase;
               Progr   : Fl_Program;
-              Sectors : ARRAY[ 0 .. 3, 0 .. 1 ] of Byte; { 4 Rainbow }
+              Sectors : ARRAY[ 0 .. 3, 0 .. 1 ] of Byte;
               Size    : Word;
               PgSize  : Word;
               Flags   : Byte;

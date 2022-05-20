@@ -17,7 +17,7 @@ Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
 AutoSave    : Boolean = False;
-Version     = '1.18';
+Version     = '1.19';
 ForceId     : Boolean = False;
 
 Var

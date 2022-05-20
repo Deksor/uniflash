@@ -370,6 +370,15 @@ This is old info and some of the addresses below are probably dead:
 
 9.0            Revision info
 ----------------------------
+1.19           -added support for Intel 8xx chipsets (Hub Architecture):
+                i810,810E,810E2,815,815E(P),815EM,820,820E,840,850
+                with these I/O controller hubs:
+                82801AA(ICH),82801AB(ICH0),82801BA(ICH2),82801BAM(ICH2-M)
+                (they're all not tested)
+               -fixed ALi chipset detection
+               -M1543 now support 512KB ROMs, but only some revisions of
+                this chip can really support them (and according to ALi, there
+                is no software way to detect that)
 1.18           -I (Rainbow Software) am continuing the development of this
                 program after it was abandoned for two years
                -added support for i440BX/ZX and i440GX chipsets

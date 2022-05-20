@@ -21,7 +21,7 @@ MenuItem   = Record
 
 Const
 XMSLeft    : LongInt = 0;
-XMSPos  : LongInt = 0;
+XMSPos     : LongInt = 0;
 
 Function ConstPtr( Const S : String ) : Pointer;
 Function FIMemB( Addr : LongInt ) : Byte;
@@ -49,13 +49,17 @@ Procedure WrtProgressBar( Msg : String );
 Procedure ClearProgressBar;
 Procedure Beep( Hz, Ms : Word );
 Procedure Wait( MiSec : LongInt );
-Function AskFor(l : byte;txt : string) : boolean;
+function zero2str(s,o : word) : string;
+procedure cwriteln(c1,c2 : byte; s1,s2 : string);
+procedure cwrite(c1,c2 : byte; s1,s2 : string);
+function strcomp(s1,s2 : string; b : byte) : boolean;
+
 Implementation
 
 Uses Crt;
 
 Const
-MTop    = 10;
+MTop    = 9;
 XMSHnd  : Word = 0;
 
 Var
@@ -140,7 +144,6 @@ Begin
 End;
 
 Function Hl( L : Longint ) : String;
-var abc : byte;
 Begin
  Hl := Hw( L shr 16 ) + hw(l);
 End;
@@ -634,6 +637,7 @@ Begin
     GotoXY( X, Y + MTop );
     If ( Flags and 1 ) <> 0 then TextColor( 15 ) else TextColor( 7 );
     Write( Descr );
+
     CurItem := Next;
    End;
  CurItem := Nil;
@@ -809,27 +813,48 @@ Asm
         POPF
 End;
 
-Function AskFor(l : byte;txt : string) : boolean;
-var x,y,x2,y2 : byte;
-answer : char;
+function zero2str(s, o : word) : string;
+var outstr : string;
+i,c : byte;
 begin
-Askfor:=false;
-x:=wherex;
-y:=wherey;
-gotoxy(13,y+1+l);
-write(txt);
-repeat
-answer:=readkey;
-until (upcase(answer)='Y') or (upcase(answer)='N') or (upcase(answer)='O')
-       or (upcase(answer)='N');
-If (upcase(answer)='Y') or (upcase(answer)='O') then askfor:=true;
-write(#13#10);
-x2:=wherex;
-y2:=wherey;
-gotoxy(13,y+1+l);
-clreol;
-gotoxy(x,y);
+i:=0;
+c:=0;
+outstr[0]:=#0;
+while (mem[s:o+i]<>0) and (i<255) do
+      begin
+      inc(c);
+      outstr[1+i]:=char(mem[s:o+i]);
+      inc(i);
+      end;
+outstr[0]:=#0;
+zero2str:=outstr;
 end;
+
+procedure cwriteln(c1,c2 : byte; s1,s2 : string);
+begin
+textcolor(c1);
+write(s1);
+textcolor(c2);
+writeln(s2);
+end;
+
+procedure cwrite(c1,c2 : byte; s1,s2 : string);
+begin
+textcolor(c1);
+write(s1);
+textcolor(c2);
+write(s2);
+end;
+
+
+function strcomp(s1,s2 : string; b : byte) : boolean;
+var i : byte;
+begin
+strcomp:=true;
+for i:=1 to b do
+    if s1[i]<>s2[i] then strcomp:=false;
+end;
+
 
 Begin
  MicroSec := 312785 div CalibrateWait;

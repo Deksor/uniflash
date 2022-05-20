@@ -30,7 +30,7 @@ Begin
   {Specific}
    Case DevId of
     $41 : Begin
-           Name := ConstPtr( 'W29EE011/5V' );
+           Name := ConstPtr( 'W29EE011/5V or W29C010/5V' );
            Size := 128;
           End;
     $45 : Begin

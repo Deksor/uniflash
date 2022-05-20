@@ -1,8 +1,13 @@
-{$M 16384, 4096, 4096}
+{$M 32384, 4096, 4096}
 {$I-}
-Uses Crt,Flash,Pci,Tools, GenFlash, Atmel,
-     SST, Winbond, AMD, Intel,
-     Catalyst, Macronix;
+{$S-}
+Program Uniflash;
+
+Uses Crt, Dos,
+     Flash,Pci,Tools, GenFlash,
+     Intel, Atmel, SST, Winbond, AMD,
+     Catalyst, Macronix,
+     Language, English, French, Dutch;
 
 
 Const
@@ -11,9 +16,12 @@ Emergency   : Boolean = False;
 Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
-Version     = '1.16c';
+AutoSave    : Boolean = False;
+Version     = '1.17b';
+ForceId     : Boolean = False;
 
 Var
+M, D,
 CurOp,
 ORBus, OrDev,
 ORFun, Z,
@@ -25,6 +33,7 @@ OldBIOS,
 NewBIOS     : LongInt;
 FlashBase,
 FlashSize   : LongInt;
+X2,Y2       : Longint;
 AdvMenu,
 PnPDMIMenu,
 MainMenu    : PMenuItem;
@@ -54,6 +63,42 @@ OpROM       : ARRAY[ 1 .. 20 ] of
                 Bus,
                 Pos     : Byte;
                End;
+AnswYes,
+AnswNo      : Char;
+StdOut      : Text;
+StdOutRec   : TextRec absolute StdOut;
+ForceIdVal  : Word;
+
+Function AskFor2(l : byte;txt : string) : boolean;
+var x,y,x2,y2 : byte;
+answer : char;
+begin
+Askfor2:=true;
+x:=wherex;
+y:=wherey;
+gotoxy(13,y+1+l);
+write(txt);
+repeat
+answer:=Upcase( readkey );
+until ( answer = AnswYes ) or ( Answer = AnswNo );
+askfor2:= Answer = AnswYes;
+writeln;
+x2:=wherex;
+y2:=wherey;
+gotoxy(13,y+1+l);
+clreol;
+gotoxy(x,y);
+end;
+
+Function AskFor(l : byte;txt : string) : boolean;
+Var x,y : byte;
+
+begin
+ x:=wherex;
+ y:=wherey;
+ AskFor := AskFor2( l, txt );
+ gotoxy( x,y );
+end;
 
 Procedure FlashBlock( Block, Start, Size : LongInt );
 Var
@@ -113,7 +158,7 @@ Begin
      {Might need blanking prior to erase}
      If ( FlashInfo^.Flags and 4 ) <> 0 then
       Begin
-       WrtProgressBar( 'Blanking in progress' );
+       WrtProgressBar( Msg( 1 ) );
        FillLinBlockD( TempBuf, FlashInfo^.PgSize, 0 );
        UpdStat := ( FlashSize div FlashInfo^.PgSize + 31 ) shr 5;
        NxtUpd := UpdStat;
@@ -129,7 +174,7 @@ Begin
         End;
       End;
     End;
-   WrtProgressBar( 'Flashing in progress' );
+   WrtProgressBar( Msg( 2 ) );
    SPos := 0;
    While Start >= SStarts[ SPos + 1 ] do Inc( SPos ); {Find starting sector}
 
@@ -222,7 +267,7 @@ Begin
   Begin
    UpdStat := ( Size div FlashInfo^.PgSize + 31 ) shr 5;
    NxtUpd := UpdStat;
-   WrtProgressBar( 'Flashing in progress' );
+   WrtProgressBar( Msg( 2 ) );
 
    {Write first unaligned and/or partial page if necessary}
    If ( ( Start and ( FlashInfo^.PgSize - 1 ) ) <> 0 )
@@ -277,7 +322,7 @@ X : LongInt;
 Begin
  Repeat
   FlashBlock( BIOS, Start, Size );
-  WrtProgressBar( 'Verifying data' );
+  WrtProgressBar( Msg( 3 ) );
   VErr := False;
 {writeln(hl(X * ( Size shr 5 ) + FlashBase + Start),' ',hl(X * ( Size shr 5 ) + BIOS));}
   For X := 0 to 31 do
@@ -294,15 +339,15 @@ Begin
   If VErr then
    Begin
     TextColor( 12 );
-    GotoXY( 11, 22 );
+    GotoXY( 2, 22 );
     If Emergency then Sound( 1000 ) else Write( #7 );
-    Write( 'FLASH DATA VERIFICATION ERROR. RETRY WRITE OPERATION [Y/N]?' );
-    Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+    Write( Msg( 4 ) );
+    Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
     If Emergency then NoSound;
     GotoXY( 11, 22 );
     ClrEol;
    End;
- Until ( not VErr ) or ( A = 'N' );
+ Until ( not VErr ) or ( A = AnswNo );
  ClearProgressBar;
 End;
 
@@ -335,14 +380,14 @@ Begin
       not CompLinBlocks( $FFFFE000, NewBios + FlashSize - 8192, 8192 ) then
     Begin
      TextColor( 12 );
-     GotoXY( 11, 22 );
-     Write( 'WARNING: BOOTBLOCK MISMATCH !! PROCEED ANYWAY [Y,N]?' );
-     Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
-     GotoXY( 11, 22 );
+     GotoXY( 2, 22 );
+     Write( Msg( 5 ) );
+     Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+     GotoXY( 2, 22 );
      ClrEol;
-     If A = 'N' then
+     If A = AnswNo then
       Begin
-       GotoXY( 11, 20 );
+       GotoXY( 2, 20 );
        ClrEol;
        Exit;
       End;
@@ -361,30 +406,37 @@ IFile : File;
 X     : LongInt;
 
 Begin
- GotoXY( 11, 20 );
- Write( 'Image file name: ' );
- ReadLn( IName );
- Assign( IFile, IName );
- Rewrite( IFile, 1 );
- If IOResult <> 0 then
+ If AutoSave then IName := EMFName else
   Begin
    GotoXY( 11, 20 );
-   Write( 'Unable to create file ', IName, ' !'#7 );
-   Delay( 2000 );
-   GotoXY( 11, 20 );
-   ClrEol;
-   Exit;
+   Write( Msg( 6 ) );
+   ReadLn( IName );
   End;
 
- X := 0;
- While ( X < FlashSize ) do
+ If IName <> '' then
   Begin
-   MoveLinBlockD( X + OldBIOS, LongInt(  Seg( BIOSBlk ) ) shl 4 + LongInt( Ofs( BIOSBlk ) ), 32768 );
-   BlockWrite( IFile, BIOSBlk, 32768 );
-   X := X + 32768;
-  End;
+   Assign( IFile, IName );
+   Rewrite( IFile, 1 );
+   If IOResult <> 0 then
+    Begin
+     GotoXY( 11, 20 );
+     Write( Msg( 7 ), IName, Msg( 95 ) );
+     Delay( 2000 );
+     GotoXY( 11, 20 );
+     ClrEol;
+     Exit;
+    End;
 
- Close( IFile );
+   X := 0;
+   While ( X < FlashSize ) do
+    Begin
+     MoveLinBlockD( X + OldBIOS, LongInt(  Seg( BIOSBlk ) ) shl 4 + LongInt( Ofs( BIOSBlk ) ), 32768 );
+     BlockWrite( IFile, BIOSBlk, 32768 );
+     X := X + 32768;
+    End;
+
+   Close( IFile );
+  End;
 
  GotoXY( 11, 20 );
  ClrEol;
@@ -400,7 +452,7 @@ A     : Char;
 
 Begin
  GotoXY( 11, 20 );
- Write( 'Image file name: ' );
+ Write( Msg( 6 ) );
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -409,7 +461,7 @@ Begin
    If IOResult <> 0 then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Unable to open file ', IName, ' !'#7 );
+     Write( Msg( 8 ), IName, Msg( 95 ) );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -419,11 +471,11 @@ Begin
     Begin
      TextColor( 12 );
      GotoXY( 11, 22 );
-     Write( 'FILE SIZE DOES NOT MATCH FLASH ROM CHIP SIZE. PROCEED [Y,N]?' );
-     Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+     Write( Msg( 9 ) );
+     Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
      GotoXY( 11, 22 );
      ClrEol;
-     If A = 'N' then
+     If A = AnswNo then
       Begin
        GotoXY( 11, 20 );
        ClrEol;
@@ -435,11 +487,11 @@ Begin
     Begin
      TextColor( 12 );
      GotoXY( 11, 22 );
-     Write( 'WARNING: ABOUT TO ALTER THE BOOT BLOCK. PROCEED [Y,N]?' );
-     Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+     Write( Msg( 10 ) );
+     Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
      GotoXY( 11, 22 );
      ClrEol;
-     If A = 'N' then
+     If A = AnswNo then
       Begin
        GotoXY( 11, 20 );
        ClrEol;
@@ -450,17 +502,17 @@ Begin
 
    FlashFile( IFile, BB );
    Close( IFile );
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    ClrEol;
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    If VErr then
     Begin
      TextColor( 12 );
-     Write( 'ERROR' );
+     Write( Msg( 11 ) );
     End else
     Begin
      TextColor( 15 );
-     Write( 'SUCCESS' );
+     Write( Msg( 12 ) );
     End;
   End else
   Begin
@@ -488,7 +540,7 @@ A     : Char;
 
 Begin
  GotoXY( 11, 20 );
- Write( Typ + ' data file name: ' );
+ Write( Typ + Msg( 13 ) );
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -497,7 +549,7 @@ Begin
    If IOResult <> 0 then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Unable to open file ', IName, ' !'#7 );
+     Write( Msg( 8 ), IName, Msg( 95 ) );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -506,7 +558,7 @@ Begin
    If FileSize( IFile ) <> 4096 then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Invalid file size - must be exactly 4K !'#7 );
+     Write( Msg( 14 ) );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -514,7 +566,7 @@ Begin
      Exit;
     End;
    BlockRead( IFile, BIOSBlk, 4096 );
-   if not askfor(0,'Do you want to preceed (Y/N)? ') then
+   if not askfor(0, Msg( 15 ) ) then
       begin
       close(ifile);
       GotoXY( 11, 20 );
@@ -526,17 +578,17 @@ Begin
                  Pos - FlashBase, 4096 );
    SetMenuItemStatus( MainMenu, 2, True );
    Close( IFile );
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    ClrEol;
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    If VErr then
     Begin
      TextColor( 12 );
-     Write( 'ERROR' );
+     Write( Msg( 11 ) );
     End else
     Begin
      TextColor( 15 );
-     Write( 'SUCCESS' );
+     Write( Msg( 12 ) );
     End;
   End else
   Begin
@@ -561,27 +613,27 @@ Procedure ClearPnPDMI( Typ : String; Pos : LongInt );
 Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
- Write( 'WARNING: YOU WILL LOSE ALL ', Typ, ' SETTINGS. PROCEED [Y,N]?' );
- Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+ Write( Msg( 16 ), Typ, Msg( 17 ) );
+ Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 11, 22 );
  ClrEol;
- If A = 'Y' then
+ If A = AnswYes then
   Begin
    FillChar( BIOSBlk, 4096, $FF );
    FlashBIOSImg( ( LongInt( Seg( BIOSBlk ) ) shl 4 ) + LongInt( Ofs( BIOSBlk ) ),
                  Pos - FlashBase, 4096 );
    SetMenuItemStatus( MainMenu, 2, True );
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    ClrEol;
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    If VErr then
     Begin
      TextColor( 12 );
-     Write( 'ERROR' );
+     Write( Msg( 11 ) );
     End else
     Begin
      TextColor( 15 );
-     Write( 'SUCCESS' );
+     Write( Msg( 12 ) );
     End;
   End;
 End;
@@ -604,14 +656,14 @@ X     : LongInt;
 
 Begin
  GotoXY( 11, 20 );
- Write( Typ + ' data file name: ' );
+ Write( Msg( 97 ) + Typ + Msg( 18 ) );
  ReadLn( IName );
  Assign( IFile, IName );
  Rewrite( IFile, 1 );
  If IOResult <> 0 then
   Begin
    GotoXY( 11, 20 );
-   Write( 'Unable to create file ', IName, ' !'#7 );
+   Write( Msg( 7 ), IName, ' !'#7 );
    Delay( 2000 );
    GotoXY( 11, 20 );
    ClrEol;
@@ -643,14 +695,14 @@ IFile : File;
 
 Begin
  GotoXY( 11, 20 );
- Write( 'Bootblock file name: ' );
+ Write( Msg( 19 ) );
  ReadLn( IName );
  Assign( IFile, IName );
  Rewrite( IFile, 1 );
  If IOResult <> 0 then
   Begin
    GotoXY( 11, 20 );
-   Write( 'Unable to create file ', IName, ' !'#7 );
+   Write( Msg( 7 ), IName, ' !'#7 );
    Delay( 2000 );
    GotoXY( 11, 20 );
    ClrEol;
@@ -672,7 +724,7 @@ A     : Char;
 
 Begin
  GotoXY( 11, 20 );
- Write( 'Bootblock file name: ' );
+ Write( Msg( 19 ) );
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -681,7 +733,7 @@ Begin
    If IOResult <> 0 then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Unable to open file ', IName, ' !'#7 );
+     Write( Msg( 8 ), IName, ' !'#7 );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -690,7 +742,7 @@ Begin
    If FileSize( IFile ) <> 8192 then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Invalid file size - must be exactly 8K !'#7 );
+     Write( Msg( 96 ) );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -699,11 +751,11 @@ Begin
     End;
    TextColor( 12 );
    GotoXY( 11, 22 );
-   Write( 'WARNING: ABOUT TO ALTER THE BOOT BLOCK. PROCEED [Y,N]?' );
-   Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+   Write( Msg( 10 ) );
+   Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
    GotoXY( 11, 22 );
    ClrEol;
-   If A = 'N' then
+   If A = AnswNo then
     Begin
      GotoXY( 11, 20 );
      ClrEol;
@@ -716,17 +768,17 @@ Begin
                  $FFFFE000 - FlashBase, 8192 );
    SetMenuItemStatus( MainMenu, 2, True );
    Close( IFile );
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    ClrEol;
-   GotoXY( 30, 7 );
+   GotoXY( 32, 7 );
    If VErr then
     Begin
      TextColor( 12 );
-     Write( 'ERROR' );
+     Write( Msg( 11 ) );
     End else
     Begin
      TextColor( 15 );
-     Write( 'SUCCESS' );
+     Write( Msg( 12 ) );
     End;
   End else
   Begin
@@ -740,11 +792,11 @@ Procedure FlashOldBIOS; Far;
 Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
- Write( 'FLASH THE BACKUP BIOS IMAGE BACK INTO THE FLASH ROM [Y,N]?' );
- Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+ Write( Msg( 20 ) );
+ Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 11, 22 );
  ClrEol;
- If A = 'Y' then
+ If A = AnswYes then
   Begin
    FlashBIOSImg( OldBIOS, 0, FlashSize - 8192 );
    SetMenuItemStatus( MainMenu, 2, False );
@@ -788,12 +840,12 @@ X, Y : Byte;
 
 Begin
  TextColor( 12 );
- GotoXY( 11, 22 );
- Write( 'WARNING: YOU WILL LOSE ALL BIOS SETTINGS. PROCEED [Y,N]?' );
- Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
- GotoXY( 11, 22 );
+ GotoXY( 2, 22 );
+ Write( Msg( 21 ) );
+ Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+ GotoXY( 2, 22 );
  ClrEol;
- If A = 'Y' then
+ If A = AnswYes then
   Begin
    {Clear it}
    For X := $10 to CMOSSize - 1 do
@@ -812,11 +864,11 @@ Begin
    GotoXY( 11, 22 );
    If Y = 0 then
     Begin
-     Write( 'CLEARED ', CMOSSize, ' BYTES OF CMOS RAM.'#7 );
+     Write( Msg( 22 ), CMOSSize, Msg( 23 ) );
      Delay( 1000 );
     End else
     Begin
-     Write( 'ERROR CLEARING CMOS RAM - MAY BE (PARTIALLY) WRITE PROTECTED.'#7 );
+     Write( Msg( 24 ) );
      Delay( 2000 );
     End;
    GotoXY( 11, 22 );
@@ -835,14 +887,14 @@ X     : Byte;
 
 Begin
  GotoXY( 11, 20 );
- Write( 'CMOS data file name: ' );
+ Write( Msg( 97 ) + 'CMOS' + Msg( 18 ) );
  ReadLn( IName );
  Assign( IFile, IName );
  Rewrite( IFile, 1 );
  If IOResult <> 0 then
   Begin
    GotoXY( 11, 20 );
-   Write( 'Unable to create file ', IName, ' !'#7 );
+   Write( Msg( 7 ), IName, ' !'#7 );
    Delay( 2000 );
    GotoXY( 11, 20 );
    ClrEol;
@@ -868,7 +920,7 @@ X, Y  : Byte;
 
 Begin
  GotoXY( 11, 20 );
- Write( 'CMOS data file name: ' );
+ Write( Msg( 97 ) + 'CMOS' + Msg( 18 ) );
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -877,7 +929,7 @@ Begin
    If IOResult <> 0 then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Unable to open file ', IName, ' !'#7 );
+     Write( Msg( 8 ), IName, ' !'#7 );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -886,7 +938,7 @@ Begin
    If FileSize( IFile ) <> ( CMOSSize - $10 ) then
     Begin
      GotoXY( 11, 20 );
-     Write( 'Invalid file size - must be exactly ', CMOSSize - $10, ' bytes !'#7 );
+     Write( Msg( 98 ), CMOSSize - $10, Msg( 99 ) );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
@@ -908,7 +960,7 @@ Begin
     End;
    If Y <> 0 then
     Begin
-     Write( 'ERROR WRITING TO CMOS RAM - MAY BE (PARTIALLY) WRITE PROTECTED.'#7 );
+     Write( Msg( 26 ) );
      Delay( 2000 );
     End;
    SetMenuItemStatus( MainMenu, 4, True );
@@ -926,11 +978,11 @@ Size : Byte;
 Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
- Write( 'WRITE BACK OLD CMOS DATA [Y,N]?' );
- Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+ Write( Msg( 27 ) );
+ Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
  GotoXY( 11, 22 );
  ClrEol;
- If A = 'Y' then
+ If A = AnswYes then
   Begin
    Size := CMOSSize;
    For X := $10 to Size - 1 do
@@ -949,11 +1001,11 @@ Begin
    GotoXY( 11, 22 );
    If Y = 0 then
     Begin
-     Write( Size - $10, ' BYTES OF CMOS RAM WRITTEN.'#7 );
+     Write( Size - $10, Msg( 28 ) );
      Delay( 1000 );
     End else
     Begin
-     Write( 'ERROR WRITING CMOS RAM - MAY BE (PARTIALLY) WRITE PROTECTED.'#7 );
+     Write( Msg( 26 ) );
      ReadKey;
     End;
    GotoXY( 11, 22 );
@@ -1011,6 +1063,45 @@ Begin
   End else OpStr := '';
 End;
 
+procedure BiosInfo; far;
+var s1,s2,s3,s4,s5 : string;
+begin
+gotoxy(6,21);
+s1:=zero2str($f000,$A367);
+s2:=zero2str($f000,$e061);
+s3:=zero2str($f000,$ece0);
+s4:=zero2str($f000,$ec71);
+s5:=zero2str($f000,$e0c1);
+
+{if s1='Award Software,  Inc.' then}
+if not strcomp(s1,'Award',5) then
+   begin
+   s1:='?';
+   s2:='?';
+   s3:='?';
+   s4:='?';
+   s5:='?';
+   end;
+
+cwriteln(14,15, Msg( 100 ),s1);
+cwriteln(14,15, Msg( 101 ),s2);
+cwriteln(14,15, Msg( 102 ),s3);
+cwriteln(14,15, Msg( 103 ),s4);
+cwrite(14,15, Msg( 104 ),s5);
+readkey;
+gotoxy(1,21);
+clreol;
+gotoxy(1,22);
+clreol;
+gotoxy(1,23);
+clreol;
+gotoxy(1,24);
+clreol;
+gotoxy(1,25);
+clreol;
+
+end;
+
 
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
@@ -1020,6 +1111,11 @@ var savefile : file;
     savename : string;
 
 Begin
+ {Hack to be able to write to StdOut - better ideas anyone ?}
+ Assign( StdOut, 'CON' );
+ Rewrite( StdOut );
+ StdOutRec.Handle := 1;
+
  ClrScr;
  GotoXY(11,2);
  textcolor(yellow);
@@ -1030,14 +1126,40 @@ Begin
  Write(' (C) 1998 Pascal van Leeuwen & Galkowski Adam ',#13,#10);
  textcolor(lightgray);
 
- X := 1;
+ SetLanguage( 1 ); {default = English}
+ If ( ParamCount > 0 ) then
+  Begin
+   PStr := OpStr( ParamStr( 1 ) );
+   If PStr[ 1 ] = '0' then
+    Begin
+     WriteLn;
+     WriteLn;
+     WrtCenter( 'Languages supported in this version:' );
+     WriteLn;
+     For X := 1 to GetLangCount do
+      WrtCenter( Char( X + Ord( '0' ) ) + '. ' + GetLangName( X ) );
+     WriteLn;
+     WrtCenter( 'Use UNIFLASH /x [other options] where x is the language number.' );
+     WriteLn;
+     Halt;
+    End;
+   If PStr[ 1 ] in [ '1' .. Char( GetLangCount + Byte( '0' ) ) ] then
+    Begin
+     SetLanguage( Byte( PStr[ 1 ] ) - Byte( '0' ) ); {Set language}
+     X := 2;
+    End else X := 1;
+  End;
+ PStr := Msg( 105 );
+ AnswYes := PStr[ 1 ];
+ AnswNo  := PStr[ 2 ];
+
  While ParamCount >= X do
   Begin
    PStr := OpStr( ParamStr( X ) );
    If ( PStr = 'E' ) then
     Begin
      Inc( X );
-     If ParamCount < X then Err( 'Missing file name with option -E' );
+     If ParamCount < X then Err( Msg( 29 ) );
      Emergency := True;
      EMFName := ParamStr( X );
     End else
@@ -1045,29 +1167,80 @@ Begin
     Begin
      WriteLn;
      WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|-E fname|-EXPERT|-PCIOR] ' );
+     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-EXPERT][-PCIOR|-AMI]' );
+     WrtCenter( '          [-DEBUG][-SAVE fname]|-CHIPLIST|-FORCE xxxx]' );
      WrtCenter( '' );
-     WrtCenter( '-H or -?        Shows this help screen' );
-     WrtCenter( '-E fname        Flashes bios image from file fname to Flash' );
-     WrtCenter( '                ROM without any user intervention.' );
-     WrtCenter( '-EXPERT         Enables some more advanced menu options' );
-     WrtCenter( '-PCIOR          Flash PCI option ROM instead of system ROM' );
-     WrtCenter( '-DEBUG          Debugging mode. Gives some low-level info');
+     WrtCenter( Msg( 30 ) );
+     WrtCenter( Msg( 31 ) );
+     WrtCenter( Msg( 32 ) );
+     WrtCenter( Msg( 33 ) );
+     WrtCenter( Msg( 34 ) );
+     WrtCenter( Msg( 35 ) );
+     WrtCenter( Msg( 36 ) );
+     WrtCenter( Msg( 107 ) );
+     WrtCenter( Msg( 108 ) );
+     WrtCenter( Msg( 109 ) );
      WriteLn;
      Halt;
     End else
    If PStr = 'EXPERT' then Expert := True else
    If PStr = 'DEBUG' then Debug := True else
-   If PStr = 'PCIOR' then PCIOR := True;
+   If PStr = 'PCIOR' then PCIOR := True else
+   If PStr = 'AMI' then WantToUseAmi := True else
+   If PStr = 'CHIPLIST' then
+    Begin
+     WriteLn( StdOut );
+     WriteLn( StdOut, '  List of supported flash chips' );
+     WriteLn( StdOut, '  -----------------------------' );
+     CurManuf := ManuRoot;
+     Repeat
+      With CurManuf^ do
+       Begin
+        M := Manuf;
+        For D := 0 to $7F do
+         If IdChip( D, CurCInfo ) then With CurCInfo do
+          WriteLn( StdOut,
+                   '  ', Hb( M ), Hb( D ), ' - ', Manuf^, ' ', Name^ );
+       End;
+      CurManuf := CurManuf^.Next;
+     Until ( CurManuf = Nil );
+     Halt;
+    End else
+   If PStr = 'FORCE' then
+    Begin
+     Inc( X );
+     If ParamCount < X then Err( Msg( 106 ) );
+     PStr := ParamStr( X );
+     If Length( PStr ) <> 4 then Err( Msg( 106 ) );
+     ForceIdVal := 0;
+     For M := 1 to 4 do
+      Begin
+       ForceIdVal := ForceIdVal shl 4;
+       If ( PStr[ M ] >= '0' ) and ( PStr[ M ] <= '9' ) then
+        ForceIdVal := ForceIdVal or ( Byte( PStr[ M ] ) - Byte( '0' ) )
+       else
+       If ( UpCase( PStr[ M ] ) >= 'A' ) and ( UpCase( PStr[ M ] ) <= 'F' ) then
+        ForceIdVal := ForceIdVal or ( Byte( UpCase( PStr[ M ] ) ) - Byte( 'A' ) + 10 )
+       else Err( Msg( 106 ) );
+      End;
+     ForceId := True;
+    End else
+   If PStr = 'SAVE' then
+    Begin
+     Inc( X );
+     If ParamCount < X then Err( Msg( 29 ) );
+     AutoSave := True;
+     EMFName := ParamStr( X );
+    End;
    Inc( X );
   End;
 
  InitXMS; {Init memory subsystem. Should be done before FlatRealOn}
  If XMSLeft = -1 then
-  Err('Unable to access memory beyond 1Mb - try using HIMEM.SYS.');
+  Err( Msg( 37 ) );
 
  If not FlatRealOn then
-  Err('Sorry, but either you don''t have a 486+ either CPU is in V86 mode.');
+  Err( Msg( 38 ) );
 
  {Allocate high memory if XMS not present}
  AllocHimem;
@@ -1080,7 +1253,7 @@ Begin
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
 
- ROMBase :=0 ;  {standard system BIOS}
+ ROMBase :=0 ;  {standard system BIOS flag for detectloop}
 
  {If PCI option ROM mode then scan for & select option ROM    }
  {NOTE: This is all experimental and uses a technique that    }
@@ -1156,24 +1329,24 @@ Begin
     Begin
      WriteLn;
      TextColor( yellow );
-     WrtCenter( 'Select PCI option ROM from list below:' );
+     WrtCenter( Msg( 39 ) );
      WriteLn;
      TextColor( 15 );
      For X := 1 to OPRCnt do With OpROM[ X ] do
       Begin
        Write( '          ', Char( X + 48 ), '. ' );
-       WriteLn( 'Bus ', Hb( Bus ),
-                ' device ', Hb( Pos shr 3 ),
-                ' function ', Hb( Pos and 7 ),
+       WriteLn( Msg( 40 ), Hb( Bus ),
+                Msg( 41 ), Hb( Pos shr 3 ),
+                Msg( 42 ), Hb( Pos and 7 ),
                 ' (VID=', Hw( VenId ),
                 ', DID=', Hw( DevId ),
                 ', ', MaxSize shr 10, 'K max)' );
 
       End;
      WriteLn;
-     WrtCenter( '0. Quit' );
+     WrtCenter( Msg( 43 ) );
      WriteLn;
-     WrtCenter( 'Select: 0' );
+     WrtCenter( Msg( 44 ) );
      GotoXY( 19, WhereY - 1 );
      SelA := '0';
      Repeat
@@ -1211,34 +1384,55 @@ Begin
      Window( 1, 1, 80, 25 );
      GotoXY( 1, 3 );
 
-    End else Err( 'No PCI option ROMs found.' );
+    End else Err( Msg( 45 ) );
   End;
 
- FlashInfo := FlashDetect;
+ If ForceId then
+  Begin
+   FlashError := 1;
+   CurManuf := ManuRoot;
+   FlashInfo := @CurCInfo;
+   CurCInfo.Count := 1;
+   Repeat
+    With CurManuf^ do
+     If ( Manuf = Hi( ForceIdVal ) ) and
+          IdChip( Lo( ForceIdVal ), CurCInfo ) then FlashError := 0;
+    CurManuf := CurManuf^.Next;
+   Until ( FlashError = 0 ) or ( CurManuf = Nil );
+   If ROMBase = 0 then
+    ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
+  End else FlashInfo := FlashDetect;
 
+(*
+if pcior then begin
+if askfor2(2,Msg( 46 ) ) then begin
+                      write( Msg( 47 ) );
+                      readln(savename);
+                      assign(savefile,savename);
+                      rewrite(savefile,1);
+                       X2 := 0;
+                       While ( X2 < Oprom[curop].maxsize ) do
+                        Begin
+                         MoveLinBlockD( X2 + $80000000, LongInt(  Seg( BIOSBlk ) ) shl 4 + LongInt( Ofs( BIOSBlk ) ), 32768 );
+                         BlockWrite( savefile, BIOSBlk, 32768 );
+                         X2 := X2 + 32768;
+                        End;
+
+
+                      close(savefile);
+                      writeln( Msg( 48 ) );
+                      end;
+end; *)
 
  {Abort if option ROM is not a recognised flash ROM. This to avoid  }
  {the corruption of memory local to the PCI card as much as possible}
-if pcior then begin
-
-if askfor(2,'Do you want to save this BIOS to file? ') then begin
-                      write('            Name of the file: ');
-                      readln(savename);
-                      movelinblockb($80000000,$80000,$FFFF);
-                      assign(savefile,savename);
-                      rewrite(savefile,1);
-                      blockwrite(savefile,mem[$8000:0],$ffff);
-                      close(savefile);
-                      writeln('            Done.');
-                      end;
-end;
  If PCIOR and ( FlashError <> 0 ) then
-  Err( 'Selected device''s option ROM is not a supported Flash ROM.' );
+  Err( Msg( 49 ) );
 
  If FlashError = 0 then
   Begin
    FlashSize := LongInt( FlashInfo^.Size ) shl 10;
-   FlashBase := ROMBase;
+   FlashBase := ROMBase { - ( FlashSize * FlashInfo^.Count ) };
 
    With FlashInfo^ do
     Case Flags and 3 of
@@ -1262,7 +1456,7 @@ end;
    TempBuf := AllocLinBlock( MaxBlock );
 
    If ( OldBIOS = 0 ) or ( NewBIOS = 0 ) or ( TempBuf = 0 ) then
-    Err( 'Not enough free memory.' );
+    Err( Msg( 50 ) );
   End else
   Begin
    {some defaults so we can at least write something to disk}
@@ -1274,34 +1468,37 @@ end;
     Begin
      FlashSize := 131072;    {128K default}
      FlashBase := $FFFE0000; {same}
+     ROMBase := FlashBase;
     End;
    OldBIOS := AllocLinBlock( FlashSize );
    If ( OldBIOS = 0 ) then
-    Err( 'Not enough free memory.' );
+    Err( Msg( 50 ) );
   End;
  textcolor(yellow);
- GotoXY( 14, 4 );
- Write( 'Flash ROM chip: ' );
+ GotoXY( 2, 4 );
+ Write( Msg( 51 ) );
  With FlashInfo^ do
   Begin
    TextColor( 15 );
-   If FlashError <> 0 then Write( 'UNKNOWN' ) else
+   If FlashError <> 0 then Write( Msg( 52 ) ) else
     Begin
      If Count > 1 then Write( Count, ' x ' );
      Write( Manuf^, ' ', Name^ );
     End;
+   If ForceId then
+    Write( ' (forced)' ) else
    If Debug then
     Write(' (' + Hb( Man1 ) + Hb( Dev1 ) +
           ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
-   GotoXY( 16, 5 );
+   GotoXY( 2, 5 );
    TextColor(yellow);
-   Write( 'Organisation: ' );
+   Write( Msg( 53 ) );
    TextColor( 15 );
-   If FlashError <> 0 then Write( 'N/A' ) else
+   If FlashError <> 0 then Write( Msg( 54 ) ) else
     Begin
      Case Flags and 3 of
       0 : Begin
-           Write( 'sectored: ' );
+           Write( Msg( 55 ) );
            If Count > 1 then Write( Count, ' x (' );
            For X := 0 to 3 do With FlashInfo^ do
             Begin
@@ -1315,13 +1512,13 @@ end;
       1 : Begin
            If Count > 1 then Write( Count, ' x ' );
            Write( ( ( LongInt( Size ) shl 10 ) div Count ) div PgSize );
-           Write( ' pages of ', pgsize, ' bytes' );
+           Write( Msg( 56 ), pgsize, Msg( 57 ) );
           End;
-      2 : Write( 'bulk erase' );
+      2 : Write( Msg( 58 ) );
       3 : Begin
            If Count > 1 then Write( Count, ' x ' );
            Write( ( ( LongInt( Size ) shl 10 ) div Count ) div PgSize );
-           Write( ' sectors of ', pgsize, ' bytes' );
+           Write( Msg( 59 ), pgsize, Msg( 57 ) );
           End;
      End;
      If ( Size and 1023 ) <> 0 then
@@ -1332,13 +1529,19 @@ end;
   End;
  GotoXY( 11, 7 );
 
+ If AutoSave then
+  Begin
+   WriteBIOSImg;
+   GotoXY( 1, Hi( WindMax ) );
+  End;
+
  If Emergency then
   Begin
-   If FlashError <> 0 then Err( 'Unknown flash chip !' );
+   If FlashError <> 0 then Err( Msg( 60 ) );
    Beep( 1000, 500 ); {single beep, start reading}
    Assign( IFile, EmFName );
    Reset( IFile, 1 );
-   If IOResult <> 0 then Err( 'Unable to open file ' + EMFName + ' !' );
+   If IOResult <> 0 then Err( Msg( 8 ) + EMFName + Msg( 95 ) );
    FlashFile( IFile, True {force boot block write, from personal experience}
                           {I really think that it can't be avoided !!      } );
    Close( IFile );
@@ -1348,43 +1551,44 @@ end;
    Beep( 1000, 200 );
    Halt;
   End;
- GotoXY( 11+6, 6 );
+
+ GotoXY( 2, 6 );
  TextColor(yellow);
- Write('PCI chipset: ');
+ Write( Msg( 61 ) );
  TextColor( 15 );
  Write( CurrentChipset);
- GotoXY( 11, 7 );
+ GotoXY( 2, 7 );
  TextColor(yellow);
- Write( 'Last write status: ' );
+ Write( Msg( 62 ) );
  TextColor( 15 );
- Write( 'not available' );
+ Write( Msg( 63 ) );
  If Debug then
   Begin
-   TextColor( yellow );
-   GotoXY( 16, 9 );
-   Write( 'South bridge: ' );
+(*   TextColor( yellow );
+   GotoXY( 2, 9 );
+   Write( Msg( 64 ) );
    TextColor( 15 );
-   Write( 'Vendor=', Hw( PiixMan ), ', Device=', Hw( PIIXId ), ' at ', Hb( PiixL shr 3 ), ':',
-          Hb( PiixL and 7 ) );
+   Write( Msg( 65 ), Hw( PiixMan ), Msg( 66 ), Hw( PIIXId ), Msg( 67 ), Hb( PiixL shr 3 ), ':',
+          Hb( PiixL and 7 ) ); *)
    TextColor( yellow );
-   GotoXY( 22, 3 );
-   Write( 'Memory: ' );
+   GotoXY( 2, 3 );
+   Write( Msg( 68 ) );
    TextColor( 15 );
    Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
    TextColor( yellow );
-   GotoXY( 20, 8 );
-   Write( 'ROM base: ' );
+   GotoXY( 2, 8 );
+   Write( Msg( 69 ) );
    TextColor( 15 );
-   Write( Hl( ROMBase )+', memory dump at '+hl(rombase)+' --> ('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
+   Write( Hl( ROMBase )+ Msg( 70 ) +hl(rombase)+'-->('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
   End;
 
  If PCIOr then
   Begin
    TextColor( yellow );
-   GotoXY( 14, 8 );
-   Write( 'Option ROM for: ' );
+   GotoXY( 2, 8 );
+   Write( Msg( 71 ) );
    TextColor( 15 );
-   Write( 'device at ', Hb( ORBus ),
+   Write( Msg( 72 ), Hb( ORBus ),
           ':', Hb( ORDev ),
           ':', Hb( ORFun ) );
   End;
@@ -1401,56 +1605,57 @@ end;
  textcolor(WHITE);
 
  PnPDMIMenu :=
-  AddMenuItem( 'Write ESCD (PnP data) to disk',
+  AddMenuItem( Msg( 73 ),
                0, 1, @WritePnp,
-  AddMenuItem( 'Flash ESCD (PnP data) image to Flash ROM',
+  AddMenuItem( Msg( 74 ),
                1, 1, @FlashPnp,
-  AddMenuItem( 'Clear ESCD (PnP data)',
+  AddMenuItem( Msg( 75 ),
                2, 1, @ClearPnp,
-  AddMenuItem( 'Write DMI data to disk',
+  AddMenuItem( Msg( 76 ),
                3, 1, @WriteDMI,
-  AddMenuItem( 'Flash DMI data image to Flash ROM',
+  AddMenuItem( Msg( 77 ),
                4, 1, @FlashDMI,
-  AddMenuItem( 'Clear DMI data',
+  AddMenuItem( Msg( 78 ),
                5, 1, @ClearDMI,
-  AddMenuItem( 'Back to main menu',
+  AddMenuItem( Msg( 79 ),
                7, 1, Nil,
   Nil ) ) ) ) ) ) );
 
  AdvMenu :=
-  AddMenuItem( 'Save CMOS data to disk',
+  AddMenuItem( Msg( 80 ),
                0, 1, @SaveCMOS,
-  AddMenuItem( 'Restore CMOS data from disk',
+  AddMenuItem( Msg( 81 ),
                1, 1, @RestoreCMOS,
-  AddMenuItem( 'Flash BIOS image INCLUDING bootblock',
+  AddMenuItem( Msg( 82 ),
                2, 1, @FlashBIOSBB,
-  AddMenuItem( 'Write boot block to disk',
+  AddMenuItem( Msg( 83 ),
                3, 1, @WriteBootBlk,
-  AddMenuItem( 'Flash bootblock to Flash ROM',
+  AddMenuItem( Msg( 84 ),
                4, 1, @FlashBootBlk,
-
-  AddMenuItem( 'Back to main menu',
+  AddMenuItem( Msg( 79 ),
                6, 1, Nil,
   Nil ) ) ) ) ) );
 
  MainMenu :=
-  AddMenuItem( 'Write old BIOS image to disk',
+  AddMenuItem( Msg( 85 ),
                0, 1, @WriteBIOSImg,
-  AddMenuItem( 'Flash BIOS image to Flash ROM',
+  AddMenuItem( Msg( 86 ),
                1, 1, @FlashBIOS,
-  AddMenuItem( 'Flash back old BIOS image',
+  AddMenuItem( Msg( 87 ),
                2, 0, @FlashOldBIOS,
-  AddMenuItem( 'Clear CMOS data',
+  AddMenuItem( Msg( 88 ),
                3, 1, @ClearCMOS,
-  AddMenuItem( 'Write back old CMOS data',
+  AddMenuItem( Msg( 89 ),
                4, 0, @WrtOldCMOS,
-  AddMenuItem( 'ESCD (PnP) and DMI submenu',
+  AddMenuItem( Msg( 90 ),
                5, 3, PnPDMIMenu,
-  AddMenuItem( 'Advanced submenu',
+  AddMenuItem( Msg( 91 ),
                6, 3, AdvMenu,
-  AddMenuItem( 'Quit',
-               8, 1, Nil,
-  Nil ) ) ) ) ) ) ) );
+  AddMenuItem( Msg( 92 ),
+               7, 1, @biosinfo,
+  AddMenuItem( Msg( 93 ),
+               9, 1, Nil,
+  Nil ) ) ) ) ) ) ) ) );
 
  If FlashInfo = Nil then
   Begin
@@ -1482,12 +1687,12 @@ end;
    Begin
     TextColor( 12 );
     GotoXY( 11, 22 );
-    Write( 'LAST FLASH WRITE WAS UNSUCCESFULL. QUIT ANYHOW [Y/N]?'#7 );
-    Repeat A := UpCase( ReadKey ) Until ( A = 'Y' ) or ( A = 'N' );
+    Write( Msg( 94 ) );
+    Repeat A := UpCase( ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
     GotoXY( 11, 22 );
     ClrEol;
    End;
- Until ( not VErr ) or ( A = 'Y' );
+ Until ( not VErr ) or ( A = AnswYes );
 
  GotoXY( 1, Hi( WindMax ) );
 end.

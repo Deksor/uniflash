@@ -2,11 +2,6 @@ Unit Flash;
 
 Interface
 
-Const
-On         = True;
-Off        = False;
-FlashError : Word = 0;
-
 Type
 Fl_Erase   = Procedure( SAddr : LongInt );
 Fl_Program = Procedure( Pos, Data : LongInt );
@@ -23,13 +18,29 @@ ChipInfo   = Record
              End;
 PChipInfo  = ^ChipInfo;
 Fl_IdChip  = Function( DevID : Byte; Var CInfo : ChipInfo ) : Boolean;
+PFl_Manuf  = ^Fl_Manuf;
+Fl_Manuf   = Record
+              IdChip : Fl_IdChip;
+
+              Next   : PFl_Manuf;
+              Manuf  : Byte;
+             End;
+
+
+Const
+On         = True;
+Off        = False;
+FlashError : Word = 0;
+ManuRoot   : PFl_Manuf = Nil;
+ManuTail   : PFl_Manuf = Nil;
+CurManuf   : PFl_Manuf = Nil;
+
 
 Var
 Man1, Dev1,
 Man2, Dev2 : Byte;
 CurCInfo   : ChipInfo;
 ROMBase    : LongInt;
-Rand,Rand2 : byte;
 
 Procedure FlashCmd( Cmd : Byte );
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
@@ -41,25 +52,18 @@ Implementation
 
 Uses Crt, Tools;
 
-Type
-PFl_Manuf  = ^Fl_Manuf;
-Fl_Manuf   = Record
-              IdChip : Fl_IdChip;
-
-              Next   : PFl_Manuf;
-              Manuf  : Byte;
-             End;
-
-Const
-ManuRoot   : PFl_Manuf = Nil;
-ManuTail   : PFl_Manuf = Nil;
-CurManuf   : PFl_Manuf = Nil;
-
 Procedure FlashCmd( Cmd : Byte );
 Begin
  FOMemB( ROMBase + $5555, $AA );
  FOMemB( ROMBase + $2AAA, $55 );
  FOMemB( ROMBase + $5555, Cmd );
+End;
+
+Procedure FlashCmdW( Cmd : Byte );
+Begin
+ FOMemW( ROMBase + $5555, $AA );
+ FOMemW( ROMBase + $2AAA, $55 );
+ FOMemW( ROMBase + $5555, Cmd );
 End;
 
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
@@ -97,17 +101,60 @@ End;
 Function FlashDetect : PChipInfo;
 Var
 MinB,MaxB,Tries : Byte;
-Conditions: boolean;
+Conditions      : boolean;
+Rand            : Byte;
 
 Function DetectLoop( Method : Byte; Var Man, Dev : Byte ) : Boolean;
 Var
 M, D, X   : Byte;
+T         : Word;
 Done,
 Found     : Boolean;
 
+Procedure SendIdCmd;
+Begin
+ Case ( Method and 3 ) of
+  0 : Begin
+       {old method}
+       FlashCmd( $80 );
+       FlashCmd( $60 );
+      End;
+  1 : Begin
+       {new method}
+       FlashCmd( $90 );
+      End;
+  2 : Begin
+       {old method, words}
+       FlashCmdW( $80 );
+       FlashCmdW( $60 );
+      End;
+  3 : Begin
+       {new method, words}
+       FlashCmdW( $90 );
+      End;
+ End;
+ Wait( 50 );
+End;
+
+Procedure ResetROM;
+Begin
+ If ( Method and 2 ) = 0 then
+  Begin
+   FOMemB( ROMBase, $FF );
+   FOMemB( ROMBase, $FF );
+   FOMemB( ROMBase, $00 );
+   FlashCmd( $F0 );
+  End else
+  Begin
+   FOMemW( ROMBase, $FFFF );
+   FOMemW( ROMBase, $FFFF );
+   FOMemW( ROMBase, $0000 );
+   FlashCmdW( $F0 );
+  End;
+End;
+
 
 Begin
-wait(600);
  DetectLoop := True;
  Found := False;
  For X := MinB to MaxB do
@@ -118,35 +165,28 @@ wait(600);
 
    Repeat
     Asm CLI End;
-    If Method = 0 then
+    ResetROM;
+    {Get man. code}
+    SendIdCmd;
+    If ( Method and 2 ) = 0 then
+     M := FIMemB( ROMBase )
+    else
+     M := Lo( FIMemW( ROMBase ) );
+
+    {Get dev. code}
+    If ( Method and 4 ) <> 0 then
      Begin
-      {old method}
-      FlashCmd( $80 );
-      FlashCmd( $60 );
-     End else
-     Begin
-      {new method}
-      FlashCmd( $90 );
+      ResetROM;
+      SendIdCmd;
      End;
-    Wait( 20 );
-    M := FIMemB( ROMBase);
-    D := FIMemB( ROMBase + 1 );
-
-{exec('c:\command.com','');}
- {   FOMemW( ROMBase, $FFFF );
-    FOMemW( ROMBase, $FFFF );
-    FOMemW( ROMBase, $0000 );}
-    FlashCmd( $F0 ); {Avoid leaving the chip in ID mode}
-
-if method=0 then
-            begin
-            FOMemW( ROMBase, $FFFF );
-            FOMemW( ROMBase, $FFFF );
-            FOMemW( ROMBase, $0000 );
-            end;
-
-    Wait( 20 );
+    If ( Method and 2 ) = 0 then
+     D := FIMemB( ROMBase + 1 )
+    else
+     D := Hi( FIMemW( ROMBase ) );
+    ResetROM;
     Asm STI End;
+
+
     If ( ( M <> FIMemB( ROMBase ) ) or
        ( D <> FIMemB( ROMBase + 1 ) ) ) and
        ParityOdd( D ) and ParityOdd( M ) then
@@ -158,7 +198,6 @@ if method=0 then
         Dev := D and $7F;
         CurManuf := ManuRoot;
         Found := False;
-    (*    man:=curmanuf^.manuf; *) {Used for debugging ???? Shouldn't be there, anyway}
         Repeat
 
          With CurManuf^ do
@@ -231,21 +270,26 @@ Begin
    MinB := 0;
    MaxB := 0;
   End;
-  randomize;
- rand:=random(2);
+ randomize;
  tries:=0;
 { If not ( DetectLoop( rand , Man1, Dev1 ) or
           DetectLoop( rand + 1, Man2, Dev2 ) ) then}
 
 { The loop below is *VERY* tricky. The DetectLoop proc is called until}
 { the chip is detected or the number of unsuccessful tries (255) is reached}
-repeat
- rand:=random(2);
-inc(tries);
-if rand+1=2 then rand2:=1 else rand2:=0;
-conditions:= (( DetectLoop( rand , Man1, Dev1 ) or
-                DetectLoop( rand2 , Man2, Dev2 )));
-until (conditions) or (tries=255);
+
+ conditions := false;
+ repeat
+  rand:=random( 8 );
+
+  if DetectLoop( rand, Man1, Dev1 ) then conditions := true
+  else if ( man1 <> $FF ) or ( dev2 <> $FF ) then
+   begin
+    man2 := man1;
+    dev2 := dev1;
+   end;
+  inc(tries);
+ until (conditions) or (tries=0);
 
 if not conditions then
   Begin

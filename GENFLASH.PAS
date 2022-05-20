@@ -6,6 +6,8 @@ Procedure GenPageProgB( Pos, Data : LongInt ); Far;
 Procedure GenPageProgW( Pos, Data : LongInt ); Far;
 Procedure GenPageProgBAtmel( Pos, Data : LongInt ); Far;
 Procedure GenPageProgWAtmel( Pos, Data : LongInt ); Far;
+Procedure IntelResetB;
+Procedure IntelResetW;
 Procedure IntelSecProg( Pos, Data : LongInt ); Far;
 Procedure IntelSecProgW( Pos, Data : LongInt ); Far;
 Procedure IntelSecErase( SAddr : LongInt ); Far;
@@ -247,6 +249,7 @@ Procedure AMDSecProg( Pos, Data : LongInt );
 Var
 Attempt,
 X, Y, Ld : Byte;
+TimeOut  : Word;
 
 Begin
  For Y := 0 to CurCInfo.PgSize - 1 do
@@ -258,45 +261,63 @@ Begin
      Repeat
       FlashCmd( $A0 );
       FOMemB( Pos + Y, Ld );
-      Ld := Ld and $80; {Last data byte, bit 7}
-      Repeat
-       X := FiMemB( Pos + Y );    {Read last byte written}
-      Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+
+      TimeOut := 5;   {should take no more than 14usec, we wait 50 max}
+      While ( ( FIMemB( Pos + Y ) and $80 ) <> ( Ld and $80 ) ) and
+            ( ( FIMemB( Pos + Y ) and $20 ) = 0 ) and ( TimeOut > 0 ) do
+       Begin
+        Dec( TimeOut );
+        Wait( 10 );
+       End;
+
       X := FiMemB( Pos + Y );    {Read last byte written}
       Inc( Attempt );
-     Until ( Attempt > 3 ) or  ( ( X and $80 ) = Ld );
-     If ( ( X and $80 ) <> Ld ) then
+
+     Until ( Attempt > 3 ) or  ( ( X and $80 ) = ( Ld and $80 ) );
+     If ( ( X and $80 ) <> ( Ld and $80 ) ) then
       Begin
        FlashError := 2; {programming error, timeout}
+       FlashCmd( $F0 ); {Reset chip}
        Exit;
       End;
     End;
   End;
+ FlashCmd( $F0 ); {Reset chip}
 End;
 
 Procedure AMDSecErase( SAddr : LongInt );
 Var
 Attempt,
 X        : Byte;
+TimeOut  : Word;
 
 Begin
  Attempt := 0;
  Repeat
   FlashCmd( $80 );      {Erase setup}
+  FOMemB( ROMBase + $5555, $AA );
+  FOMemB( ROMBase + $2AAA, $55 );
   FOMemB( SAddr, $30 ); {Erase sector containing address SAddr}
-(*  {Wait for erase to start}
-  Repeat
-   X := FiMemB( SAddr );
-  Until ( X and $08 ) <> 0; *)
 
-  {NOTE: IF THIS WON'T WORK THEN TRY A DELAY IN BETWEEN HERE ...}
+  TimeOut := 15;    {80 usec max normally, but waits 150usec to be sure}
+  {Wait for erase to start}
+  While ( ( FiMemB( SAddr ) and $08 ) = 0 ) and ( TimeOut > 0 ) do
+   Begin
+    Dec( TimeOut );
+    Wait( 10 );
+   End;
 
   {Wait for erase to finish}
-  Repeat
-   X := FiMemB( SAddr );
-  Until ( ( X and $A0 ) <> 0 );
+  TimeOut := 25000; {15 sec max normally, but waits 25 sec to be sure}
+  While ( ( FiMemB( SAddr ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
+   Begin
+    Dec( TimeOut );
+    Wait( 1000 );
+   End;
+
   X := FiMemB( SAddr );
   Inc( Attempt );
+  FlashCmd( $F0 ); {Reset}
  Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
  If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
 End;

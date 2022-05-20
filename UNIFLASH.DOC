@@ -1,6 +1,22 @@
-                    UniFlash's version 1.16 documentation.
+                    UniFlash's version 1.17 documentation.
                     --------------------------------------
                (C) 1998 Pascal Van Leeuwen and Galkowski Adam
+
+"Your program just saved the day for me!
+ I tried to use AWDFLASH.exe to flash my new Shuttle HOT-603 v2.0(AMD640)
+ with the new 603WWQ07.bin BIOS and it did! The only problem was that the
+ BIN file wasn't complete.
+ Evidently this destroyed the boot block too. I tried to restore the old
+ BIOS to that EEPROM on a HOT-565(430TX) with all the other flash
+ programs I could get my hands on to no avail. I was able to flash the
+ HOT-603's EEPROM to 565WIQ0E.bin and it worked just fine on the HOT-565
+ so I knew the chip it's self was still good. I finally gave up and
+ ordered a replacement chip this morning. This evening while surfing I
+ saw a  reference to you'r program on http://ping.be and downloaded it.
+ With the 'Expert' mode I was able to properly flash the Winbond
+ W29EE011-15 chip on the HOT-565 for the HOT-603."
+ - Jack Freeman
+
 
 0.0            DISCLAIMER
 -------------------------
@@ -56,23 +72,46 @@ Mfg         | Model(s)             | Comments
 -----------------------------------------------------------------------------
 Intel       | 430FX,HX,VX,TX,MX    | No comments It works in 99% of cases
             | 440FX,LX (not tested)| (The 440FX/LX have not been yet tested,
-            |                      | but should work well)
+            | 450 KX/GX            | but should work well)
+            | 434 LX/NX            | 450 & 434 not tested and may not (yet)
+            |                      | work
 -----------------------------------------------------------------------------
-VIA         | Appollo series       | Not tested
+VIA         | Appollo Master       | Only VP2 has been tested so far
+            | Apollo-VP            |
+            | Apollo-VPX           |
+            | Apollo-VP2           |
+            | Apollo-VP3           |
+            | Apollo-MVP3          |
+            | Apollo-P6            |
             | +our buddy the VXPRO |
+            | (which is a remarked |
+            |  Apollo VP2)         |
+-----------------------------------------------------------------------------
+AMD         | AMD 640 (remarked    | Works just fine
+            | Apollo VP2)          |
 -----------------------------------------------------------------------------
 OPTi        | Vendetta             | Not tested
 -----------------------------------------------------------------------------
 SiS         | 559X series          | Not supported yet. Uniflash detects it,
             | +the wondreful TXPRO2| but it doesn't handle them. (SiS doesn't
-            |                      | put his datasheets on free acces. You
+            |                      | put his datasheets on free access. You
             |                      | have to register. It's free, but it
             |                      | doesn't work for me)
+            |                      |*If your BIOS is an AMI WinBIOS, try
+            |                      |running Uniflash with the -AMI parameter
 -----------------------------------------------------------------------------
 Ali         | Alladin series plus  | Not supported yet. For the datasheets,
             | the lovely TXPRO     | same situation as for SiS, but it's
             |                      | even worse.
+            |                      |*If your BIOS is an AMI WinBIOS, try
+            |                      |running Uniflash with the -AMI parameter
 
+
+NEW!: The version 1.16d+ includes support for AMI's Flash Interface. It
+allows you to flash even if you have an unknown chipset (new AMI WinBIOS is
+necessary to use this feature). Uniflash will automatically try to use
+this feature if there's no chipset detected. You can force using this mode,
+even if your chipset is recognised by giving the -AMI parameter.
 
 
 
@@ -90,7 +129,7 @@ fine too))
                 AMD
                 ---
                 Am29F100T
-               #Am29F010
+               *Am29F010
                 Am29F080B
                 Am29F400AT
                 Am29F400BT
@@ -139,6 +178,7 @@ fine too))
                 W29C020
                 W29EE512
                 W29C101
+                W29C010
 
                 Atmel
                 -----
@@ -178,15 +218,16 @@ fine too))
                 --------
                ?CAT28F150T
                 CAT28F150B
-                CAT28F001T
-                CAT28F001B
+               *CAT28F001T
+               *CAT28F001B
                 CAT28F002T
                 CAT28F002B
 
-                Macronix (experimental, still no datasheets :()
+                Macronix
                 --------
-               ?MXIC28F1000AP
+               *MXIC28F1000AP
                 MXIC28F1000P
+                MXIC28F1000PPC
 
                 Texas Instruments
                 -----------------
@@ -259,7 +300,7 @@ long continuous beep: some error occured, press any key to retry operation
 If you want to help us in adding support for new chips, in testing the whole
 thing or bugfixing, mail us BOTH!!, we'll put your name in credits at the end.
 We want your opinions & experiences to make flashing BIOS an easy and safe
-operation, where you doesn't need tons of flashers (if you multiply the 
+operation, where you doesn't need tons of flashers (if you multiply the
 number of chipsets by the number of flash rom memories available, you'll 
 understand better what we're talking about).
 
@@ -288,16 +329,14 @@ If you want to contact us, please write to BOTH of us (send the same letter at
 two different addresses) with the subject UNIFLASH project.
 
 - Pascal van Leeuwen
-web    : http://ourworld.compuserve.com/homepages/pvanleeuwen/homepage.htm
-email  : pvanleeuwen@compuserve.com
-         or
-         9896043@stud.rhij.nl
+web    : http://ourworld.compuserve.com/homepages/pvanleeuwen/index.htm
+email  : pvanleeuwen@csi.com
 
 - Galkowski Adam
 email  : 100665.2705@compuserve.com
 
 BTW: New versions should be on:
-1)   http://ourworld.compuserve.com/homepages/pvanleeuwen/uniflash.htm
+1)   http://ourworld.compuserve.com/homepages/pvanleeuwen/ufhome.htm
 
 2)   http://www.ping.be/bios/   (A page by Wim Bervoets, a very good page
 for maniacs of flashing, I suggest you to have a look there)
@@ -305,6 +344,22 @@ for maniacs of flashing, I suggest you to have a look there)
 
 9.0            Revision info
 ----------------------------
+1.17b          -fixed a bug in the -FORCE option, should work now
+               -still having trouble correctly detecting flash chips,
+                we can use all the input we can get on which chips are
+                and aren't correctly identified by UNIFLASH !
+1.17           -pre-1.20 release because of some important fixes,
+                still working on some things we promised for 1.20, though
+               -fixed flashing problems with Macronix & AMD chips
+               -Integrated English & French version into one executable
+                to avoid having to keep 2 versions synchronized
+               -Cleaned up chipset detection
+               -known bugs: chip detection still not 100% accurate
+                (we're working on it, this will be fixed in v1.20)
+1.16d          -Added AMI Flash Interface support
+               -Added the "Additional BIOS Info" option
+               -Added the Macronix MXIC 28F1000PPC/12V chip
+               (not officially released by Adam's request)
 1.16c          -Made the detection routine more accurate
 1.16b          -Removed some (debugging?) code that messed up detection
 1.16           -Fixed a stupid bug in the chip detection part, which made it
@@ -318,7 +373,6 @@ for maniacs of flashing, I suggest you to have a look there)
                -Added the Intel 28F010/12V and 28F020/12V chips
                -Translation of the whole thing to french. The english 1.16
                version equals french 1.00FRENCH version
-
 1.15           -Fixed problems with AMD flash chips
                -Added VIA 82C570 chipset support
                -Tested Intel 28F001BX-T/28F001BN-T support
@@ -365,4 +419,35 @@ ASUSTeK       | T2P4 rev 2 & 3.10 | Intel HX     | SST 29EE010/5V
 Expertboard   | 8661 rev ?        | Intel VX     | WinBond W29EE011/5V
 Soyo          | 5TA2 rev ?        | Intel FX     | SST 29EE010/5V
 Shuttle       | Hot569 rev 2      | Intel TX     | Atmel 29C010A/5V
+Shuttle       | Hot565 rev ?      | Intel TX     | Winbond W29EE011
+Shuttle       | Hot603 rev ?      | AMD 640      | Winbond W29EE011
+
+
+11.0            Beta testing stuff
+----------------------------------
+
+We would like to extend our thanx to the following people who've been
+very helpful with beta testing this program.
+NOTE: YOU can be on this list too ! All you have to do is send us
+information on a system where UNIFLASH doesn't work and help us with
+getting it to work on that system.
+Please help us in making UNIFLASH the universal and reliable tool we had
+in mind when we started this project. Thanx in advance !
+
+                The 100 heroes gallery (random order)
+                -------------------------------------
+                Enrico Antongiovanni
+                Wim Bervoets
+                Michael L. Croswell
+                Polyvios Simopoulos
+                Matthias David Siebler
+
+
+12.0            Biz support
+---------------------------
+
+We would like to thank the following people at the various flash ROM
+and chipset manufacturers for their support (in random order):
+
+                Scotts Chen at Macronix International Co., Ltd.
 

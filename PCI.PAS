@@ -11,7 +11,7 @@ PCICfData   = $CFC;
 
 Var
 NorthFunc, SouthFunc, LPCFunc: Word;
-NorthPos, SouthPos, CurPCIROM, PCIROMBus, PCIROMDev, PCIROMFun, LPCBase: Byte;
+NorthPos,SouthPos,PMUPos,CurPCIROM,PCIROMBus,PCIROMDev,PCIROMFun,LPCBase: Byte;
 CurrentChipset, CurrentPCICard: string;
 WantToUseAMI, AMIUsed, ChipsetFound, ROMEnabled, PCIROMEnabled: Boolean;
 PCIROMs: array[1..20] of
@@ -20,6 +20,7 @@ PCIROMs: array[1..20] of
             VenID, DevID : Word;
             Bus, Pos     : Byte;
           end;
+BIOSID: array[1..8] of Char; {v1.34}
 
 Procedure OPortD( Prt : Word; Val : LongInt );
 Function  IPortD( Prt : Word ) : LongInt;
@@ -255,6 +256,7 @@ Begin
     $3580: NorthName:='i8285xGM';
     $3340: NorthName:='i82855PM';
     $2531: NorthName:='i82860';
+    $2570: NorthName:='i82865'; {v1.34}
     $2578: NorthName:='i82875';
     $255D: NorthName:='iE7205';
     $2540: NorthName:='iE7500';
@@ -736,10 +738,14 @@ Begin
   then CurrentChipset:='Intel 850(E)';
  if (NorthName='i8285xGM') and (SouthName='i82801DBM ICH4-M')
   then CurrentChipset:='Intel 852GM/855GM'; {v1.31}
+ if (NorthName='i8285xGM') and (SouthName='i82801DB ICH4')
+  then CurrentChipset:='Intel 852GM/855GM non-mobile'; {v1.34}
  if (NorthName='i82855PM') and (SouthName='i82801DBM ICH4-M')
   then CurrentChipset:='Intel 855PM'; {v1.31}
  if (NorthName='i82860') and (SouthName='i82801BA ICH2')
   then CurrentChipset:='Intel 860';
+ if (NorthName='i82865') and (SouthName='i82801EB ICH5')
+  then CurrentChipset:='Intel 865P(E)/G(V)/848P'; {v1.34}
  if (NorthName='i82875') and (SouthName='i82801EB ICH5')
   then CurrentChipset:='Intel 875P'; {v1.31}
  if (NorthName='iE7205') and (SouthName='i82801DB ICH4')
@@ -950,6 +956,16 @@ PIIXReg, PIIXReg2, PIIXReg3, PIIXReg4, PIIXReg5 : LongInt;
 Procedure ROMEnable( Map : Boolean );
 Var
 Mask : LongInt;
+Pos: Byte;
+
+ procedure GetBIOSID;
+ begin
+   if BIOSID=#0#0#0#0#0#0#0#0 then
+    begin
+      MoveLinBlockB($FFFFFFE8,LongInt(Seg(BIOSID)) shl 4+LongInt(Ofs(BIOSID)),8); {v1.34}
+      LogWrite('Detected BIOS ID: '+BIOSID);
+    end;
+ end;
 
 Begin
  if ROMEnabled=Map then Exit; {v1.22}
@@ -1171,6 +1187,19 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 or $FF000000 ); {C0 -> FF} {v1.31}
            LogWrite('Intel 8xx method: reg $E0 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
+           GetBIOSID;
+           if BIOSID='6A69RM4E' then {MSI MS-6337 v3.x}
+            begin
+             if GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $5C ) and $10=$10 then
+              begin
+               PIIXReg3:=GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $58 ) and $7FC0;
+               LogWrite('6A69RM4E: GPO at '+Hw(PIIXReg3));
+               PIIXReg4:=Port[PIIXReg3+$E];
+               LogWrite('6A69RM4E: GPO = '+Hb(PIIXReg4));
+               Port[PIIXReg3+$E]:=PIIXReg4 or $80;
+               LogWrite('6A69RM4E: GPO changed to '+Hb(Port[PIIXReg3+$E]));
+              end;
+            end;
           End else
           Begin
            LogWrite('Intel 8xx method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
@@ -1179,6 +1208,14 @@ Begin
            LogWrite('Intel 8xx method: restoring reg $E0 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 );
+           if BIOSID='6A69RM4E' then {MSI MS-6337 v3.x}
+            begin
+             if GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $5C ) and $10=$10 then
+              begin
+               LogWrite('6A69RM4E: restoring GPO from '+Hb(Port[PIIXReg3+$E]));
+               Port[PIIXReg3+$E]:=PIIXReg4;
+              end;
+            end;
           End;
         End;
   $03 : Begin {VIA method} {AMD method is the same v1.20}
@@ -1248,6 +1285,26 @@ Begin
               {512K enable}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg3 or $1000000 );
               LogWrite('ALi method: reg $7C changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C )));
+              {256KB support through GPO for M1533/M1543}
+              PIIXReg4:=GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $54 ); {v1.34}
+              LogWrite('ALi method: reg $54 = '+Hl(PIIXReg4));
+              if PIIXReg4 and $10=$10 then
+               begin
+                LogWrite('ALi method: using GPO to control A17');
+                {Locate PMU}
+                for Pos:=0 to $FF do
+                 if GetPCIRegD($00,Pos shr 3,Pos and $07,$00) and $FFFF<>$FFFF then
+                  if GetPCIRegD($00,Pos shr 3,
+                                   Pos and $07,$00)=$710110B9 then Break;
+                if Pos=$FF then PMUPos:=SouthPos else PMUPos:=Pos;
+                PIIXReg5:=GetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0);
+                LogWrite('ALi method: PMU reg $C0 = '+Hl(PIIXReg5));
+                Flash_Read:=FIMemB_Flash_ALiGPO;
+                Flash_Write:=FOMemB_Flash_ALiGPO;
+                Flash_ReadBlock:=MoveLinBlock_From_Flash_D_ALiGPO;
+                Flash_WriteBlock:=MoveLinBlock_To_Flash_B_ALiGPO;
+                Flash_Compare:=CompLinBlocks_Flash_ALiGPO;
+               end;
             end;
           End else
           Begin
@@ -1265,6 +1322,12 @@ Begin
               LogWrite('ALi method: restoring reg $7C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $7C ))); {v1.24}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg3 ); {v1.24}
+              if PIIXReg4 and $10=$10 then {v1.34}
+               begin
+                LogWrite('ALi method: restoring PMU reg $C0 from '+Hl(GetPCIRegD($00,PMUPos shr 3,
+                 PMUPos and $7,$C0)));
+                SetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0,PIIXReg5);
+               end;
             end;
           End;
         End;
@@ -1621,7 +1684,6 @@ Begin
            end;
         end;
  end;
-
  ROMEnabled:=Map; {v1.22}
 End;
 

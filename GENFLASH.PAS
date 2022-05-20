@@ -7,6 +7,7 @@ Procedure GenPageProgB( Pos, Data : LongInt ); Far;
 Procedure IntelResetB;
 Procedure IntelSecProg( Pos, Data : LongInt ); Far;
 Procedure IntelSecErase( SAddr : LongInt ); Far;
+Procedure IntelSecErase2( SAddr : LongInt ); Far;
 Procedure AMDSecProg( Pos, Data : LongInt ); Far;
 Procedure AMDSecErase( SAddr : LongInt ); Far;
 Procedure AMDBulkErase( SAddr : LongInt ); Far; {v1.22}
@@ -120,6 +121,33 @@ Begin
  If ( X and $B8 ) <> $80 then FlashError := 3; {erasing error}
  IntelResetB;
 End;
+
+Procedure IntelSecErase2( SAddr : LongInt ); {erase setup $21} {v1.34}
+Var
+Attempt,
+X        : Byte;
+TimeOut:Word;
+Begin
+ Attempt := 0;
+ Repeat
+  Flash_Write(SAddr,$21); {Erase setup}
+  Flash_Write(SAddr,$D0); {Erase confirm}
+  {Wait for erase to finish}
+  TimeOut:=65000;
+  Repeat
+   X := Flash_Read(SAddr);
+   Wait(1000);
+   Dec(TimeOut);
+  Until ((X and $80)<>0) or (TimeOut<1);
+  if TimeOut<1 then FlashError:=3;
+  Inc( Attempt );
+  X := Flash_Read(Saddr);
+  Flash_Write(SAddr,$50); {Clear status}
+ Until ( Attempt > 3 ) or ( ( X and $B8 ) = $80 );
+ If ( X and $B8 ) <> $80 then FlashError := 3; {erasing error}
+ IntelResetB;
+End;
+
 
 Procedure AMDSecProg( Pos, Data : LongInt );
 Var

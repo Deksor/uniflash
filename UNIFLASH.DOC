@@ -1,6 +1,6 @@
-                     UniFlash version 1.33 documentation
+                     UniFlash version 1.34 documentation
                      -----------------------------------
-                   (C) 2003 Rainbow Software (Ondrej Zary)
+                   (C) 2004 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
 
 
@@ -92,8 +92,8 @@ Here's a list of chipsets suported by Uniflash:
 | Mfg     | Chipset(s)           | Comments                                  |
 `---------|----------------------|-------------------------------------------'
  Intel    |*Triton 430FX         | No comments It works in 99% of cases
-          |*Triton II 430HX      | 450 & 430LX/NX not tested
-          |*Triton II 430VX      | 440GX and 440FX untested
+          |*Triton II 430HX      |
+          |*Triton II 430VX      |
           |*Triton III 430TX     |
           |*Mobile 430MX         |
           | Natoma 440FX         |
@@ -107,7 +107,7 @@ Here's a list of chipsets suported by Uniflash:
           | i810E                |
           | i810E2               |
           | i815(P/G)            |
-          | i815E(P/G)           |
+          |*i815E(P/G)           |
           | i815EM               |
           | i820                 |
           | i820E                |
@@ -118,7 +118,7 @@ Here's a list of chipsets suported by Uniflash:
           | i845G(E/L/V)/845PE   |
           | i845MP/MZ            |
           | i850(E)              |
-          | i852GM/855GM         |
+          |*i852GM/855GM         |
           | i855PM               |
           | i860                 |
           | i875P                |
@@ -165,7 +165,7 @@ Here's a list of chipsets suported by Uniflash:
           |*5591/5592            | 5 different methods of enabling Flash ROM
           | 5596                 | write access. (The more code, the more
           |*5597/5598/5581/5120  | bugs :-)
-          | 530                  | All SiS South Bridges have the same
+          |*530                  | All SiS South Bridges have the same
           | 540                  | device ID $0008 (SiS 540 and 630 can have
           | 600                  | either $0008 or $0018 - it can be
           |*620                  | configured(!!!) through registers.
@@ -189,7 +189,7 @@ Here's a list of chipsets suported by Uniflash:
 ----------|----------------------|--------------------------------------------
  ALi      |*FinALi 486           | FinALi has very weird Flash ROM access but
           |*Aladdin              | finally it works correctly.
-          | Aladdin III          | <- The 1st ALi Pentium chipset
+          | Aladdin III          |
           | Aladdin IV/IV+       | All chipsets with M1533/M1543/M1535 South
           |*Aladdin V            | Bridge should work.
           | Aladdin 7            |
@@ -204,7 +204,6 @@ Here's a list of chipsets suported by Uniflash:
 ----------|----------------------|--------------------------------------------
  SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
           |                      | South Bridge (UDMA-66 support)
-          |                      | Untested.
 ----------|----------------------|--------------------------------------------
  Winbond/ | W83C553F South Bridge| I don't know if this one was ever used.
  Symphony | Winbond W83697(H)F   | LPC Super I/Os with Flash ROM support
@@ -253,7 +252,17 @@ use this feature). Starting from version 1.24, you must force using this mode,
 if you want to use it by giving the -AMI parameter. This is neccessary because
 it often doesn't work and hangs, preventing users from making BIOS backup.
 
-2.1            Tested PCI cards
+2.1            Support for specific boards
+------------------------------------------
+These boards use non-standard write protection using general purpose outputs
+(GPOs) of the chipset.
+They're detected by reading the BIOS ID string from the top of 4GB. This means
+that the correct BIOS MUST be present in the socket when starting UniFlash or
+the flashing will not work.
+
+6A69RM4E = MicroStar MSI MS-6337 v3.0 (815EP Pro)
+
+2.2            Tested PCI cards
 -------------------------------
  * means tested and functional
  # means tested, but doesn't work
@@ -389,6 +398,7 @@ UniFlash supports the following flash chips:
   ---                             |
  *AE29F1008 = Winbond W29EE011    | 128KB
  *AE29F2008 = Winbond W29C020(C)  | 256KB
+ *AE49F2008 = Winbond W49F002U    | 256KB
 ----------------------------------|-------------------------------------------
   Atmel                           |
   -----                           |
@@ -403,17 +413,18 @@ UniFlash supports the following flash chips:
   AT29xV020 series                | 256KB
   AT29xV040A series               | 512KB
   AT49x512 series                 | 64KB
-  AT49x001(N)T series             | 128KB
-  AT49x001(N) series              | 128KB
- *AT49x002(N)T series             | 256KB
-  AT49x002(N) series              | 256KB
+  AT49x001(A)(N)T series          | 128KB
+  AT49x001(A)(N) series           | 128KB
+ *AT49x002(A)(N)T series          | 256KB
+  AT49x002(A)(N) series           | 256KB
   AT49x008AT series               | 1024KB
   AT49x008(A) series              | 1024KB
   AT49x010 series                 | 128KB
   AT49x020 series                 | 256KB
-  AT49x040 series                 | 512KB
+  AT49x040(A) series              | 512KB
   AT49x080 series                 | 1024KB
   AT49x080T series                | 1024KB
+  AT49x2048(A) series             | 256KB
   AT49x4096(A) series             | 512KB
   AT49x8011T series               | 1024KB
   AT49x8011 series                | 1024KB
@@ -421,6 +432,10 @@ UniFlash supports the following flash chips:
   AT49x160/161(4) series          | 2048KB
   AT49BV320T/321T                 | 4096KB
   AT49BV320/321                   | 4096KB
+  AT49LH002 (LPC/FWH)             | 256KB
+  AT49LH004 (LPC/FWH)             | 512KB
+  AT49LH00B4 (LPC/FWH)            | 512KB
+ *AT49LW080 (Firmware Hub)        | 1024KB
 ----------------------------------|-------------------------------------------
   Bright Microelectronics         |
   -----------------------         |
@@ -530,7 +545,7 @@ UniFlash supports the following flash chips:
   28F640J3A                       | 8192KB
   28F128J3A                       | 16384KB
  *82802AB (Firmware Hub)          | 512KB
-  82802AC (Firmware Hub)          | 1024KB
+ *82802AC (Firmware Hub)          | 1024KB
 ----------------------------------|-------------------------------------------
   ISSI                            |
   ----                            |
@@ -622,12 +637,16 @@ UniFlash supports the following flash chips:
 ----------------------------------|-------------------------------------------
   PMC                             |
   ---                             |
-  Pm39LV512R                      | 64KB
-  Pm39LV010R                      | 128KB
-  Pm29F002T                       | 256KB
+ *Pm29F002T                       | 256KB
   Pm29F002B                       | 256KB
   Pm29F004T or Pm29LV104T         | 512KB
   Pm29F004B or Pm29LV104B         | 512KB
+  Pm39F010 or 39LV010(R)          | 128KB
+  Pm39F020                        | 256KB
+  Pm39F040                        | 512KB
+  Pm39LV512(R)                    | 64KB
+  Pm39LV020                       | 256KB
+  Pm39LV040                       | 512KB
   Pm49FL002                       | 256KB
   Pm49FL004                       | 512KB
   Pm49FL008                       | 1024KB
@@ -654,12 +673,12 @@ UniFlash supports the following flash chips:
   49LF030                         | 384KB
   49LF040                         | 512KB
   49LF080                         | 1024KB
-  49LF002(A) (Firmware Hub)       | 256KB
+ *49LF002(A) (Firmware Hub)       | 256KB
   49LF003A (Firmware Hub)         | 384KB
   49LF004 (Firmware Hub)          | 512KB
   49LF004A (Firmware Hub)         | 512KB
   49LF008 (Firmware Hub)          | 1024KB
-  49LF008A (Firmware Hub)         | 1024KB
+ *49LF008A (Firmware Hub)         | 1024KB
   39SF512                         | 64KB
   39SF010(A)                      | 128KB
  *39SF020(A)                      | 256KB
@@ -792,7 +811,7 @@ Some 12V Flash ROMs require 12V voltage not only to flash, but also to detect.
 If you're trying to flash 12V chip, first check that you have 12V on the VPP
 pin in the socket on motherboard. Flash write protect jumper usually removes
 12V from this pin.
-When some parts of the chip are write protected, 12V on VPP/RESET pin will
+When some parts of the chip are write protected, 12V on VPP/#RESET pin will
 usually allow these protected parts to be flashed (unless the chip has N in
 the name - e.g. MX29F002NT - this means that RESET pin is not connected).
 
@@ -815,7 +834,7 @@ Flash ROM pinout (32-pin DIP):
      A3 -|             |- #OE     (# means active low signal)
      A2 -|             |- A10
      A1 -|             |- #CE     Notes:
-     A0 -|             |- Q7        - some chips have RESET instead of VPP
+     A0 -|             |- Q7        - some chips have #RESET instead of VPP
      Q0 -|             |- Q6        - this is 256KB chip
      Q1 -|             |- Q5        - 512KB chips have A18 instead of VPP
      Q2 -|             |- Q4        - 128KB chips have NC instead of A17
@@ -977,7 +996,6 @@ advertised, etc...
 --------------------------------
 You can contact me (Rainbow Software) by:
 web    : http://www.uniflash.org - UniFlash ONLY
-web    : http://rainbow.ht.st
 web    : http://www.rainbow-software.org
 (new versions should be at all the addresses above)
 e-mail : rainbow@rainbow-software.org
@@ -986,6 +1004,22 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.34       -fixed a bug causing arithmetic overflow with chips with many
+            sectors (such as SST 49LF008A FWH)
+           -fixed problems with c't Flasher and 5V chips smaller than 512KB
+            that use pin 1 as #RESET
+           -added some new PMC chips: Pm39F010, Pm39F020, Pm39F040, Pm39LV020,
+            Pm39LV040
+           -fixed problems with logging on a write protected drive
+           -added support for non-standard BIOS write protection methods by
+            detecting BIOS ID string and matching the board in the list of
+            known boards
+           -added alternative method of supporting 256KB chips on M1533/M1543
+            south bridges - through GPO[19] (used e.g. on Acer V72MA board)
+            (although it does not seem to work...)
+           -added Intel 865P(E)/G(V)/848P chipsets
+           -added some Atmel chips: AT49x2048(A) series, AT49LH002, AT49LH004,
+            AT49LH00B4 and AT49LW080
 1.33       -fixed reboot when running on QDI Titanium IB+ board
            -no more flashing when file size is not correct
            -added support for Winbond LPC Super I/O chips W83697(H)F,
@@ -1389,7 +1423,6 @@ When sending reports that something doesn't work, always send the log file!
  - Intel 28F004-T doesn't work
  - PCI Option ROM Flashing (-pcirom parameter) doesn't work on many cards
  - 256KB BIOSes don't work on some i430VX/HX boards (AWDFLASH works!)
- - Winbond W49F002U doesn't work - looks like write protected (sometimes???)
  - Some VIA and AMD chipsets don't work - maybe because of non-standard flash
    write protection on some boards.
  - Garbage on screen instead of flashing - on Asus P5A board with Aladdin V
@@ -1417,87 +1450,99 @@ When sending reports that something doesn't work, always send the log file!
 
 Here is a list of tested & working motherboards/Flash ROM chip combinations.
 
-Manufacturer  | Model + revision  | Chipset       | Flash ROM chip used
----------------------------------------------------------------------------
-ASUSTeK       | T2P4 rev 2 & 3.10 | Intel 430HX   | SST 29EE010/5V
-Expertboard   | 8661              | Intel 430VX   | Winbond W29EE011/5V
-Soyo          | 5TA2              | Intel 430FX   | SST 29EE010/5V
-Shuttle       | Hot-569           | Intel 430TX   | Atmel AT29C010A/5V
-Shuttle       | Hot-565           | Intel 430TX   | Winbond W29EE011/5V
-Shuttle       | Hot-603           | AMD 640       | Winbond W29EE011/5V
-ASUSTeK       | P2B rev 1.10      | Intel 440BX   | Winbond W29EE011/5V
-PC Chips      | M726 v3.4A        | Aladdin Pro 2 | ASD AE29F1008/5V
-Abit          | BX6 rev. 2        | Intel 440BX   | AMIC A29002T/5V
-MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Winbond W29EE011/5V
-Abit          | BE6-R2            | Intel 440BX   | Winbond W29C020/5V
-DFI           | P2-XLX            | Intel 440LX   | Winbond W29EE011/5V
-FIC           | PT-2006           | Intel 430VX   | Intel 28F001/12V
-PC Chips      | M726 v3.4A        | Aladdin Pro 2 | Winbond W29C020/5V
-Abit          | BX6-R2            | Intel 440BX   | Winbond W29EE011/5V
-Abit          | BX6-R2            | Intel 440BX   | Winbond W29C020(C)/5V
-Abit          | BX6-R2            | Intel 440BX   | SST 29EE010/5V
-Abit          | BX6-R2            | Intel 440BX   | CAT28F010/12V
-Abit          | BX6-R2            | Intel 440BX   | Macronix MX28F1000P/12V
-Abit          | BX6-R2            | Intel 440BX   | Intel 28F010/12V
-AOpen         | AP5C/P            | Intel 430FX   | SST29EE010/5V
-Gigabyte      | GA586SG           | SiS 5591+5595 | Atmel AT29C010A/5V
-Chaintech     | 5IFM0             | Intel 430HX   | Macronix MX29F001B/5V
-ASUSTeK       | P2B rev 1.10      | Intel 440BX   | Atmel AT49F002T/5V
-Micronics     | C200              | Aladdin V     | SST 29EE010/5V
-MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | SST 29EE010/5V
-MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Macronix MX28F1000P/12V
-MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | H.T. M21032T/12V
-PC Chips      | M726 v3.4A        | Aladdin Pro 2 | Macronix MX29F002(N)T/5V
-PC Chips      | M726 v3.4A        | Aladdin Pro 2 | EON EN29F002NT/5V
-Mercury/Kobian| KOB 694X FSX r1.0 | ApolloPro 133A| SST 39VF020/3V (PLCC32)
-QDI           | LegendX           | Intel 440LX   | Winbond W29C020(C)/5V
-PC Chips      | M741LMRT          | SiS 620+5595  | SST 29EE010/5V
-PC Partner    | VIB8x4DS          | Apollo VPX    | SyncMOS F29C51002T/5V
-Soyo          | 5EMA+ v1.1        | Apollo MVP3   | Macronix MX29F001T/5V
-LuckyStar     | K7VAT+            | Apollo KT133  | Winbond W29EE011/5V
-LuckyStar     | K7VAT+            | Apollo KT133  | Winbond W29C020(C)/5V
-LuckyStar     | K7VAT+            | Apollo KT133  | SST 39SF020(A)/5V
-Chaintech     | 7AIA5             | Apollo KT133A | Winbond W49F002U/5V
-PC Chips      | M571              | SiS 5598      | Winbond W29EE011/5V
-PC Partner    | P5VB3+ Rev. B     | Apollo MVP3   | AMD Am29F010A/5V
-Mercury/Kobian| KOB 630E FSFx r1.1| SiS630+IT8705F| EON EN29F002T/5V
-ECS           | K7S5A             | SiS735+IT8705F| Winbond W49F002U/5V
-PowerTech     | MB532 v1.0        | Intel 430FX   | SST 29EE010/5V
-Matsonic      | MS6260S rev.1.6A  | Aladdin V     | ASD AE29F1008/5V
-PC Partner    | TXB820DS          | Intel 430TX   | Atmel AT29C010A/5V
-PC Chips      | M570 v1.3         | SiS 5591+5595 | Atmel AT29C010A/5V
-Gemlight/DTK  | GMB-P57IPS-V1     | Intel 430TX   | Winbond W29EE011/5V
-PC Chips      | M918 V1.2A        | FinALi 486    | H.T. M21032T/12V
-PC Chips      | M918 V1.2A        | FinALi 486    | Macronix MX28F1000P/12V
-PC Chips      | M918 V1.2A        | FinALi 486    | Winbond W29EE011/5V
-PC Chips      | M918 V1.2A        | FinALi 486    | Atmel AT29C010A/5V
-GVC/BCM       | FR500             | SiS 5598      | AMD Am29F002(N)(B)T/5V
-Asus          | A7V266-E          | Apollo KT266A | SST 49LF020/3V
-PC Chips      | M537DMA           | Apollo VPX    | H.T. M20271H/12V
-QDI           | BrillianX 1       | Intel 440BX   | SST 29EE020/5V
-ECS(?)        | TD-4IP-UMC-AIO    | UM8881F+8886BF| Winbond W29EE011/5V
-PC Chips      | M919 V3.4B/F      | UM8881F+8886BF| Macronix MX28F1000P/12V
-PC Chips      | M919 V3.4B/F      | UM8881F+8886BF| Winbond W29EE011/5V
-PC Chips      | M715 V1.2A        | Intel 440LX   | ASD AE29F1008/5V
-Zida          | 4DPS              | SiS 85C496+497| SST 29EE010/5V
-PC Chips      | M571LMR v5.0      | SiS 5598      | Macronix MX29F001T/5V
-Iwill         | P55A2 v1.0        | Intel 430FX   | Intel 28F001BX/BN-T/12V
-Asus          | P2B-F             | Intel 440BX   | Winbond W29C020(C)/5V
-QDI           | WinneX 2 P6I810/W2| Intel 810     | Intel 82802AB/3.3V
-Asus          | P5A Rev 1.04      | ALi Aladdin V | SST 39SF020(A)/5V
-AOpen         | AP43              | SiS 85C496+497| SST 29EE010/5V
-FIC           | PT-2006 v2.2      | Intel 430VX   | Winbond W29C020(C)/5V
-FIC           | PT-2006 v2.2      | Intel 430VX   | H.T. M38705/12V
-MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Macronix MX28F1000/12V
-PC Chips      | Unknown Socket 4  | ALi Aladdin   | ASD AE29F1008/5V
-PC Chips      | Unknown Socket 4  | ALi Aladdin   | Macronix MX28F1000/12V
-c't Flasher   | 8-bit ISA card    |               | AMD Am29F040B/5V
-c't Flasher   | 8-bit ISA card    |               | Catalyst CAT28F010/12V
-c't Flasher   | 8-bit ISA card    |               | Intel 28F001BX/BN-T/12V
-QDI           | Titanium IB+ 1.0  | Intel 430TX   | SST 29EE010/5V
-QDI           | KinetiZ 7B 1.0    | Apollo KT133  | SST 39SF020(A)/5V
-QDI           | Advance 3 1.0     | Apollo MVP3   | SST 29EE020/5V
-QDI           | BrillianX 9 2.0   | Intel 440BX   | Winbond W29C020(C)/5V
+Manufacturer  | Model + revision   | Chipset        | Flash ROM chip used
+------------------------------------------------------------------------------
+ASUSTeK       | T2P4 rev 2 & 3.10  | Intel 430HX    | SST 29EE010/5V
+Expertboard   | 8661               | Intel 430VX    | Winbond W29EE011/5V
+Soyo          | 5TA2               | Intel 430FX    | SST 29EE010/5V
+Shuttle       | Hot-569            | Intel 430TX    | Atmel AT29C010A/5V
+Shuttle       | Hot-565            | Intel 430TX    | Winbond W29EE011/5V
+Shuttle       | Hot-603            | AMD 640        | Winbond W29EE011/5V
+ASUSTeK       | P2B rev 1.10       | Intel 440BX    | Winbond W29EE011/5V
+PC Chips      | M726 v3.4A         | Aladdin Pro 2  | ASD AE29F1008/5V
+Abit          | BX6 rev. 2         | Intel 440BX    | AMIC A29002T/5V
+MicroStar MSI | MS-5120 ver 1      | Intel 430FX    | Winbond W29EE011/5V
+Abit          | BE6-R2             | Intel 440BX    | Winbond W29C020/5V
+DFI           | P2-XLX             | Intel 440LX    | Winbond W29EE011/5V
+FIC           | PT-2006            | Intel 430VX    | Intel 28F001/12V
+PC Chips      | M726 v3.4A         | Aladdin Pro 2  | Winbond W29C020/5V
+Abit          | BX6-R2             | Intel 440BX    | Winbond W29EE011/5V
+Abit          | BX6-R2             | Intel 440BX    | Winbond W29C020(C)/5V
+Abit          | BX6-R2             | Intel 440BX    | SST 29EE010/5V
+Abit          | BX6-R2             | Intel 440BX    | CAT28F010/12V
+Abit          | BX6-R2             | Intel 440BX    | Macronix MX28F1000P/12V
+Abit          | BX6-R2             | Intel 440BX    | Intel 28F010/12V
+AOpen         | AP5C/P             | Intel 430FX    | SST29EE010/5V
+Gigabyte      | GA586SG            | SiS 5591+5595  | Atmel AT29C010A/5V
+Chaintech     | 5IFM0              | Intel 430HX    | Macronix MX29F001B/5V
+ASUSTeK       | P2B rev 1.10       | Intel 440BX    | Atmel AT49F002T/5V
+Micronics     | C200               | Aladdin V      | SST 29EE010/5V
+MicroStar MSI | MS-5120 ver 1      | Intel 430FX    | SST 29EE010/5V
+MicroStar MSI | MS-5120 ver 1      | Intel 430FX    | Macronix MX28F1000P/12V
+MicroStar MSI | MS-5120 ver 1      | Intel 430FX    | H.T. M21032T/12V
+PC Chips      | M726 v3.4A         | Aladdin Pro 2  | Macronix MX29F002(N)T/5V
+PC Chips      | M726 v3.4A         | Aladdin Pro 2  | EON EN29F002NT/5V
+Mercury/Kobian| KOB 694X FSX r1.0  | Apollo Pro 133A| SST 39VF020/3V (PLCC32)
+QDI           | LegendX            | Intel 440LX    | Winbond W29C020(C)/5V
+PC Chips      | M741LMRT           | SiS 620+5595   | SST 29EE010/5V
+PC Partner    | VIB8x4DS           | Apollo VPX     | SyncMOS F29C51002T/5V
+Soyo          | 5EMA+ v1.1         | Apollo MVP3    | Macronix MX29F001T/5V
+LuckyStar     | K7VAT+             | Apollo KT133   | Winbond W29EE011/5V
+LuckyStar     | K7VAT+             | Apollo KT133   | Winbond W29C020(C)/5V
+LuckyStar     | K7VAT+             | Apollo KT133   | SST 39SF020(A)/5V
+Chaintech     | 7AIA5              | Apollo KT133A  | Winbond W49F002U/5V
+PC Chips      | M571               | SiS 5598       | Winbond W29EE011/5V
+PC Partner    | P5VB3+ Rev. B      | Apollo MVP3    | AMD Am29F010A/5V
+Mercury/Kobian| KOB 630E FSFx r1.1 | SiS630+IT8705F | EON EN29F002T/5V
+ECS           | K7S5A              | SiS735+IT8705F | Winbond W49F002U/5V
+PowerTech     | MB532 v1.0         | Intel 430FX    | SST 29EE010/5V
+Matsonic      | MS6260S rev.1.6A   | Aladdin V      | ASD AE29F1008/5V
+PC Partner    | TXB820DS           | Intel 430TX    | Atmel AT29C010A/5V
+PC Chips      | M570 v1.3          | SiS 5591+5595  | Atmel AT29C010A/5V
+Gemlight/DTK  | GMB-P57IPS-V1      | Intel 430TX    | Winbond W29EE011/5V
+PC Chips      | M918 V1.2A         | FinALi 486     | H.T. M21032T/12V
+PC Chips      | M918 V1.2A         | FinALi 486     | Macronix MX28F1000P/12V
+PC Chips      | M918 V1.2A         | FinALi 486     | Winbond W29EE011/5V
+PC Chips      | M918 V1.2A         | FinALi 486     | Atmel AT29C010A/5V
+GVC/BCM       | FR500              | SiS 5598       | AMD Am29F002(N)(B)T/5V
+Asus          | A7V266-E           | Apollo KT266A  | SST 49LF020/3V
+PC Chips      | M537DMA            | Apollo VPX     | H.T. M20271H/12V
+QDI           | BrillianX 1        | Intel 440BX    | SST 29EE020/5V
+ECS(?)        | TD-4IP-UMC-AIO     | UM8881F+8886BF | Winbond W29EE011/5V
+PC Chips      | M919 V3.4B/F       | UM8881F+8886BF | Macronix MX28F1000P/12V
+PC Chips      | M919 V3.4B/F       | UM8881F+8886BF | Winbond W29EE011/5V
+PC Chips      | M715 V1.2A         | Intel 440LX    | ASD AE29F1008/5V
+Zida          | 4DPS               | SiS 85C496+497 | SST 29EE010/5V
+PC Chips      | M571LMR v5.0       | SiS 5598       | Macronix MX29F001T/5V
+Iwill         | P55A2 v1.0         | Intel 430FX    | Intel 28F001BX/BN-T/12V
+Asus          | P2B-F              | Intel 440BX    | Winbond W29C020(C)/5V
+QDI           | WinneX 2 P6I810/W2 | Intel 810      | Intel 82802AB/3.3V
+Asus          | P5A Rev 1.04       | ALi Aladdin V  | SST 39SF020(A)/5V
+AOpen         | AP43               | SiS 85C496+497 | SST 29EE010/5V
+FIC           | PT-2006 v2.2       | Intel 430VX    | Winbond W29C020(C)/5V
+FIC           | PT-2006 v2.2       | Intel 430VX    | H.T. M38705/12V
+MicroStar MSI | MS-5120 ver 1      | Intel 430FX    | Macronix MX28F1000/12V
+PC Chips      | Unknown Socket 4   | ALi Aladdin    | ASD AE29F1008/5V
+PC Chips      | Unknown Socket 4   | ALi Aladdin    | Macronix MX28F1000/12V
+c't Flasher   | 8-bit ISA card     |                | AMD Am29F040B/5V
+c't Flasher   | 8-bit ISA card     |                | Catalyst CAT28F010/12V
+c't Flasher   | 8-bit ISA card     |                | Intel 28F001BX/BN-T/12V
+QDI           | Titanium IB+ 1.0   | Intel 430TX    | SST 29EE010/5V
+QDI           | KinetiZ 7B 1.0     | Apollo KT133   | SST 39SF020(A)/5V
+QDI           | Advance 3 1.0      | Apollo MVP3    | SST 29EE020/5V
+QDI           | BrillianX 9 2.0    | Intel 440BX    | Winbond W29C020(C)/5V
+PC Chips      | M598MR v1.3B       | SiS 530        | Macronix MX29F002(N)T/5V
+Abit          | BX133-RAID         | Intel 440BX    | PMC Pm29F002T/5V
+QDI           | Advance 5/133 1.0  | Apollo Pro 133 | Winbond W29C020(C)/5V
+c't Flasher   | 8-bit ISA card     |                | AMIC A29002T/5V
+c't Flasher   | 8-bit ISA card     |                | AMIC A290021T/5V
+c't Flasher   | 8-bit ISA card     |                | AMIC A29002T/5V
+c't Flasher   | 8-bit ISA card     |                | ASD AE49F2008/5V
+MicroStar MSI | MS-6337 v3.0       | Intel 815EP    | SST 49LF002(A)/3.3V
+Procomp       | BVK2A=BioStar M7VKB| Apollo KT133(A)| AMIC A29002(1)T/5V
+LiPPERT       | Thunderbird        | Intel 8255GME  | Intel 82802AC/3.3V
+LiPPERT       | Thunderbird        | Intel 8255GME  | SST 49LF008A/3.3V
+LiPPERT       | Thunderbird        | Intel 8255GME  | Atmel AT49LW080/3.3V
 
 
 11.0            Beta testing stuff
@@ -1532,6 +1577,8 @@ in mind when we started this project. Thanx in advance!
                 Kuzvesov
                 Spec
                 Ernst Ahlers (c't Flasher author)
+                Alfred Glass, Alex Student, Jurgen Stauffer
+                  at LiPPERT Automationstechnik GmbH
 
 
 12.0            Biz support

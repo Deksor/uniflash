@@ -146,9 +146,8 @@ X, Pos  : LongInt;
 UpdStat,
 NxtUpd  : Word;
 Sector  : Boolean;
-SPos, Y,
-{Z,} W    : Byte;
-Z       : Word; {v1.21}
+W       : Byte;
+SPos,Y,Z: Word; {v1.34}
 SaveCR0 : LongInt;
 
 Begin
@@ -1697,7 +1696,7 @@ Begin
  Text_Color(LightGreen);
  Write('v' + Version );
  Text_Color(LightCyan);
- WriteLn(' (c) 2003 Rainbow Software (http://www.uniflash.org)');
+ WriteLn(' (c) 2004 Rainbow Software (http://www.uniflash.org)');
  Text_Color(LightMagenta);
  GotoXY(9,3);
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
@@ -1958,6 +1957,7 @@ Begin
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
 
+ BIOSID:=#0#0#0#0#0#0#0#0; {v1.34}
  ROMSelect; {v1.24}
 
  If ForceId then
@@ -1974,6 +1974,7 @@ Begin
    Until ( FlashError = 0 ) or ( CurManuf = Nil );
    If ROMBase = 0 then
     ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
+   Size512K:=CurCInfo.Size>=512; {v1.34}
   End else FlashInfo := FlashDetect;
 
  ROMType; {v1.24}

@@ -24,12 +24,11 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.33';
+Version    = '1.34';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
 Mono       : Boolean = False; {v1.27}
-FirstBank  : Boolean = True;  {v1.28}
 var Wait:WaitProc;
 
 Function ConstPtr( Const S : String ) : Pointer;
@@ -70,7 +69,6 @@ procedure LogStart; {v1.23}
 procedure LogEnd; {v1.23}
 procedure Text_Color(Color:Byte); {v1.27}
 procedure Text_Background(Color:Byte); {v1.27}
-procedure SetBank(Bank:Byte); {v1.28}
 function NoVideo:Boolean; {v1.28}
 procedure FInput(var Name:String;DefaultName:String;MaxLen:Byte); {v1.28}
 function BrowseFile:String; {v1.28}
@@ -487,6 +485,7 @@ Var
 Block : Word;
 
 Begin
+ LogWrite('Allocating memory block '+Hl(Size));
  Size := ( Size + 3 ) and $FFFFFFFC; {DWORD ALIGN}
  Asm
   MOV   AH,48H     {Alloc dos mem}
@@ -950,14 +949,35 @@ end;
 
 procedure LogWrite(S:String); {v1.23}
 var F : Text;
+
+ procedure LogDisable;
+ begin
+   WriteLn;
+   WriteLn('Warning: unable to write to log file, logging disabled.');
+   Logging:=False;
+ end;
+
 begin
  if Logging then
   Begin
    Assign( F, 'UNIFLASH.LOG');
    Append( F );
-   if IOResult <> 0 then ReWrite( F );
+   if IOResult=2 then
+    begin
+      ReWrite( F );
+      if IOResult<>0 then
+       begin
+         LogDisable;
+         Exit;
+       end;
+    end;
    WriteLn( F, Time,': ',S);
    Close(F);
+   if IOResult<>0 then
+    begin
+      LogDisable;
+      Exit;
+    end;
   End;
 end;
 
@@ -1164,23 +1184,6 @@ asm
 @exit:
   db 66h
   popf                      {POPFD}             {Restore EFLAGS register}
-end;
-
-procedure SetBank(Bank:Byte); {for ALi FinALi 486} {v1.28}
-var A:Byte;
-begin
-  if FirstBank=(Bank=1) then Exit;
-  Port[$22]:=$03;
-  Port[$23]:=$C5;
-
-  Port[$22]:=$2B;
-  A:=Port[$23];
-  Port[$22]:=$2B;
-  if Bank=1 then Port[$23]:=A or $20 else Port[$23]:=A and $DF;
-
-  Port[$22]:=$03;
-  Port[$23]:=$00;
-  FirstBank:=Bank=1;
 end;
 
 function NoVideo:Boolean;assembler; {v1.28}

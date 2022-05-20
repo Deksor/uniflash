@@ -2,6 +2,7 @@ Unit CT_Flash; {c't Flasher 8-bit ISA card} {v1.32}
 
 Interface
 uses Flash,Tools;
+const Size512K:Boolean=False; {v1.34}
 var CTFlashPort: Word;
     CTFlashBase: LongInt;
 
@@ -16,12 +17,14 @@ Implementation
 
 function FIMemB_Flash_CTFlash(Addr:LongInt):Byte;
 begin
+  if not Size512K then Addr:=Addr or $40000; {v1.34}
   Port[CTFlashPort]:=Addr shr 11;
   FIMemB_Flash_CTFlash:=FIMemB(CTFlashBase+Addr and $7FF);
 end;
 
 procedure FOMemB_Flash_CTFlash(Addr:LongInt;Data:Byte);
 begin
+  if not Size512K then Addr:=Addr or $40000; {v1.34}
   Port[CTFlashPort]:=Addr shr 11;
   FOMemB(CTFlashBase+Addr and $7FF,Data);
 end;
@@ -29,6 +32,7 @@ end;
 procedure MoveLinBlock_From_Flash_D_CTFlash(Src,Dest,Size:LongInt);
 var Pos:LongInt;
 begin
+ if not Size512K then Src:=Src or $40000; {v1.34}
  Pos:=0;
  while Pos<Size do
   begin
@@ -42,6 +46,7 @@ end;
 procedure MoveLinBlock_To_Flash_B_CTFlash(Src,Dest,Size:LongInt);
 var Pos:LongInt;
 begin
+ if not Size512K then Dest:=Dest or $40000; {v1.34}
  Pos:=0;
  while Pos<Size do
   begin
@@ -56,6 +61,7 @@ function CompLinBlocks_Flash_CTFlash(Block1,Block2,Size:LongInt):Boolean;
 var OK:Boolean;
     Pos:LongInt;
 begin
+ if not Size512K then Block1:=Block1 or $40000; {v1.34}
  OK:=True;
  Pos:=0;
  while Pos<Size do

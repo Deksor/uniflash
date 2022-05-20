@@ -130,7 +130,7 @@ Begin
            Sectors[ 0, 0 ] := 16;  {16 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 64;
-           Name := ConstPtr( 'Pm39LV512R/3.3V' );
+           Name := ConstPtr( 'Pm39LV512(R)/3.3V' );
           End;
     $1C : Begin
            Flags  := 0;   {sector mode}
@@ -140,7 +140,35 @@ Begin
            Sectors[ 0, 0 ] := 32;  {32 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 128;
-           Name := ConstPtr( 'Pm39LV010R/3.3V' );
+           Name := ConstPtr( 'Pm39F010/5V or Pm39LV010(R)/3.3V' );
+          End;
+    $3D,
+    $4D : Begin {v1.34}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 64;  {64 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 256;
+           case DevId of
+            $3D : Name := ConstPtr( 'Pm39LV020/3.3V' );
+            $4D : Name := ConstPtr( 'Pm39F020/5V' );
+           End;
+          End;
+    $3E,
+    $4E : Begin {v1.34}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 128;  {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 512;
+           case DevId of
+            $3E : Name := ConstPtr( 'Pm39LV040/3.3V' );
+            $4E : Name := ConstPtr( 'Pm39F040/5V' );
+           End;
           End;
     $6D : Begin {v1.31}
            Flags  := 0;   {sector mode}

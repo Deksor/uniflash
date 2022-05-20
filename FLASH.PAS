@@ -33,19 +33,25 @@ Man2, Dev2 : Byte;
 CurCInfo   : ChipInfo;
 ROMBase    : LongInt;
 
+procedure SetBank_FinALi(Bank:Byte); {v1.28}
 function  FIMemB_Flash(Addr:LongInt):Byte; {v1.29}
 function  FIMemB_Flash_FinALi(Addr:LongInt):Byte; {v1.29}
 function  FIMemB_Flash_Low(Addr:LongInt):Byte; {v1.31}
+function  FIMemB_Flash_ALiGPO(Addr:LongInt):Byte; {v1.34}
 procedure FOMemB_Flash(Addr:LongInt;Data:Byte); {v1.29}
 procedure FOMemB_Flash_FinALi(Addr:LongInt;Data:Byte); {v1.29}
+procedure FOMemB_Flash_ALiGPO(Addr:LongInt;Data:Byte); {v1.34}
 procedure MoveLinBlock_From_Flash_D(Src,Dest,Size:LongInt); {v1.29}
 procedure MoveLinBlock_From_Flash_D_FinALi(Src,Dest,Size:LongInt); {v1.29}
 procedure MoveLinBlock_From_Flash_D_Low(Src,Dest,Size:LongInt); {v1.31}
+procedure MoveLinBlock_From_Flash_D_ALiGPO(Src,Dest,Size:LongInt); {v1.34}
 procedure MoveLinBlock_To_Flash_B(Src,Dest,Size:LongInt); {v1.29}
 procedure MoveLinBlock_To_Flash_B_FinALi(Src,Dest,Size:LongInt); {v1.29}
+procedure MoveLinBlock_To_Flash_B_ALiGPO(Src,Dest,Size:LongInt); {v1.34}
 function  CompLinBlocks_Flash(Block1,Block2,Size:LongInt):Boolean; {v1.29}
 function  CompLinBlocks_Flash_FinALi(Block1,Block2,Size:LongInt):Boolean; {v1.29}
 function  CompLinBlocks_Flash_Low(Block1,Block2,Size:LongInt):Boolean; {v1.31}
+function  CompLinBlocks_Flash_ALiGPO(Block1,Block2,Size:LongInt):Boolean; {v1.34}
 Procedure FlashCmd( Cmd : Byte );
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
 Function  FlashDetect : PChipInfo;
@@ -66,10 +72,39 @@ Flash_WriteBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_To_Flas
 Flash_Compare: function(MemAddr,FlashAddr,Size:LongInt):Boolean=CompLinBlocks_Flash; {v1.29}
 ShadowDisable: procedure=nil; {v1.31}
 ShadowRestore: procedure=nil; {v1.31}
+FirstBank  : Boolean = True;  {v1.28}
 
 Implementation
 
-Uses Crt, PCI;
+Uses Crt, PCI, CT_Flash;
+
+procedure SetBank_FinALi(Bank:Byte); {for ALi FinALi 486} {v1.28}
+var A:Byte;
+begin
+  if FirstBank=(Bank=1) then Exit;
+  Port[$22]:=$03;
+  Port[$23]:=$C5;
+
+  Port[$22]:=$2B;
+  A:=Port[$23];
+  Port[$22]:=$2B;
+  if Bank=1 then Port[$23]:=A or $20 else Port[$23]:=A and $DF;
+
+  Port[$22]:=$03;
+  Port[$23]:=$00;
+  FirstBank:=Bank=1;
+end;
+
+procedure SetBank_ALiGPO(Bank:Byte); {for ALi M1533/43} {v1.34}
+var A:Byte;
+begin
+  if FirstBank=(Bank=1) then Exit;
+  if Bank=1 then SetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0,
+    GetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0) and $FFF7FFFF)
+  else SetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0,
+    GetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0) or $80000);
+  FirstBank:=Bank=1;
+end;
 
 function FIMemB_Flash(Addr:LongInt):Byte; {v1.29}
 begin
@@ -78,7 +113,7 @@ end;
 
 function FIMemB_Flash_FinALi(Addr:LongInt):Byte; {v1.29}
 begin
-  if Addr<$10000 then SetBank(1) else SetBank(2);
+  if Addr<$10000 then SetBank_FinALi(1) else SetBank_FinALi(2);
   FIMemB_Flash_FinALi:=FIMemB(ROMBase+Addr-Byte(Addr>=$10000)*$10000);
 end;
 
@@ -91,6 +126,12 @@ begin
  asm popf end;
 end;
 
+function FIMemB_Flash_ALiGPO(Addr:LongInt):Byte; {v1.34}
+begin
+  if Addr<$20000 then SetBank_ALiGPO(1) else SetBank_ALiGPO(2);
+  FIMemB_Flash_ALiGPO:=FIMemB(ROMBase+Addr-Byte(Addr>=$20000)*$20000);
+end;
+
 procedure FOMemB_Flash(Addr:LongInt;Data:Byte); {v1.29}
 begin
  FOMemB(ROMBase+Addr,Data);
@@ -98,8 +139,14 @@ end;
 
 procedure FOMemB_Flash_FinALi(Addr:LongInt;Data:Byte); {v1.29}
 begin
-  if Addr<$10000 then SetBank(1) else SetBank(2);
+  if Addr<$10000 then SetBank_FinALi(1) else SetBank_FinALi(2);
   FOMemB($F0000+Addr-Byte(Addr>=$10000)*$10000,Data);
+end;
+
+procedure FOMemB_Flash_ALiGPO(Addr:LongInt;Data:Byte); {v1.34}
+begin
+  if Addr<$20000 then SetBank_ALiGPO(1) else SetBank_ALiGPO(2);
+  FOMemB(ROMBase+Addr-Byte(Addr>=$20000)*$20000,Data);
 end;
 
 procedure MoveLinBlock_From_Flash_D(Src,Dest,Size:LongInt); {v1.29}
@@ -113,13 +160,13 @@ begin
  FirstBlock:=0;
  if Src<$10000 then
   begin
-    SetBank(1);
+    SetBank_FinALi(1);
     if Size+Src>=$10000 then FirstBlock:=$10000-Src else FirstBlock:=Size;
     MoveLinBlockD(ROMBase+Src,Dest,FirstBlock);
   end;
  if Src+Size>=$10000 then
   begin
-    SetBank(2);
+    SetBank_FinALi(2);
     if Src<$10000 then MoveLinBlockD(ROMBase,Dest+FirstBlock,Size-FirstBlock)
      else MoveLinBlockD(ROMBase+Src-$10000,Dest+FirstBlock,Size);
   end;
@@ -134,6 +181,24 @@ begin
  asm popf end;
 end;
 
+procedure MoveLinBlock_From_Flash_D_ALiGPO(Src,Dest,Size:LongInt); {v1.34}
+var FirstBlock:LongInt;
+begin
+ FirstBlock:=0;
+ if Src<$20000 then
+  begin
+    SetBank_ALiGPO(1);
+    if Size+Src>=$20000 then FirstBlock:=$20000-Src else FirstBlock:=Size;
+    MoveLinBlockD(ROMBase+Src,Dest,FirstBlock);
+  end;
+ if Src+Size>=$20000 then
+  begin
+    SetBank_ALiGPO(2);
+    if Src<$20000 then MoveLinBlockD(ROMBase,Dest+FirstBlock,Size-FirstBlock)
+     else MoveLinBlockD(ROMBase+Src-$20000,Dest+FirstBlock,Size);
+  end;
+end;
+
 procedure MoveLinBlock_To_Flash_B(Src,Dest,Size:LongInt); {v1.29}
 begin
  MoveLinBlockB(Src,ROMBase+Dest,Size);
@@ -145,15 +210,33 @@ begin
  FirstBlock:=0;
  if Dest<$10000 then
   begin
-    SetBank(1);
+    SetBank_FinALi(1);
     if Size+Dest>=$10000 then FirstBlock:=$10000-Dest else FirstBlock:=Size;
     MoveLinBlockB(Src,$F0000+Dest,FirstBlock);
   end;
  if Dest+Size>=$10000 then
   begin
-    SetBank(2);
+    SetBank_FinALi(2);
     if Dest<$10000 then MoveLinBlockB(Src+FirstBlock,$F0000,Size-FirstBlock)
      else MoveLinBlockD(Src,$F0000+Dest-$10000,Size);
+  end;
+end;
+
+procedure MoveLinBlock_To_Flash_B_ALiGPO(Src,Dest,Size:LongInt); {v1.34}
+var FirstBlock:LongInt;
+begin
+ FirstBlock:=0;
+ if Dest<$20000 then
+  begin
+    SetBank_ALiGPO(1);
+    if Size+Dest>=$20000 then FirstBlock:=$20000-Dest else FirstBlock:=Size;
+    MoveLinBlockB(Src,ROMBase+Dest,FirstBlock);
+  end;
+ if Dest+Size>=$20000 then
+  begin
+    SetBank_ALiGPO(2);
+    if Dest<$20000 then MoveLinBlockB(Src+FirstBlock,ROMBase,Size-FirstBlock)
+     else MoveLinBlockD(Src,ROMBase+Dest-$20000,Size);
   end;
 end;
 
@@ -170,13 +253,13 @@ begin
  FirstBlock:=0;
  if Block1<$10000 then
   begin
-    SetBank(1);
+    SetBank_FinALi(1);
     if Size+Block1>=$10000 then FirstBlock:=$10000-Block1 else FirstBlock:=Size;
     if not CompLinBlocks(ROMBase+Block1,Block2,FirstBlock) then OK:=False;
   end;
  if (Block1+Size>=$10000) and OK then
   begin
-    SetBank(2);
+    SetBank_FinALi(2);
     if Block1<$10000 then
      begin
        if not CompLinBlocks(ROMBase,Block2+FirstBlock,Size-FirstBlock) then OK:=False;
@@ -193,6 +276,30 @@ begin
  CompLinBlocks_Flash_Low:=CompLinBlocks(ROMBase+Block1,Block2,Size);
  ShadowRestore;
  asm popf end;
+end;
+
+function CompLinBlocks_Flash_ALiGPO(Block1,Block2,Size:LongInt):Boolean; {v1.34}
+var OK:Boolean;
+    FirstBlock:LongInt;
+begin
+ OK:=True;
+ FirstBlock:=0;
+ if Block1<$20000 then
+  begin
+    SetBank_ALiGPO(1);
+    if Size+Block1>=$20000 then FirstBlock:=$20000-Block1 else FirstBlock:=Size;
+    if not CompLinBlocks(ROMBase+Block1,Block2,FirstBlock) then OK:=False;
+  end;
+ if (Block1+Size>=$20000) and OK then
+  begin
+    SetBank_ALiGPO(2);
+    if Block1<$20000 then
+     begin
+       if not CompLinBlocks(ROMBase,Block2+FirstBlock,Size-FirstBlock) then OK:=False;
+     end
+     else if not CompLinBlocks(ROMBase+Block1-$20000,Block2+FirstBlock,Size) then OK:=False;
+  end;
+ CompLinBlocks_Flash_ALiGPO:=OK;
 end;
 
 Procedure FlashCmd( Cmd : Byte );
@@ -276,6 +383,7 @@ ROMFound        : Boolean;
 
 
  begin
+  LogWrite('DetectLoop');
   DetectLoop := True;
   Found := False;
   for X := MinB to MaxB do
@@ -348,6 +456,7 @@ ROMFound        : Boolean;
  end;
 
 Begin
+ LogWrite('Beginning Flash ROM detection...');
  Man1 := $FF; Dev1 := $FF; Man2 := $FF; Dev2 := $FF;
  ROMFound:=False;
  FlashError := 0;
@@ -373,7 +482,9 @@ Begin
    FlashDetect := Nil; {not identified}
    CurManuf := Nil;
    FlashError := 1;    {unknown chip}
-  End;
+  End
+ else Size512K:=CurCInfo.Size>=512; {v1.34}
+ LogWrite('Flash ROM detection complete');
 End;
 
 Procedure FlashProgram( Pos, Data : LongInt );

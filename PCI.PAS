@@ -937,15 +937,15 @@ Begin
           begin
            Port[$A8]:=$11;
            PIIXReg:=Port[$A9];
-           LogWrite('VIA old method: internal reg $11 = '+_Str(PIIXReg)); {v1.28}
+           LogWrite('VIA old method: internal reg $11 = '+Hl(PIIXReg)); {v1.28}
            Port[$A8]:=$11;
            Port[$A9]:=PIIXReg or $40; {ROM Write enable}
            Port[$A8]:=$11;
-           LogWrite('VIA old method: internal reg $11 changed to '+_Str(Port[$A9])); {v1.28}
+           LogWrite('VIA old method: internal reg $11 changed to '+Hl(Port[$A9])); {v1.28}
           end else
           begin
            Port[$A8]:=$11;
-           LogWrite('VIA old method: restoring internal reg $11 from '+_Str(Port[$A9])); {v1.28}
+           LogWrite('VIA old method: restoring internal reg $11 from '+Hl(Port[$A9])); {v1.28}
            Port[$A8]:=$11;
            Port[$A9]:=PIIXReg;
           end;
@@ -954,13 +954,13 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0 );
-           LogWrite('SiS old method: reg $D0 = '+_Str(PIIXReg)); {v1.28}
+           LogWrite('SiS old method: reg $D0 = '+Hl(PIIXReg)); {v1.28}
            {write enable, 384K enable}
            SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0, PIIXReg or $F8 );
-           LogWrite('SiS old method: reg $D0 changed to '+_Str(GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0 )));
+           LogWrite('SiS old method: reg $D0 changed to '+Hl(GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0 )));
           End else
           Begin
-           LogWrite('SiS old method: restoring reg $D0 from '+_Str(GetPCIRegD( $00, NorthPos shr 3,
+           LogWrite('SiS old method: restoring reg $D0 from '+Hl(GetPCIRegD( $00, NorthPos shr 3,
             NorthPos and $7, $D0 ))); {v1.28}
            SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0, PIIXReg );
           End;
@@ -977,10 +977,10 @@ Begin
                Flash_ReadBlock:=MoveLinBlock_From_Flash_D_Low;
                Flash_Compare:=CompLinBlocks_Flash_Low;
                PIIXReg := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $4C );
-               LogWrite('ALi old method: reg $4C = '+_Str(PIIXReg));
+               LogWrite('ALi old method: reg $4C = '+Hl(PIIXReg));
                {E and F segment write shadow disable}
                SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $4C, PIIXReg and $00FFFFFF );
-                LogWrite('ALi old method: reg $4C changed to '+_Str(GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $4C)));
+                LogWrite('ALi old method: reg $4C changed to '+Hl(GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $4C)));
              end
             else
              begin {ALi FinALi 486 M1489/1487} {v1.28}
@@ -995,27 +995,27 @@ Begin
 
                Port[$22]:=$12;
                PIIXReg:=Port[$23];
-               LogWrite('ALi old method: internal reg $12 = '+_Str(PIIXReg));
+               LogWrite('ALi old method: internal reg $12 = '+Hl(PIIXReg));
                Port[$22]:=$12;
                Port[$23]:=PIIXReg or $11;
                Port[$22]:=$12;
-               LogWrite('ALi old method: internal reg $12 changed to '+_Str(Port[$23]));
+               LogWrite('ALi old method: internal reg $12 changed to '+Hl(Port[$23]));
 
                Port[$22]:=$21;
                PIIXReg2:=Port[$23];
-               LogWrite('ALi old method: internal reg $21 = '+_Str(PIIXReg2));
+               LogWrite('ALi old method: internal reg $21 = '+Hl(PIIXReg2));
                Port[$22]:=$21;
                Port[$23]:=PIIXReg2 or $20;
                Port[$22]:=$21;
-               LogWrite('ALi old method: internal reg $21 changed to '+_Str(Port[$23]));
+               LogWrite('ALi old method: internal reg $21 changed to '+Hl(Port[$23]));
 
                Port[$22]:=$2B;
                PIIXReg3:=Port[$23];
-               LogWrite('ALi old method: internal reg $2B = '+_Str(PIIXReg3));
+               LogWrite('ALi old method: internal reg $2B = '+Hl(PIIXReg3));
                Port[$22]:=$2B;
                Port[$23]:=PIIXReg3 or $20;
                Port[$22]:=$2B;
-               LogWrite('ALi old method: internal reg $2B changed to '+_Str(Port[$23]));
+               LogWrite('ALi old method: internal reg $2B changed to '+Hl(Port[$23]));
 
                Port[$22]:=$03;
                Port[$23]:=$00;
@@ -1025,7 +1025,7 @@ Begin
           begin
             if Lo(NorthFunc)=0 then
              begin {ALi Aladdin M1451/1449} {v1.31}
-               LogWrite('ALi old method: restoring reg $4C from '+_Str(GetPCIRegD( $00, NorthPos shr 3,
+               LogWrite('ALi old method: restoring reg $4C from '+Hl(GetPCIRegD( $00, NorthPos shr 3,
                 NorthPos and $7, $4C )));
                SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $4C, PIIXReg );
              end
@@ -1035,17 +1035,17 @@ Begin
                Port[$23]:=$C5;
 
                Port[$22]:=$12;
-               LogWrite('ALi old method: restoring internal reg $12 from '+_Str(Port[$23]));
+               LogWrite('ALi old method: restoring internal reg $12 from '+Hl(Port[$23]));
                Port[$22]:=$12;
                Port[$23]:=PIIXReg;
 
                Port[$22]:=$21;
-               LogWrite('ALi old method: restoring internal reg $21 from '+_Str(Port[$23]));
+               LogWrite('ALi old method: restoring internal reg $21 from '+Hl(Port[$23]));
                Port[$22]:=$21;
                Port[$23]:=PIIXReg2;
 
                Port[$22]:=$2B;
-               LogWrite('ALi old method: restoring internal reg $2B from '+_Str(Port[$23]));
+               LogWrite('ALi old method: restoring internal reg $2B from '+Hl(Port[$23]));
                Port[$22]:=$2B;
                Port[$23]:=PIIXReg3;
 
@@ -1059,15 +1059,15 @@ Begin
           Begin
             Port[$22]:=$12;
             PIIXReg:=Port[$23];
-            LogWrite('Cypress old method: internal reg $12 = '+_Str(PIIXReg));
+            LogWrite('Cypress old method: internal reg $12 = '+Hl(PIIXReg));
             Port[$22]:=$12;
             Port[$23]:=PIIXReg and $EF;
             Port[$22]:=$12;
-            LogWrite('Cypress old method: internal reg $12 changed to '+_Str(Port[$23]));
+            LogWrite('Cypress old method: internal reg $12 changed to '+Hl(Port[$23]));
           End else
           Begin
             Port[$22]:=$12;
-            LogWrite('Cypress old method: restoring internal reg $12 from '+_Str(Port[$23]));
+            LogWrite('Cypress old method: restoring internal reg $12 from '+Hl(Port[$23]));
             Port[$22]:=$12;
             Port[$23]:=PIIXReg;
           End;
@@ -1085,37 +1085,37 @@ Begin
            If ( SouthFunc and 4 ) <> 0 then Mask := $C00000; {v1.29}
 
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
-           LogWrite('Intel method: reg $4C = '+_Str(PIIXReg)); {v1.23}
+           LogWrite('Intel method: reg $4C = '+Hl(PIIXReg)); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg or Mask );
-           LogWrite('Intel method: reg $4C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C ))); {v1.23}
+           LogWrite('Intel method: reg $4C changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C ))); {v1.23}
            PIIXReg4:=0;
            if Lo(SouthFunc)=3 then {v1.29}
             begin
               PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, 4, $40 ); {v1.29}
-              LogWrite('Intel method: PM Base = '+_Str(PIIXReg2));
+              LogWrite('Intel method: PM Base = '+Hl(PIIXReg2));
               if PIIXReg2=-1 then
                begin
                  PIIXReg4:=1;
                  SetPCIRegD($00,SouthPos shr 3,3,$40,$6101);
                  SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) or 1);
-                 LogWrite('Intel method: PM Base set to '+_Str(GetPCIRegD($00,SouthPos shr 3,3,$40)));
+                 LogWrite('Intel method: PM Base set to '+Hl(GetPCIRegD($00,SouthPos shr 3,3,$40)));
                  PIIXReg3:=Port[$6134] or LongInt(Port[$6135]) shl 8
                                                           or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24;
-                 LogWrite('Intel method: GPO status '+_Str(PIIXReg3));
+                 LogWrite('Intel method: GPO status '+Hl(PIIXReg3));
                  Port[$6135]:=Port[$6135] and $FD;
                  Port[$6137]:=Port[$6137] and $FB; {Abit BX133-RAID v1.29}
-                 LogWrite('Intel method: GPO changed to '+_Str(Port[$6134] or LongInt(Port[$6135]) shl 8
+                 LogWrite('Intel method: GPO changed to '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
                    or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
                end;
              end;
           End else
           Begin
-           LogWrite('Intel method: restoring reg $4C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Intel method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
            if PIIXReg4=1 then {v1.29}
             begin
-              LogWrite('Intel method: restoring GPO from '+_Str(Port[$6134] or LongInt(Port[$6135]) shl 8
+              LogWrite('Intel method: restoring GPO from '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
                or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
               Port[$6134]:=PIIXReg3 and $FF;
               Port[$6135]:=PIIXReg3 and $FF00 shr 8;
@@ -1130,23 +1130,23 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
-           LogWrite('Intel 8xx method: reg $4C = '+_Str(PIIXReg)); {v1.23}
+           LogWrite('Intel 8xx method: reg $4C = '+Hl(PIIXReg)); {v1.23}
            {FWH Write Enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg or $10000 );
-           LogWrite('Intel 8xx method: reg $4C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Intel 8xx method: reg $4C changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0 );
-           LogWrite('Intel 8xx method: reg $E0 = '+_Str(PIIXReg2)); {v1.23}
+           LogWrite('Intel 8xx method: reg $E0 = '+Hl(PIIXReg2)); {v1.23}
            {FWH Decode at $FFC00000-$FFFFFFFF = 4MB enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 or $FF000000 ); {C0 -> FF} {v1.31}
-           LogWrite('Intel 8xx method: reg $E0 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Intel 8xx method: reg $E0 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
           End else
           Begin
-           LogWrite('Intel 8xx method: restoring reg $4C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Intel 8xx method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
-           LogWrite('Intel 8xx method: restoring reg $E0 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Intel 8xx method: restoring reg $E0 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 );
           End;
@@ -1157,15 +1157,15 @@ Begin
             if Map then
              begin
                PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
-               LogWrite('VT8233 method: reg $40 = '+_Str(PIIXReg)); {v1.23}
+               LogWrite('VT8233 method: reg $40 = '+Hl(PIIXReg)); {v1.23}
                {write enable, 4MB enable}
                SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or $7F10 );
-               LogWrite('VT8233 method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+               LogWrite('VT8233 method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                 SouthPos and $7, $40 ))); {v1.23}
              end
             else
              begin
-               LogWrite('VT8233 method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+               LogWrite('VT8233 method: restoring reg $40 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                 SouthPos and $7, $40 ))); {v1.23}
                SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
              end;
@@ -1178,13 +1178,13 @@ Begin
               If ( SouthFunc and 1 ) <> 0 then Mask := Mask or $20000000; {1M enable} {v1.22}
 
               PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
-              LogWrite('VIA/AMD method: reg $40 = '+_Str(PIIXReg)); {v1.23}
+              LogWrite('VIA/AMD method: reg $40 = '+Hl(PIIXReg)); {v1.23}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
-              LogWrite('VIA/AMD method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+              LogWrite('VIA/AMD method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $40 ))); {v1.23}
              End else
              Begin
-              LogWrite('VIA/AMD method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+              LogWrite('VIA/AMD method: restoring reg $40 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $40 ))); {v1.23}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
              End;
@@ -1194,45 +1194,45 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-           LogWrite('ALi method: reg $44 = '+_Str(PIIXReg)); {v1.23}
+           LogWrite('ALi method: reg $44 = '+Hl(PIIXReg)); {v1.23}
            {write enable, 256K enable} {43->47 v1.24}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or $47000000 );
-           LogWrite('ALi method: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 ))); {v1.23}
+           LogWrite('ALi method: reg $44 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 ))); {v1.23}
 
            PIIXReg4 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
-           LogWrite('ALi method: reg $40 = '+_Str(PIIXReg4));
+           LogWrite('ALi method: reg $40 = '+Hl(PIIXReg4));
            {PCI-ISA Posted Write Disable} {v1.26}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg4 and $FFFFFFFB );
-           LogWrite('ALi method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 )));
+           LogWrite('ALi method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 )));
            If (SouthFunc and 1)<>0 then {v1.26}
             begin
               {M1543C rev. B1 - supports 512K ROM}
               PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 ); {v1.19}
-              LogWrite('ALi method: reg $78 = '+_Str(PIIXReg2)); {v1.23}
+              LogWrite('ALi method: reg $78 = '+Hl(PIIXReg2)); {v1.23}
               {512K enable} {v1.19} {v1.24 fixed}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 or $1000 ); {v1.19}
-              LogWrite('ALi method: reg $78 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 )));
+              LogWrite('ALi method: reg $78 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 )));
               {M1535 - supports 512K ROM} {v1.24}
               PIIXReg3 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C );
-              LogWrite('ALi method: reg $7C = '+_Str(PIIXReg3));
+              LogWrite('ALi method: reg $7C = '+Hl(PIIXReg3));
               {512K enable}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg3 or $1000000 );
-              LogWrite('ALi method: reg $7C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C )));
+              LogWrite('ALi method: reg $7C changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C )));
             end;
           End else
           Begin
-           LogWrite('ALi method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('ALi method: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $44 ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
-           LogWrite('ALi method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('ALi method: restoring reg $40 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $40 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg4 );
            If (SouthFunc and 1)<>0 then {v1.26}
             begin
-              LogWrite('ALi method: restoring reg $78 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+              LogWrite('ALi method: restoring reg $78 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $78 ))); {v1.23}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 ); {v1.19}
-              LogWrite('ALi method: restoring reg $7C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+              LogWrite('ALi method: restoring reg $7C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $7C ))); {v1.24}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg3 ); {v1.24}
             end;
@@ -1242,76 +1242,76 @@ Begin
          if Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
-           LogWrite('SiS method: reg $40 = '+_Str(PIIXReg)); {v1.23}
+           LogWrite('SiS method: reg $40 = '+Hl(PIIXReg)); {v1.23}
            {Lower & extended BIOS enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg and $FFFFFFFB or $B{or $3} );
-           LogWrite('SiS method: reg $40 changed to '+_Str(GetPCIRegD($00,SouthPos shr 3,SouthPos and $7,$40))); {v1.23}
+           LogWrite('SiS method: reg $40 changed to '+Hl(GetPCIRegD($00,SouthPos shr 3,SouthPos and $7,$40))); {v1.23}
            case Lo(SouthFunc) of
             $01: Begin {internal reg. 80h}
                    Port[ $22 ] := $80;
                    PIIXReg2 := Port[ $23 ];
-                   LogWrite('SiS method 1: internal reg $80 = '+_Str(PIIXReg2)); {v1.23}
+                   LogWrite('SiS method 1: internal reg $80 = '+Hl(PIIXReg2)); {v1.23}
                    Port[ $22 ] := $80;
                    Port[ $23 ] := PIIXReg2 and $DF or $4; {Enable Flash ROM write}
                    Port[ $22 ] := $80;
-                   LogWrite('SiS method 1: internal reg $80 changed to '+_Str(Port[$23])); {v1.23}
+                   LogWrite('SiS method 1: internal reg $80 changed to '+Hl(Port[$23])); {v1.23}
                    {v1.23 registers can be also at $70}
                    Port[ $22 ] := $70;
                    PIIXReg3 := Port[ $23 ];
-                   LogWrite('SiS method 1: internal reg $70 = '+_Str(PIIXReg3)); {v1.23}
+                   LogWrite('SiS method 1: internal reg $70 = '+Hl(PIIXReg3)); {v1.23}
                    Port[ $22 ] := $70;
                    Port[ $23 ] := PIIXReg3 and $DF or $4; {Enable Flash ROM write}
                    Port[ $22 ] := $70;
-                   LogWrite('SiS method 1: internal reg $70 changed to '+_Str(Port[$23])); {v1.23}
+                   LogWrite('SiS method 1: internal reg $70 changed to '+Hl(Port[$23])); {v1.23}
                  End;
             $02: Begin {internal reg. 50h}
                    Port[ $22 ] := $50;
                    PIIXReg2 := Port[ $23 ];
-                   LogWrite('SiS method 2: internal reg $50 = '+_Str(PIIXReg2)); {v1.23}
+                   LogWrite('SiS method 2: internal reg $50 = '+Hl(PIIXReg2)); {v1.23}
                    Port[ $22 ] := $50;
                    Port[ $23 ] := PIIXReg2 and $DF or $4; {Enable Flash ROM write}
                    Port[ $22 ] := $50;
-                   LogWrite('SiS method 2: internal reg $50 changed to '+_Str(Port[$23])); {v1.23}
+                   LogWrite('SiS method 2: internal reg $50 changed to '+Hl(Port[$23])); {v1.23}
                  End;
             $03: Begin {PCI reg. 45h bits 5,2}
                    PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-                   LogWrite('SiS method 3: reg $44 = '+_Str(PIIXReg2)); {v1.23}
+                   LogWrite('SiS method 3: reg $44 = '+Hl(PIIXReg2)); {v1.23}
                    SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 and $FFFFDFFF or $400 );
-                   LogWrite('SiS method 3: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                   LogWrite('SiS method 3: reg $44 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                     SouthPos and $7, $44 ))); {v1.23}
                  End;
             $04: Begin {PCI reg. 45h bits 7,6}
                    PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-                   LogWrite('SiS method 4: reg $44 = '+_Str(PIIXReg2)); {v1.23}
+                   LogWrite('SiS method 4: reg $44 = '+Hl(PIIXReg2)); {v1.23}
                    SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 and $FFFF7FFF or $4000 );
-                   LogWrite('SiS method 4: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                   LogWrite('SiS method 4: reg $44 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                     SouthPos and $7, $44 ))); {v1.23}
                  End;
            End;
           End else
           Begin
-           LogWrite('SiS method: restoring reg $40 from '+_Str(GetPCIRegD($00,SouthPos shr 3,SouthPos and $7,$40))); {v1.23}
+           LogWrite('SiS method: restoring reg $40 from '+Hl(GetPCIRegD($00,SouthPos shr 3,SouthPos and $7,$40))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
            case Lo(SouthFunc) of
             $01: Begin {internal reg. 80h}
                    Port[ $22 ] := $80;
-                   LogWrite('SiS method 1: restoring internal reg $80 from '+_Str(Port[$23])); {v1.23}
+                   LogWrite('SiS method 1: restoring internal reg $80 from '+Hl(Port[$23])); {v1.23}
                    Port[ $22 ] := $80;
                    Port[ $23 ] := PIIXReg2;
                    {v1.23 registers can be also at $70}
                    Port[ $22 ] := $70;
-                   LogWrite('SiS method 1: restoring internal reg $70 from '+_Str(Port[$23])); {v1.23}
+                   LogWrite('SiS method 1: restoring internal reg $70 from '+Hl(Port[$23])); {v1.23}
                    Port[ $22 ] := $70;
                    Port[ $23 ] := PIIXReg3;
                  End;
             $02: Begin {internal reg. 50h}
                    Port[ $22 ] := $50;
-                   LogWrite('SiS method 2: restoring internal reg $50 from '+_Str(Port[$23])); {v1.23}
+                   LogWrite('SiS method 2: restoring internal reg $50 from '+Hl(Port[$23])); {v1.23}
                    Port[ $22 ] := $50;
                    Port[ $23 ] := PIIXReg2;
                  End;
             $03,$04: Begin {PCI reg. 45h}
-                      LogWrite('SiS method 3/4: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                      LogWrite('SiS method 3/4: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                        SouthPos and $7, $44 ))); {v1.23}
                       SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 );
                      End;
@@ -1322,13 +1322,13 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
-           LogWrite('SMSC method: reg $4C = '+_Str(PIIXReg)); {v1.23}
+           LogWrite('SMSC method: reg $4C = '+Hl(PIIXReg)); {v1.23}
            {write & 1M enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg or $02C40000 );
-           LogWrite('SMSC method: reg $4C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C ))); {v1.23}
+           LogWrite('SMSC method: reg $4C changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C ))); {v1.23}
           End else
           Begin
-           LogWrite('SMSC method: restoring reg $4C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('SMSC method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
           End;
@@ -1337,13 +1337,13 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
-           LogWrite('Winbond method: reg $4C = '+_Str(PIIXReg)); {v1.23}
+           LogWrite('Winbond method: reg $4C = '+Hl(PIIXReg)); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg and $DF00 or $D000 );
-           LogWrite('Winbond method: reg $4C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Winbond method: reg $4C changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
           End else
           Begin
-           LogWrite('Winbond method: restoring reg $4C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Winbond method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
           End;
@@ -1354,17 +1354,17 @@ Begin
            case Lo(SouthFunc) of
             $01: Begin
                   PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-                  LogWrite('ITE method 1: reg $44 = '+_Str(PIIXReg)); {v1.23}
+                  LogWrite('ITE method 1: reg $44 = '+Hl(PIIXReg)); {v1.23}
                   {write enable}
                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg and $FFFF7FFF );
-                  LogWrite('ITE method 1: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                  LogWrite('ITE method 1: reg $44 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                    SouthPos and $7, $44 ))); {v1.23}
                  End;
             $02: Begin
                   PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 );
-                  LogWrite('ITE method 2: reg $50 = '+_Str(PIIXReg)); {v1.23}
+                  LogWrite('ITE method 2: reg $50 = '+Hl(PIIXReg)); {v1.23}
                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg or $E0000000 and $FEFFFFFF );
-                  LogWrite('ITE method 2: reg $50 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                  LogWrite('ITE method 2: reg $50 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                    SouthPos and $7, $50 ))); {v1.23}
                  End;
            End;
@@ -1372,12 +1372,12 @@ Begin
           Begin
            case Lo(SouthFunc) of
             $01: Begin
-                  LogWrite('ITE method 1: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                  LogWrite('ITE method 1: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                    SouthPos and $7, $44 ))); {v1.23}
                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
                  End;
             $02: Begin
-                  LogWrite('ITE method 2: restoring reg $50 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                  LogWrite('ITE method 2: restoring reg $50 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                    SouthPos and $7, $50 ))); {v1.23}
                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg );
                  End;
@@ -1388,29 +1388,29 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
-           LogWrite('Reliance method: reg $40 = '+_Str(PIIXReg));
+           LogWrite('Reliance method: reg $40 = '+Hl(PIIXReg));
            {512K enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or $00000200 );
-           LogWrite('Reliance method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 )));
+           LogWrite('Reliance method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 )));
 
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 );
-           LogWrite('Reliance method: reg $70 = '+_Str(PIIXReg2));
+           LogWrite('Reliance method: reg $70 = '+Hl(PIIXReg2));
            {4MB enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 or $00000080 );
-           LogWrite('Reliance method: reg $70 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 )));
+           LogWrite('Reliance method: reg $70 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 )));
 
-           LogWrite('Reliance method: internal reg $C6F = '+_Str(Port[$C6F]));
+           LogWrite('Reliance method: internal reg $C6F = '+Hl(Port[$C6F]));
            Port[$C6F]:=Port[$C6F] or $40; {Flash write enable}
-           LogWrite('Reliance method: internal reg $C6F changed to '+_Str(Port[$C6F]));
+           LogWrite('Reliance method: internal reg $C6F changed to '+Hl(Port[$C6F]));
           End else
           Begin
-           LogWrite('Reliance method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Reliance method: restoring reg $40 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $40 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
-           LogWrite('Reliance method: restoring reg $70 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Reliance method: restoring reg $70 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $70 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 );
-           LogWrite('Reliance method: restoring internal reg $C6F from '+_Str(Port[$C6F]));
+           LogWrite('Reliance method: restoring internal reg $C6F from '+Hl(Port[$C6F]));
            Port[$C6F]:=Port[$C6F] and $BF; {Flash write disable}
           End;
         End;
@@ -1419,15 +1419,15 @@ Begin
           Begin
            Port[$24]:=$03;
            PIIXReg:=Port[$26];
-           LogWrite('PicoPower method: internal reg $03 = '+_Str(PIIXReg));
+           LogWrite('PicoPower method: internal reg $03 = '+Hl(PIIXReg));
            Port[$24]:=$03;
            Port[$26]:=PIIXReg or $40; {Flash enable}
            Port[$24]:=$03;
-           LogWrite('PicoPower method: internal reg $03 changed to '+_Str(Port[$26]));
+           LogWrite('PicoPower method: internal reg $03 changed to '+Hl(Port[$26]));
           End else
           Begin
            Port[$24]:=$03;
-           LogWrite('PicoPower method: restoring internal reg $03 from '+_Str(Port[$26]));
+           LogWrite('PicoPower method: restoring internal reg $03 from '+Hl(Port[$26]));
            Port[$24]:=$03;
            Port[$26]:=PIIXReg;
           End;
@@ -1436,13 +1436,13 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 );
-           LogWrite('Cyrix method: reg $50 = '+_Str(PIIXReg));
+           LogWrite('Cyrix method: reg $50 = '+Hl(PIIXReg));
            {16MB enable, write enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg or $00060000 );
-           LogWrite('Cyrix method: reg $50 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 )));
+           LogWrite('Cyrix method: reg $50 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 )));
           End else
           Begin
-           LogWrite('Cyrix method: restoring reg $50 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Cyrix method: restoring reg $50 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $50 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg );
           End;
@@ -1451,23 +1451,23 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-           LogWrite('OPTi method: reg $44 = '+_Str(PIIXReg));
+           LogWrite('OPTi method: reg $44 = '+Hl(PIIXReg));
            {write enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or $80000000 );
-           LogWrite('OPTi method: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 )));
+           LogWrite('OPTi method: reg $44 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 )));
 
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48 );
-           LogWrite('OPTi method: reg $48 = '+_Str(PIIXReg2));
+           LogWrite('OPTi method: reg $48 = '+Hl(PIIXReg2));
            {256k enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48, PIIXReg2 or $FF000000 );
-           LogWrite('OPTi method: reg $48 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48 )));
+           LogWrite('OPTi method: reg $48 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48 )));
 
           End else
           Begin
-           LogWrite('OPTi method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('OPTi method: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $44 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
-           LogWrite('OPTi method: restoring reg $48 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('OPTi method: restoring reg $48 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $48 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48, PIIXReg2 );
           End;
@@ -1476,13 +1476,13 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 );
-           LogWrite('Utron method: reg $60 = '+_Str(PIIXReg));
+           LogWrite('Utron method: reg $60 = '+Hl(PIIXReg));
            {write & 128k enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg and $FFFFEFFF or $2{or $802} ); {v1.28}
-           LogWrite('Utron method: reg $60 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 )));
+           LogWrite('Utron method: reg $60 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 )));
           End else
           Begin
-           LogWrite('Utron method: restoring reg $60 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Utron method: restoring reg $60 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $60 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg );
           End;
@@ -1491,11 +1491,11 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-           LogWrite('UMC method: reg $44 = '+_Str(PIIXReg));
+           LogWrite('UMC method: reg $44 = '+Hl(PIIXReg));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg and $BFFFFFFF);
           End else
           Begin
-           LogWrite('UMC method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('UMC method: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $44 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
           End;
@@ -1504,11 +1504,11 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-           LogWrite('Cypress method: reg $44 = '+_Str(PIIXReg));
+           LogWrite('Cypress method: reg $44 = '+Hl(PIIXReg));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or $E0000000);
           End else
           Begin
-           LogWrite('Cypress method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('Cypress method: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $44 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
           End;
@@ -1517,35 +1517,35 @@ Begin
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-           LogWrite('nForce method: reg $44 = '+_Str(PIIXReg));
+           LogWrite('nForce method: reg $44 = '+Hl(PIIXReg));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or $100);
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 );
-           LogWrite('nForce method: reg $70 = '+_Str(PIIXReg2));
+           LogWrite('nForce method: reg $70 = '+Hl(PIIXReg2));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 and $FFE0FFFF or $C0);
            PIIXReg3 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $74 );
-           LogWrite('nForce method: reg $74 = '+_Str(PIIXReg3));
+           LogWrite('nForce method: reg $74 = '+Hl(PIIXReg3));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $74, 0);
            PIIXReg4 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 );
-           LogWrite('nForce method: reg $78 = '+_Str(PIIXReg4));
+           LogWrite('nForce method: reg $78 = '+Hl(PIIXReg4));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, 0);
            PIIXReg5 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C );
-           LogWrite('nForce method: reg $7C = '+_Str(PIIXReg5));
+           LogWrite('nForce method: reg $7C = '+Hl(PIIXReg5));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, 0);
           End else
           Begin
-           LogWrite('nForce method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('nForce method: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $44 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
-           LogWrite('nForce method: restoring reg $70 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('nForce method: restoring reg $70 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $70 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 );
-           LogWrite('nForce method: restoring reg $74 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('nForce method: restoring reg $74 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $74 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $74, PIIXReg3 );
-           LogWrite('nForce method: restoring reg $78 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('nForce method: restoring reg $78 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $78 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg4 );
-           LogWrite('nForce method: restoring reg $7C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+           LogWrite('nForce method: restoring reg $7C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $7C )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg5 );
           End;
@@ -1559,15 +1559,15 @@ Begin
            begin
              ITEUnlock(LPCBase);
              PIIXReg:=LPCRead(LPCBase,$24);
-             LogWrite('ITE LPC method: reg $24 = '+_Str(PIIXReg));
+             LogWrite('ITE LPC method: reg $24 = '+Hl(PIIXReg));
              {512K enable, write enable}
              LPCWrite(LPCBase,$24,PIIXReg or $7C);
-             LogWrite('ITE LPC method: reg $24 changed to '+_Str(LPCRead(LPCBase,$24)));
+             LogWrite('ITE LPC method: reg $24 changed to '+Hl(LPCRead(LPCBase,$24)));
              LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
            end else
            begin
              ITEUnlock(LPCBase);
-             LogWrite('ITE LPC method: restoring reg $24 from '+_Str(LPCRead(LPCBase,$24)));
+             LogWrite('ITE LPC method: restoring reg $24 from '+Hl(LPCRead(LPCBase,$24)));
              LPCWrite(LPCBase,$24,PIIXReg);
              LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
            end;

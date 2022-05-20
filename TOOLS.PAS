@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.31';
+Version    = '1.32';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -39,6 +39,7 @@ Procedure FOMemB( Addr : LongInt; Data : Byte );
 Function Hb( B : Byte ) : String;
 Function Hw( W : Word ) : String;
 Function Hl( L : Longint ) : String;
+function Hex2Dec(S:String):LongInt; {v1.32}
 Function Windows : Boolean; {v1.22}
 Function EMM386 : Boolean; {v1.27}
 Function FlatRealOn : Boolean;
@@ -162,6 +163,21 @@ Function Hl( L : Longint ) : String;
 Begin
  Hl := Hw( L shr 16 ) + hw(l);
 End;
+
+function Hex2Dec(S:String):LongInt; {v1.32}
+var A,I,Z:LongInt;
+begin
+  I:=0;
+  Z:=1;
+  for A:=Length(S) downto 1 do
+   begin
+     if S[A] in ['0'..'9'] then I:=I+(Ord(S[A])-48)*Z;
+     if S[A] in ['A'..'F'] then I:=I+(Ord(S[A])-55)*Z;
+     if S[A] in ['a'..'f'] then I:=I+(Ord(S[A])-87)*Z;
+     Z:=Z shl 4;
+   end;
+  Hex2Dec:=I;
+end;
 
 {Detect if Windows is running}
 Function Windows : Boolean; Assembler; {v1.22}

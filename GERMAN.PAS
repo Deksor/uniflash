@@ -39,8 +39,8 @@ begin
  AddMsg(28, ' BYTES von CMOS RAM geschrieben.'#7 );
  AddMsg(29, 'Vermisse Dateiname mit Option -' );
  AddMsg(30, '-H oder -?      Zeigt die Hilfe an' );
- AddMsg(31, '-E fname        Flasht Bios Abbild von Datei fname in das Flash' );
- AddMsg(32, '                ROM ohne jeglichen Eigriff durch Benutzer' );
+ AddMsg(31, '-E fname        Flasht Bios Abbild fname in das Flash ROM' );
+ AddMsg(32, '-CTFLASH [xxx]  Flash ROM in c''t Flasher 8-bit ISA card [xxx=port]' ); {v1.32}
  AddMsg(33, '-LOG            Aktiviert Protokollierung in UNIFLASH.LOG' ); {v1.23}
  AddMsg(34, '-PCIROM         Flash ROM on a PCI card instead of system ROM' ); {v1.29}
  AddMsg(35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
@@ -123,6 +123,7 @@ begin
  AddMsg(109, '-SAVE fname     schreibt verwendetes Bios in Datei fname' );
  AddMsg(110, 'Dieses programm kann nicht unter Windows laufen.' ); {v1.22}
  AddMsg(111, 'PCI Bus nicht gefunden oder antwortet nicht.' ); {v1.22}
+ AddMsg(112, 'c''t Flasher not found.'); {v1.32}
 (* AddMsg(112, 'Schreibe ESCD (Plug & Play) Daten in Datei' ); {v1.23}
  AddMsg(113, 'Flashe ESCD (Plug & Play) Daten von Datei in Flash ROM' ); {v1.23}
  AddMsg(114, 'L”sche ESCD (Plug & Play) daten im Flash ROM' ); {v1.23}*)

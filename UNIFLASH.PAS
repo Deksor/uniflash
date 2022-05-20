@@ -6,7 +6,7 @@
 Program Uniflash;
 
 Uses Crt, Dos,
-     Flash, PCI, PCICards, Tools, GenFlash,
+     Flash, PCI, PCICards, Tools, GenFlash, CT_Flash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
      Language, English, French, Dutch, Italian, German;
@@ -16,6 +16,7 @@ Const
 Emergency   : Boolean = False;
 PCIROMEn    : Boolean = False;
 PCIROM      : Boolean = False;
+CTFlash     : Boolean = False; {v1.32}
 SaveBIOS    : Boolean = False;
 ForceId     : Boolean = False;
 CMOS        : Boolean = False;
@@ -1254,7 +1255,7 @@ End;
 
 Procedure WrtCenter( Msg : String );
 Begin
- WriteLn( '          ' + Msg );
+ WriteLn( '        ' + Msg );
 End;
 
 Procedure Err( Msg : String );
@@ -1483,10 +1484,23 @@ begin
      GotoXY(1,3);
      LogWrite( 'PCI expansion ROM at '+Hb(PCIROMBus)+':'+Hb(PCIROMDev)+':'+Hb(PCIROMFun)+' selected' ); {v1.23}
     End else Err( Msg( 45 ) );
-  End else
-   Begin
-    RomEnable( True ); {Program the chipset so it lets you see the BIOS}
-    LogWrite( 'System ROM selected' ); {v1.23}
+  End
+ else
+  if CTFlash then
+   begin
+     if not CTFlash_AutoDetect then begin Err(Msg(112)); end;
+     GotoXY(2,7);
+     ClrEol;
+     GotoXY(19,7);
+     Text_Color(Yellow);
+     Write('c''t Flasher: ');
+     Text_Color(15);
+     Write(Hw(CTFlashPort),', ',Hl(CTFlashBase));
+   end
+  else
+    Begin
+      RomEnable( True ); {Program the chipset so it lets you see the BIOS}
+      LogWrite( 'System ROM selected' ); {v1.23}
    End;
 end;
 
@@ -1684,7 +1698,7 @@ Begin
  if NoVideo then DirectVideo:=False; {v1.28}
 
  ClrScr;
- GotoXY(11,2);
+ GotoXY(9,2);
  Text_Color(Yellow);
  Write('UniFlash ');
  Text_Color(LightGreen);
@@ -1692,7 +1706,7 @@ Begin
  Text_Color(LightCyan);
  WriteLn(' (c) 2003 Rainbow Software (http://rainbow.ht.st)');
  Text_Color(LightMagenta);
- GotoXY(11,3);
+ GotoXY(9,3);
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
  Text_Color(LightGray);
 
@@ -1742,12 +1756,13 @@ Begin
     Begin
      WriteLn;
      WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx]' );
-     WrtCenter( '          [-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]' );
-     WrtCenter( '          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]'); {v1.26}
+     WrtCenter( 'UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]' );
+     WrtCenter( ' [-E fname][-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]' );
+     WrtCenter( ' [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]'); {v1.26}
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
+     WrtCenter( Msg( 33 ) ); {v1.32}
      WrtCenter( Msg( 32 ) );
      WrtCenter( Msg( 34 ) );
      WrtCenter( Msg( 35 ) );
@@ -1783,6 +1798,18 @@ Begin
       else Dec(X);
     end
    else
+   If PStr = 'CTFLASH' then {v1.32}
+    begin
+      CTFlash:=True;
+      Inc(X);
+      PStr:=ParamStr(X);
+      if (PStr[1]<>'-') and (PStr[1]<>'/') and (ParamCount>=X) then
+       CTFlashPort:=Hex2Dec(PStr)
+      else begin CTFlashPort:=0; Dec(X); end;
+      CTFlashPort:=CTFlashPort and $FFFC;
+      if (CTFlashPort<$200) or (CTFlashPort>$3FC) then CTFlashPort:=0;
+    end
+   else
    If PStr = 'AMI' then WantToUseAmi := True else
    If PStr = 'MONO' then Mono := True else {v1.27}
    If PStr = 'LOG' then
@@ -1802,7 +1829,8 @@ Begin
         M := Manuf;
         For D := 0 to $FF do {v1.21 FF}
          If IdChip( D, CurCInfo ) then With CurCInfo do
-          if not WriteLnStd( '  '+ Hb( M )+ Hb( D )+ ' - '+ Manuf^+ ' '+ Name^ ) then Exit;
+          if not WriteLnStd( '  '+ Hb( M )+ Hb( D )+ ' - '+ Manuf^+ ' '+ Name^ ) then
+           begin ClrKbBuf; Exit; end;
        End;
       CurManuf := CurManuf^.Next;
      Until ( CurManuf = Nil );

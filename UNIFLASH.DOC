@@ -1,4 +1,4 @@
-                     UniFlash version 1.31 documentation
+                     UniFlash version 1.32 documentation
                      -----------------------------------
                    (C) 2003 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -76,6 +76,7 @@ Here's the minimum configuration you need to run UniFlash:
        -MS DOS 4.0 and higher
        -Known Flash ROM chip (see section 3.0)
        -Supported chipset (see below) - note that all of them are PCI based
+        or c't Flasher 8-bit ISA card
 
 ,----------------------------------------------------------------------------,
 | Don't forget to disable "Flash write protect" - either in system BIOS or   |
@@ -135,7 +136,7 @@ Here's a list of chipsets suported by Uniflash:
           | Apollo P6            |
           | Apollo MVP4          | VIA chipsets are weird - some work, some
           | Apollo Pro           | don't.
-          | Apollo Pro Plus/133  |
+          |*Apollo Pro Plus/133  |
           |*Apollo Pro 133A      | If you have "Flash Write protect" in BIOS,
           | Apollo ProMedia      | disable it and it should work.
           | Apollo Pro 133Z/PM133|
@@ -321,7 +322,7 @@ UniFlash supports the following flash chips:
   Am28F020                        | 256KB
   Am28F020A                       | 256KB
  *Am29F010(A/B)                   | 128KB
-  Am29F040(B)                     | 512KB
+ *Am29F040(B)                     | 512KB
   Am29F080(B)                     | 1024KB
   Am29F016(B)                     | 2048KB
   Am29F017B                       | 2048KB
@@ -887,13 +888,14 @@ long continuous beep: some error occured, press any key to retry operation
 
 5.2            Command-line parameters
 --------------------------------------
-UNIFLASH [-H|-?|[-E fname][-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx]
-          [-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]
-          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]
+UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]
+ [-E fname][-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]
+ [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]
 
--H or -?        Shows command-line parameters (this list)
--E fname        Flashes bios image from file fname to Flash ROM without any
-                user intervention
+-H or -?        Shows this help screen
+-E fname        Flashes fname to Flash ROM with no prompts
+-LOG            Enables auto-logging to UNIFLASH.LOG
+-CTFLASH        Flash ROM in c't Flasher 8-bit ISA card [xxx=port]
 -PCIROM         Flash ROM on a PCI card instead of system ROM
   [BUS DEV FUN] Manually specify PCI device (decimal numbers)
 -AMI            Use AMI Flash Interface
@@ -902,8 +904,7 @@ UNIFLASH [-H|-?|[-E fname][-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx]
 -BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)
 -REPAIR         Repair erased chip ID (Winbond and SST chips)
 -SAVE fname     Write current bios image to file fname
--CMOSS fname    Save current CMOS settings to file fname
--CMOSR fname    Restore CMOS settings from file fname
+-CMOSS/R fname  Save/restore CMOS settings to/from file fname
 -CMOSC          Clears CMOS settings
 -QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)
 -REBOOT         Reboot after flashing (use together with -E)
@@ -915,6 +916,11 @@ Some parameters can't be used together - e.g. -AMI can't be used with -PCIROM.
 
 -E: Flashes BIOS image from file fname including bootblock without
     any user input
+-LOG: Enables logging of all important events into file UNIFLASH.LOG. Use this
+      when you are sending bug reports and attach this file.
+-CTFLASH: Selects ROM on c't Flasher 8-bit ISA card. This card supports
+          Flash ROMs up to 512KB. Port is autodetected or can be specified
+          manually as optional parameter (hex 200-3FC).
 -PCIROM: Selects ROM on a PCI device instead of system ROM. Works only with
          some cards. You can optionally specify the device you want to use.
          (e.g. -PCIROM 0 3 1 = BUS 0, DEVICE 3, FUNCTION 1)
@@ -975,15 +981,19 @@ advertised, etc...
 8.0            How to contact me
 --------------------------------
 You can contact me (Rainbow Software) by:
+web    : http://www.uniflash.org - UniFlash ONLY
 web    : http://rainbow.ht.st
 web    : http://rainbow.host.sk
-(new versions should be at both addresses above)
+(new versions should be at all the addresses above)
 e-mail : rainbow@host.sk
 
 When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.32       -added support for c't flasher 8-bit ISA card, autodetecting port
+            and memory base, supports Flash ROMs up to 512KB
+           -register contents in LOG file are now written as hex numbers
 1.31       -added support for ALi Aladdin, the ALi's first Pentium chipset
             (uses low E and F segments, disabling shadow during read access)
            -if the south bridge is not found, the first device with no class
@@ -1474,6 +1484,9 @@ FIC           | PT-2006 v2.2      | Intel 430VX   | H.T. M38705/12V
 MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Macronix MX28F1000/12V
 PC Chips      | Unknown Socket 4  | ALi Aladdin   | ASD AE29F1008/5V
 PC Chips      | Unknown Socket 4  | ALi Aladdin   | Macronix MX28F1000/12V
+c't Flasher   | 8-bit ISA card    |               | AMD Am29F040B/5V
+c't Flasher   | 8-bit ISA card    |               | Catalyst CAT28F010/12V
+c't Flasher   | 8-bit ISA card    |               | 28F001BX/BN-T/12V
 
 
 11.0            Beta testing stuff
@@ -1507,6 +1520,7 @@ in mind when we started this project. Thanx in advance!
                 Highlander
                 Kuzvesov
                 Spec
+                Ernst Ahlers (c't Flasher author)
 
 
 12.0            Biz support

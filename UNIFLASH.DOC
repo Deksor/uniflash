@@ -344,10 +344,6 @@ for maniacs of flashing, I suggest you to have a look there)
 
 9.0            Revision info
 ----------------------------
-1.17b          -fixed a bug in the -FORCE option, should work now
-               -still having trouble correctly detecting flash chips,
-                we can use all the input we can get on which chips are
-                and aren't correctly identified by UNIFLASH !
 1.17           -pre-1.20 release because of some important fixes,
                 still working on some things we promised for 1.20, though
                -fixed flashing problems with Macronix & AMD chips
@@ -440,7 +436,6 @@ in mind when we started this project. Thanx in advance !
                 Wim Bervoets
                 Michael L. Croswell
                 Polyvios Simopoulos
-                Matthias David Siebler
 
 
 12.0            Biz support

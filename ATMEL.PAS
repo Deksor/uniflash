@@ -92,14 +92,14 @@ Begin
            Size := 64;
            Progr  := AtmelPageProg;
           End;
-    $3D : Begin {v1.21}
+    $3D : Begin
            Name := ConstPtr( 'AT29LV512/3V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
            Progr  := AtmelPageProg;
           End;
-    $03 : Begin {v1.21}
+    $03 : Begin
            Name := ConstPtr( 'AT49x512 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
@@ -114,7 +114,7 @@ Begin
            Size := 128;
            Progr  := AtmelPageProg;
           End;
-    $17 : Begin {v1.21 Moved AT49BV010/2.7V here - was BAD $05}
+    $17 : Begin
            Name := ConstPtr( 'AT49x010 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
@@ -129,36 +129,20 @@ Begin
            Size := 128;
            Progr  := AtmelPageProg;
           End;
-    $04 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 1;  {1 x 64k}
-           Sectors[ 0, 1 ] := 512;
-           Sectors[ 1, 0 ] := 1;  {1 x 32k}
-           Sectors[ 1, 1 ] := 256;
-           Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 64;
-           Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 128;
+    $04 : Begin {v1.33 FIXED}
+           Flags := 2; {bulk erase}
+           PgSize := 128; { whatever }
            Size := 128;
+           Progr := AtByteProg;
+           Erase := AtBulkErase;
            Name := ConstPtr( 'AT49x001(N)T series (5V/3V/2.7V)' ); {Top Boot Block}
           End;
-    $05 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 32k}
-           Sectors[ 2, 1 ] := 256;
-           Sectors[ 3, 0 ] := 1;  {1 x 64k}
-           Sectors[ 3, 1 ] := 512;
+    $05 : Begin {v1.33 FIXED}
+           Flags := 2; {bulk erase}
+           PgSize := 128; { whatever }
            Size := 128;
+           Progr := AtByteProg;
+           Erase := AtBulkErase;
            Name := ConstPtr( 'AT49x001(N) series (5V/3V/2.7V)' ); {Bottom Boot Block}
           End;
     $DA : Begin
@@ -183,36 +167,20 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-    $08 : Begin {v1.21 FIXED -> support sectors}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 1;  {1 x 128k}
-           Sectors[ 0, 1 ] := 1024;
-           Sectors[ 1, 0 ] := 1;  {1 x 96k}
-           Sectors[ 1, 1 ] := 768;
-           Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 64;
-           Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 128;
+    $08 : Begin {v1.33 FIXED}
+           Flags := 2; {bulk erase}
+           PgSize := 128; { whatever }
            Size := 256;
+           Progr := AtByteProg;
+           Erase := AtBulkErase;
            Name := ConstPtr( 'AT49x002(N)T series (5V/3V/2.7V)' ); {Top Boot Block}
           End;
-    $07 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 96k}
-           Sectors[ 2, 1 ] := 768;
-           Sectors[ 3, 0 ] := 1;  {1 x 128k}
-           Sectors[ 3, 1 ] := 1024;
+    $07 : Begin {v1.33 FIXED}
+           Flags := 2; {bulk erase}
+           PgSize := 128; { whatever }
            Size := 256;
+           Progr := AtByteProg;
+           Erase := AtBulkErase;
            Name := ConstPtr( 'AT49x002(N) series (5V/3V/2.7V)' ); {Bottom Boot Block}
           End;
     $A4 : Begin
@@ -237,7 +205,7 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-    $92 : Begin {v1.21} {A has different sectors -> using bulk erase}
+    $92 : Begin {A has different sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x4096(A) series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
@@ -253,7 +221,7 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-    $21 : Begin {v1.21}
+    $21 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -283,7 +251,7 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-    $4A : Begin {v1.21} {weird sectors -> using bulk erase}
+    $4A : Begin {weird sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x8011T series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
@@ -291,7 +259,7 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-    $CB : Begin {v1.21} {weird sectors -> using bulk erase}
+    $CB : Begin {weird sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x8011 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
@@ -299,7 +267,7 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-    $C2 : Begin {v1.21}
+    $C2 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -311,7 +279,7 @@ Begin
            Size := 2048;
            Name := ConstPtr( 'AT49x160/161(4)T series (5V/3V)' ); {Top Boot Block}
           End;
-    $C0 : Begin {v1.21}
+    $C0 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -323,7 +291,7 @@ Begin
            Size := 2048;
            Name := ConstPtr( 'AT49x160/161(4) series (5V/3V)' ); {Bottom Boot Block}
           End;
-    $C9 : Begin {v1.21}
+    $C9 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -335,7 +303,7 @@ Begin
            Size := 4096;
            Name := ConstPtr( 'AT49BV320T/321T/3V' ); {Top Boot Block}
           End;
-    $C8 : Begin {v1.21}
+    $C8 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;

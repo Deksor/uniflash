@@ -17,8 +17,8 @@ begin
  AddMsg(6, 'Image file name: ' );
  AddMsg(7, 'Unable to create file ' );
  AddMsg(8, 'Unable to open file ' );
- AddMsg(9, 'FILE SIZE DOES NOT MATCH FLASH ROM CHIP SIZE. PROCEED [Y,N]?' );
- AddMsg(10, 'WARNING: ABOUT TO ALTER THE BOOT BLOCK. PROCEED [Y,N]?' );
+ AddMsg(9, 'FILE SIZE DOES NOT MATCH FLASH ROM CHIP SIZE!'#7 );
+ AddMsg(10, 'FLASH BIOS INCLUDING BOOTBLOCK. PROCEED [Y,N]?' );
  AddMsg(11, 'ERROR' );
  AddMsg(12, 'SUCCESS' );
  AddMsg(13, ' data file name: ' );
@@ -91,11 +91,11 @@ begin
  AddMsg(79, '® Back to main menu' );
  AddMsg(80, 'Save CMOS data to file' );
  AddMsg(81, 'Restore CMOS data from file' );
- AddMsg(82, 'Flash BIOS image INCLUDING bootblock' );
+ AddMsg(82, 'Flash BIOS image WITHOUT bootblock' );
  AddMsg(83, 'Write boot block to file' );
  AddMsg(84, 'Flash bootblock to Flash ROM' );
  AddMsg(85, 'Write backup BIOS image to file' );
- AddMsg(86, 'Flash BIOS image file to Flash ROM' );
+ AddMsg(86, 'Flash BIOS image INCLUDING bootblock' );
  AddMsg(87, 'Flash backup BIOS image to Flash ROM' );
  AddMsg(88, 'Clear CMOS data' );
  AddMsg(89, 'Restore backup CMOS data' );
@@ -128,7 +128,7 @@ begin
 (* AddMsg(112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
  AddMsg(113, 'Flash ESCD (Plug & Play) data from file to Flash ROM' ); {v1.23}
  AddMsg(114, 'Clear ESCD (Plug & Play) data in Flash ROM' ); {v1.23}*)
- AddMsg(115, 'Flash BIOS image from file to Flash ROM including BootBlock' ); {v1.23}
+ AddMsg(115, 'Flash BIOS image from file to Flash ROM without BootBlock' ); {v1.23}
  AddMsg(116, 'Write BootBlock to file' ); {v1.23}
  AddMsg(117, 'Flash BootBlock from file to Flash ROM' ); {v1.23}
  AddMsg(118, 'Save current CMOS settings to file' ); {v1.23}
@@ -136,7 +136,7 @@ begin
  AddMsg(120, 'Clear CMOS settings' ); {v1.23}
  AddMsg(121, 'Restore backup CMOS settings from memory' ); {v1.23}
  AddMsg(122, 'Write backup BIOS image from memory to file' ); {v1.23}
- AddMsg(123, 'Flash BIOS image from file to Flash ROM (without BootBlock)' ); {v1.23}
+ AddMsg(123, 'Flash BIOS image from file to Flash ROM including BootBlock' ); {v1.23}
  AddMsg(124, 'Flash backup BIOS image from memory to Flash ROM' ); {v1.23}
  AddMsg(125, 'Detect Flash ROM type and read its contents to backup in memory' ); {v1.23}
  AddMsg(126, 'Enter CMOS settings submenu...' ); {v1.23}

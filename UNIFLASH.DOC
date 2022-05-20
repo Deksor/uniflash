@@ -1,4 +1,4 @@
-                     UniFlash version 1.32 documentation
+                     UniFlash version 1.33 documentation
                      -----------------------------------
                    (C) 2003 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -207,8 +207,9 @@ Here's a list of chipsets suported by Uniflash:
           |                      | Untested.
 ----------|----------------------|--------------------------------------------
  Winbond/ | W83C553F South Bridge| I don't know if this one was ever used.
- Symphony |                      | (No known chipset with this SB)
- Labs     |                      | Untested, of course.
+ Symphony | Winbond W83697(H)F   | LPC Super I/Os with Flash ROM support
+ Labs     | Winbond W83697SF     |
+          | Winbond W83697UF     |
 ----------|----------------------|--------------------------------------------
  ITE      | IT8871F/2F and       | Don't know where used, untested.
           | IT8888F South Bridges| (No known chipset with these SBs)
@@ -833,18 +834,11 @@ plus some details.
 -------------------------------
 
 There's ADVANCED submenu in UniFlash, which contains possibly dangerous
-functions. If you're just a user don't enter it (unless you have to ...). This
-menu contains functions that allow you to overwrite the bootblock (which is
-not normally possible).
-
-WARNING: NEVER overwrite the bootblock if you're not sure if support for your
-Flash ROM in UniFlash is working! If you're trying to fix a bad-flashed BIOS,
-ALWAYS try first to FLASH WITHOUT OVERWRITING THE BOOTBLOCK! If flashing
-completes successfully (no verify errors) but BIOS doesn't work because of
-bootblock incompatibility with the BIOS, THEN overwrite the bootblock.
-
-NOTE: If you want to change between AMI <-> Award BIOS or flash BIOS for
-another motherboard, ALWAYS flash including bootblock.
+functions. Since v1.33, flashing is done including bootblock by default. This
+is less dangerous that flashing a new BIOS and leaving incompatible bootblock
+from previous BIOS there. And more, the bootblock is not exactly defined
+anywhere - some BIOSes might use bigger bootblock than other, which can cause
+problems.
 
 5.1            Making an emergency disk
 ---------------------------------------
@@ -895,6 +889,7 @@ UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]
 -H or -?        Shows this help screen
 -E fname        Flashes fname to Flash ROM with no prompts
 -LOG            Enables auto-logging to UNIFLASH.LOG
+-MONO           Use if you have problems with colors on monochrome monitor
 -CTFLASH        Flash ROM in c't Flasher 8-bit ISA card [xxx=port]
 -PCIROM         Flash ROM on a PCI card instead of system ROM
   [BUS DEV FUN] Manually specify PCI device (decimal numbers)
@@ -983,14 +978,26 @@ advertised, etc...
 You can contact me (Rainbow Software) by:
 web    : http://www.uniflash.org - UniFlash ONLY
 web    : http://rainbow.ht.st
-web    : http://rainbow.host.sk
+web    : http://www.rainbow-software.org
 (new versions should be at all the addresses above)
-e-mail : rainbow@host.sk
+e-mail : rainbow@rainbow-software.org
 
 When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.33       -fixed reboot when running on QDI Titanium IB+ board
+           -no more flashing when file size is not correct
+           -added support for Winbond LPC Super I/O chips W83697(H)F,
+            W83697SF and W83697UF
+           -fixed problems with bootblock erasing on Atmel AT49x001(N)(T) and
+            AT49x002(N)(T) chips (bootblock can't be erased separately -> chip
+            erase must be used)
+           -english-only - other languages are not compiled in the binary
+            release because the translations are outdated
+           -flash including bootblock by default, flashing without bootblock
+            is available from the advanced menu
+           -Restore backup CMOS data in CMOS menu now works
 1.32       -added support for c't flasher 8-bit ISA card, autodetecting port
             and memory base, supports Flash ROMs up to 512KB
            -register contents in LOG file are now written as hex numbers
@@ -1486,7 +1493,11 @@ PC Chips      | Unknown Socket 4  | ALi Aladdin   | ASD AE29F1008/5V
 PC Chips      | Unknown Socket 4  | ALi Aladdin   | Macronix MX28F1000/12V
 c't Flasher   | 8-bit ISA card    |               | AMD Am29F040B/5V
 c't Flasher   | 8-bit ISA card    |               | Catalyst CAT28F010/12V
-c't Flasher   | 8-bit ISA card    |               | 28F001BX/BN-T/12V
+c't Flasher   | 8-bit ISA card    |               | Intel 28F001BX/BN-T/12V
+QDI           | Titanium IB+ 1.0  | Intel 430TX   | SST 29EE010/5V
+QDI           | KinetiZ 7B 1.0    | Apollo KT133  | SST 39SF020(A)/5V
+QDI           | Advance 3 1.0     | Apollo MVP3   | SST 29EE020/5V
+QDI           | BrillianX 9 2.0   | Intel 440BX   | Winbond W29C020(C)/5V
 
 
 11.0            Beta testing stuff

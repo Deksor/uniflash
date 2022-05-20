@@ -120,26 +120,55 @@ LPCName : String;
   var ID:Word;
   begin
     LPCDetect:=0;
-    {LPCId:=0;}
     LPCName:=''; {v1.31}
     ITEUnlock($2E);
     ID:=256*word(LPCRead($2E,$20));
     ID:=ID+LPCRead($2E,$21);
-    LPCWrite($2E,$02,LPCRead($2E,$02) or 2);
     case ID of
-     $8705: begin LPCDetect:=$0100; {LPCId:=1;}LPCName:='ITE IT8700F/05F'; end;
-     $8710: begin LPCDetect:=$0100; {LPCId:=2;}LPCName:='ITE IT8710'; end;
+     $8705: begin LPCDetect:=$0100; LPCName:='ITE IT8700F/05F'; end;
+     $8710: begin LPCDetect:=$0100; LPCName:='ITE IT8710'; end;
     end;
-    if {LPCId<>0}LPCName<>'' then begin LPCBase:=$2E; Exit; end;
+    if LPCName<>'' then
+     begin
+       LPCBase:=$2E;
+       LPCWrite($2E,$02,LPCRead($2E,$02) or 2);
+       Exit;
+     end;
+    case ID and $FFF0 of
+     $6010: begin LPCDetect:=$0200; LPCName:='Winbond W83697(H)F'; end;
+     $6800: begin LPCDetect:=$0200; LPCName:='Winbond W83697SF'; end;
+     $6810: begin LPCDetect:=$0200; LPCName:='Winbond W83697UF'; end;
+     end;
+    if LPCName<>'' then
+     begin
+       LPCBase:=$2E;
+       Port[$2E]:=$AA;
+       Exit;
+     end;
     ITEUnlock($4E);
     ID:=256*word(LPCRead($4E,$20));
     ID:=ID+LPCRead($4E,$21);
-    LPCWrite($4E,$02,LPCRead($4E,$02) or 2);
     case ID of
-     $8705: begin LPCDetect:=$0100; {LPCId:=1;}LPCName:='ITE IT8700F/05F'; end;
-     $8710: begin LPCDetect:=$0100; {LPCId:=2;}LPCName:='ITE IT8710'; end;
+     $8705: begin LPCDetect:=$0100; LPCName:='ITE IT8700F/05F'; end;
+     $8710: begin LPCDetect:=$0100; LPCName:='ITE IT8710'; end;
     end;
-    if {LPCId<>0}LPCName<>'' then begin LPCBase:=$4E; Exit; end;
+    if LPCName<>'' then
+     begin
+       LPCBase:=$4E;
+       LPCWrite($4E,$02,LPCRead($4E,$02) or 2);
+       Exit;
+     end;
+    case ID and $FFF0 of
+     $6010: begin LPCDetect:=$0200; LPCName:='Winbond W83697(H)F'; end;
+     $6800: begin LPCDetect:=$0200; LPCName:='Winbond W83697SF'; end;
+     $6810: begin LPCDetect:=$0200; LPCName:='Winbond W83697UF'; end;
+     end;
+    if LPCName<>'' then
+     begin
+       LPCBase:=$4E;
+       Port[$4E]:=$AA;
+       Exit;
+     end;
   end;
 
 Begin
@@ -504,6 +533,7 @@ Begin
     $7110: Begin
             SouthName:='i82371AB/EB PIIX4(E)';
             Inc( SouthFunc, 3 );
+            if NorthName='i82439TX' then SouthFunc:=SouthFunc+$10; {v1.33}
            End;
     $2410: SouthName:='i82801AA ICH';
     $2420: SouthName:='i82801AB ICH0';
@@ -524,8 +554,8 @@ Begin
      $596: Begin SouthName:='VT82C596(A|B)'; Inc( SouthFunc ); End;
      $686: Begin SouthName:='VT82C686(A|B)'; Inc( SouthFunc ); End;
     $8231: SouthName:='VT8231';
-    $3074,$3147: begin SouthName:='VT8233(A|C)'; SouthFunc := $0310; end;
-    $3177: begin SouthName:='VT8235'; SouthFunc := $0310; end;
+    $3074,$3147: begin SouthName:='VT8233(A|C)'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
+    $3177: begin SouthName:='VT8235'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
    End;
   End else
  If SouthMan = $1022 {AMD} then {v1.20}
@@ -727,7 +757,7 @@ Begin
  if (NorthName='VT82C595/AMD-640') and (SouthName='VT82C586(A|B)/AMD-645')
   then CurrentChipset:='VIA Apollo VP2/AMD 640';
  if (NorthName='VT82C597') and ((SouthName='VT82C586(A|B)/AMD-645') or (SouthName='VT82C596(A|B)'))
-  then CurrentChipset:='VIA Apollo VP3';
+  then CurrentChipset:='VIA Apollo (M)VP3';
  if (NorthName='VT82C598(AT)') and ((SouthName='VT82C596(A|B)') or (SouthName='VT82C686(A|B)'))
   then CurrentChipset:='VIA Apollo MVP3';
  if (NorthName='VT82C685') then CurrentChipset:='VIA Apollo P6';
@@ -746,10 +776,10 @@ Begin
   then CurrentChipset:='VIA Apollo KT133(A)';
  if (NorthName='VT8363(A)/8365') and (SouthName='VT8231')
   then CurrentChipset:='VIA ProSavage KM133(A)';
- if (NorthName='VT8366(A)') and (SouthName='VT8233(A|C)')
+ if (NorthName='VT8366(A)') and ((SouthName='VT8233(A|C)') or (SouthName='VT8235'))
   then CurrentChipset:='VIA Apollo KT266(A)/KT333';
- if (NorthName='VT8366(A)') and (SouthName='VT8235')
-  then CurrentChipset:='VIA Apollo KT333'; {v1.31}
+(* if (NorthName='VT8366(A)') and (SouthName='VT8235')
+  then CurrentChipset:='VIA Apollo KT333'; {v1.31}*)
  if (NorthName='VT8377') and (SouthName='VT8235')
   then CurrentChipset:='VIA Apollo KT400(A)'; {v1.31}
  if (NorthName='VT8633') and (SouthName='VT8233(A|C)')
@@ -1568,6 +1598,24 @@ Begin
            begin
              ITEUnlock(LPCBase);
              LogWrite('ITE LPC method: restoring reg $24 from '+Hl(LPCRead(LPCBase,$24)));
+             LPCWrite(LPCBase,$24,PIIXReg);
+             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
+           end;
+        end;
+   $02: begin {v1.33}
+          if Map then
+           begin
+             ITEUnlock(LPCBase);
+             PIIXReg:=LPCRead(LPCBase,$24);
+             LogWrite('Winbond LPC method: reg $24 = '+Hl(PIIXReg));
+             {512K enable, write enable}
+             LPCWrite(LPCBase,$24,PIIXReg and $C7 or $28);
+             LogWrite('Winbond LPC method: reg $24 changed to '+Hl(LPCRead(LPCBase,$24)));
+             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
+           end else
+           begin
+             ITEUnlock(LPCBase);
+             LogWrite('Winbond LPC method: restoring reg $24 from '+Hl(LPCRead(LPCBase,$24)));
              LPCWrite(LPCBase,$24,PIIXReg);
              LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
            end;

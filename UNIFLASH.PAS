@@ -9,7 +9,7 @@ Uses Crt, Dos,
      Flash, PCI, PCICards, Tools, GenFlash, CT_Flash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
-     Language, English, French, Dutch, Italian, German;
+     Language, English{, French, Dutch, Italian, German};
 
 
 Const
@@ -551,17 +551,15 @@ Begin
      Text_Color( 12 );
      GotoXY( 11, 22 );
      Write( Msg( 9 ) );
-     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+     Delay(2000); {v1.33}
+{     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );}
      GotoXY( 11, 22 );
      ClrEol;
-     If A = AnswNo then
-      Begin
-       GotoXY( 11, 20 );
-       ClrEol;
-       Close( IFile );
-       IOError;
-       Exit;
-      End;
+     GotoXY( 11, 20 );
+     ClrEol;
+     Close( IFile );
+     IOError;
+     Exit;
     End;
    If BB then
     Begin
@@ -903,7 +901,7 @@ Begin
  If A = AnswYes then
   Begin
    LogWrite('Flashing backup BIOS to Flash ROM'); {v1.23}
-   FlashBIOSImg( OldBIOS, 0, FlashSize - 8192 );
+   FlashBIOSImg( OldBIOS, 0, FlashSize{ - 8192 });
    SetMenuItemStatus( MainMenu, 2, False );
   End;
 End;
@@ -1025,7 +1023,7 @@ Begin
    else LogWrite('Error clearing CMOS settings - may be write protected');
    GotoXY(11,22);
    ClrEol;
-   SetMenuItemStatus( MainMenu, 4, True );
+   SetMenuItemStatus( CMOSMenu, 3, True ); {v1.33}
   End;
 End;
 
@@ -1162,7 +1160,7 @@ Begin
     else LogWrite('Error restoring CMOS settings - may be write protected');
    Close( IFile );
    IOError;
-   SetMenuItemStatus( MainMenu, 4, True );
+   SetMenuItemStatus( CMOSMenu, 3, True ); {v1.33}
   End;
  GotoXY( 11, 20 );
  ClrEol;
@@ -1223,7 +1221,7 @@ Begin
    GotoXY(11,22);
    ClrEol;
   End;
- SetMenuItemStatus( MainMenu, 4, False );
+ SetMenuItemStatus( CMOSMenu, 3, False ); {v1.33}
  LogWrite('CMOS settings restored from backup in memory'); {v1.23}
 End;
 
@@ -1422,7 +1420,7 @@ begin
      Text_Color( 15 );
      For X := 1 to PCIROMCnt do With PCIROMs[ X ] do
       Begin
-       Write( '          ', Char( X + 48 ), '. ' );
+       Write( '        ', Char( X + 48 ), '. ' );
        WriteLn( Msg( 40 ), Hb( Bus ),
                 Msg( 41 ), Hb( Pos shr 3 ),
                 Msg( 42 ), Hb( Pos and 7 ),
@@ -1435,22 +1433,21 @@ begin
      WrtCenter( Msg( 43 ) );
      WriteLn;
      WrtCenter( Msg( 44 ) );
-     GotoXY( 19, WhereY - 1 );
+     GotoXY( 17, WhereY - 1 );
      SelA := '0';
      Repeat
       A := _ReadKey;
       If ( A >= '0' ) and ( A <= Char( 48 + PCIROMCnt ) ) then
        Begin
         SelA := A;
-        GotoXY( 19, WhereY );
+        GotoXY( 17, WhereY );
         Write( A );
-        GotoXY( 19, WhereY );
+        GotoXY( 17, WhereY );
        End;
      Until ( A = #13 ) or ( A = #27 );
      If ( A = #27 ) or ( SelA = '0' ) then
       Begin
        WriteLn;
-
        Halt;
       End;
      CurPCIROM := Byte( SelA ) - 48;
@@ -1663,22 +1660,18 @@ begin
  SetMenuItemStatus( MainMenu, 3, True );
  SetMenuItemStatus( MainMenu, 4, True );
  SetMenuItemStatus( MainMenu, 5, True );
- SetMenuItemStatus( MainMenu, 6, True );
- SetMenuItemStatus( MainMenu, 8, True );
+ SetMenuItemStatus( MainMenu, 7, True );
  If FlashInfo = Nil then
   Begin
    SetMenuItemStatus( MainMenu, 1, False );
    SetMenuItemStatus( MainMenu, 5, False );
-   SetMenuItemStatus( MainMenu, 6, False );
   End;
  If ( FlashInfo^.Flags and 3 ) = 2 then SetMenuItemStatus( MainMenu, 5, False );
-
- If PCIROM then
-  Begin
-   SetMenuItemStatus( MainMenu, 4, False );
-   SetMenuItemStatus( MainMenu, 5, False );
-   SetMenuItemStatus( MainMenu, 6, False );
-  End;
+ if PCIROM then
+  begin
+    SetMenuItemStatus( MainMenu, 4, False );
+    SetMenuItemStatus( MainMenu, 5, False );
+  end;
 end;
 
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
@@ -1704,7 +1697,7 @@ Begin
  Text_Color(LightGreen);
  Write('v' + Version );
  Text_Color(LightCyan);
- WriteLn(' (c) 2003 Rainbow Software (http://rainbow.ht.st)');
+ WriteLn(' (c) 2003 Rainbow Software (http://www.uniflash.org)');
  Text_Color(LightMagenta);
  GotoXY(9,3);
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
@@ -2077,7 +2070,7 @@ Begin
                AddMenuItem( Msg( 78 ), 6, 1, @ClearDMI,
                AddMenuItem( Msg( 79 ), Msg( 130 ), 4, 1, Nil, Nil ) ) ) ) {) ) )};*)
 
- AdvMenu := AddMenuItem( Msg( 82 ), Msg( 115 ), 0, 1, @FlashBIOSBB,
+ AdvMenu := AddMenuItem( Msg( 82 ), Msg( 115 ), 0, 1, @FlashBIOS,
             AddMenuItem( Msg( 83 ), Msg( 116 ), 1, 1, @WriteBootBlk,
             AddMenuItem( Msg( 84 ), Msg( 117 ), 2, 1, @FlashBootBlk,
             AddMenuItem( Msg( 79 ), Msg( 130 ), 4, 1, Nil, Nil ) ) ) );
@@ -2089,7 +2082,7 @@ Begin
              AddMenuItem( Msg( 79 ), Msg( 130 ), 5, 1, Nil, Nil ) ) ) ) );
 
  MainMenu := AddMenuItem( Msg( 85 ),  Msg( 122 ), 0, 1, @WriteBIOSImg,
-             AddMenuItem( Msg( 86 ),  Msg( 123 ), 1, 1, @FlashBIOS,
+             AddMenuItem( Msg( 86 ),  Msg( 123 ), 1, 1, @FlashBIOSBB,
              AddMenuItem( Msg( 87 ),  Msg( 124 ), 2, 0, @FlashOldBIOS,
              AddMenuItem( Msg( 100 ), Msg( 125 ), 3, 1, @RedetectFlashROM,
              AddMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
@@ -2101,7 +2094,6 @@ Begin
   Begin
    SetMenuItemStatus( MainMenu, 1, False );
    SetMenuItemStatus( MainMenu, 5, False );
-   SetMenuItemStatus( MainMenu, 6, False );
   End;
  If ( FlashInfo^.Flags and 3 ) = 2 then SetMenuItemStatus( MainMenu, 5, False );
 
@@ -2109,7 +2101,6 @@ Begin
   Begin
    SetMenuItemStatus( MainMenu, 4, False );
    SetMenuItemStatus( MainMenu, 5, False );
-   SetMenuItemStatus( MainMenu, 6, False );
   End;
  LogWrite('UniFlash running in interactive mode'); {v1.23}
  VErr := False;

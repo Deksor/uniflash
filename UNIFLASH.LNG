@@ -1,17 +1,2 @@
-UniFlash supports these languages now:
-  1. English
-  2. French
-  3. Dutch
-  4. Italian
-  5. German
-
-To display a list of supported languages, type UNIFLASH /0. To use a language,
-type UNIFLASH /number where number is the language you want to use. If you
-don't specify any language, English is used as default.
-There are also three batch files included, UFFR.BAT for French language,
-UFNL.BAT for Dutch language, UFIT.BAT for Italian language and UFDE.BAT for
-German language.
-
-Support for these languages is limited because I don't speak French, Dutch,
-Italian or German. If I add some new functions, they will be in English only
-(unless somebody translate them).
+This version of UniFlash supports english only. The other previously supported
+languages are not compiled because they're outdated.

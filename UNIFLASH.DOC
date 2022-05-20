@@ -1,4 +1,4 @@
-                     UniFlash version 1.25 documentation
+                     UniFlash version 1.26 documentation
                      -----------------------------------
                    (C) 2002 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -113,22 +113,23 @@ Here's a list of chipsets suported by Uniflash:
           | i840                 |
           | i850                 |
           | i860                 |
+          | E7500                |
 ----------|----------------------|--------------------------------------------
  VIA      | Appollo Master       | Only VP2 has been tested so far
           | Apollo VP            |
-          | Apollo VPX           |
+          |*Apollo VPX           |
           |*Apollo VP2           |
           | Apollo VP3           |
           | Apollo MVP3          |
           | Apollo P6            |
-          | Apollo MVP4          | <- Support for newer VIA chipsets in
-          |#Apollo Pro           |    version 1.20 (they're all untested)
-          |#Apollo Pro Plus/133  | They don't work unless you have an option
-          |#Apollo Pro 133A      | "Flash Write protect" in BIOS. If you have
-          | Apollo ProMedia      | it, disable it and it will work.
+          | Apollo MVP4          | VIA chipsets are weird - some work, some
+          | Apollo Pro           | don't.
+          | Apollo Pro Plus/133  |
+          |*Apollo Pro 133A      | If you have "Flash Write protect" in BIOS,
+          | Apollo ProMedia      | disable it and it should work.
           | Apollo Pro 133Z/PM133| VT8233: No datasheet available
           | Apollo KX133         |         (KT266 and Pro 266)
-          | Apollo KT133(A)      | These North Bridges are detected, but
+          |*Apollo KT133(A)      | These North Bridges are detected, but
           | Apollo KT266         | aren't used in any VIA's chipset (??):
           | Apollo Pro 266       | VT8653, VT8662, VT8615, VT8361, VT3133
 ----------|----------------------|--------------------------------------------
@@ -136,11 +137,9 @@ Here's a list of chipsets suported by Uniflash:
           | Apollo VP2)          |
           | AMD 750              | UniFlash supports true AMD chipsets since
           |#AMD 760              | version 1.20. Their registers are very
-          | AMD 760MP            | similar to VIA. All are untested.
-          |                      | AMD 760 should work with both VIA and
-          |                      | AMD (does it really exist?) south bridges.
-----------|----------------------|--------------------------------------------
- OPTi     | Vendetta             | Not tested (currently disabled)
+          | AMD 760MP            | similar to VIA. AMD 760 should work with
+          | AMD 760MPX           | both VIA and AMD (does it really exist?)
+          |                      | south bridges.
 ----------|----------------------|--------------------------------------------
  SiS      | 85C496+497           | I got the datasheets, but not from SiS.
           |#501/5101/5501        |
@@ -152,13 +151,16 @@ Here's a list of chipsets suported by Uniflash:
           | 530                  | All SiS South Bridges have the same
           | 540                  | device ID $0008 (SiS 540 and 630 can have
           | 600                  | either $0008 or $0018 - it can be
-          | 620                  | configured(!!!) through registers.
-          | 630                  | SiS 5591/5592 works, 501/5101/5501 doesn't
+          |*620                  | configured(!!!) through registers.
+          |#630                  | SiS 5591/5592 works, 501/5101/5501 doesn't
 ----------|----------------------|--------------------------------------------
- ALi      |*Aladdin Pro II       | All chipsets with M1533/M1543/M1535 South
-          |*Aladdin V            | Bridge should work - I think that it covers
-          | Aladdin Pro IV       | all ALi chipsets. Unlisted chipsets are
-          | ALiMAGiK 1           | not fully detected, but should work.
+ ALi      |&FINALi 486 no support| FINALi 486 not supported because it doesn't
+          |*Aladdin Pro II       | map Flash ROM to 4GB
+          | Aladdin III          | All chipsets with M1533/M1543/M1535 South
+          | Aladdin IV/IV+       | Bridge should work.
+          |*Aladdin V            | Unlisted chipsets are not fully detected,
+          | Aladdin Pro IV       | but should work if they use M1533/43/35 or
+          | ALiMAGiK 1           | M1523 South Bridge.
           |                      | Aladdin Pro II was tested and works OK.
 ----------|----------------------|--------------------------------------------
  SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
@@ -181,6 +183,12 @@ Here's a list of chipsets suported by Uniflash:
 ----------|----------------------|--------------------------------------------
  National/| Geode GX1 (MediaGX)  | Supported with Geode CS5530(A) South Bridge
  Cyrix    |                      | (Cyrix CX5530(A))
+----------|----------------------|--------------------------------------------
+ OPTi     | Vendetta 82C750      | Not tested
+----------|----------------------|--------------------------------------------
+ HiNT     | VXPro-II             | Used on some PC Chips boards (like M559)
+          |                      | I think that it's Utron UC85C501/502
+          |                      | Not tested
 ------------------------------------------------------------------------------
 
 PC100 BXCel is relabelled ALi Aladdin Pro II on PC Chips M726 motherboard.
@@ -193,7 +201,13 @@ it often doesn't work and hangs, preventing users from making BIOS backup.
 
 2.1            Tested PCI cards
 -------------------------------
-Adaptec 19160 (AIC-7892B chip) - Winbond W29EE512
+ * means tested and functional
+ # means tested, but doesn't work
+
+* Adaptec 19160 (AIC-7892B chip) - Winbond W29EE512
+# AdvanSys ASB-3940UA
+# ATI Rage Magnum AGP
+# Matrox Millennium PCI
 
 
 3.0            What flash chips are supported by UniFlash ?
@@ -201,7 +215,7 @@ Adaptec 19160 (AIC-7892B chip) - Winbond W29EE512
 
 UniFlash supports the following flash chips:
  * means tested and functional,
- # means tested, but doesn't work the way it should, DON'T USE!!!!!!!
+ # means tested, but doesn't work the way it should,
  unmarked chips are not tested (note that a lot of chips are very similar to
  one another though, so if one of them works then the rest should work fine
  too)
@@ -355,7 +369,7 @@ UniFlash supports the following flash chips:
   ---                             |
   EN29F040                        | 512KB
   EN29F080                        | 1024KB
-  EN29F002T                       | 256KB
+ *EN29F002T                       | 256KB
   EN29F002B                       | 256KB
   EN29F800T                       | 1024KB
   EN29F800B                       | 1024KB
@@ -568,7 +582,7 @@ UniFlash supports the following flash chips:
   39SF040                         | 512KB
   39xF512 series                  | 64KB
   39xF010 series                  | 128KB
-  39xF020 series                  | 256KB
+ *39xF020 series                  | 256KB
   39xF040 series                  | 512KB
   39xF080 series                  | 1024KB
   39xF016 series                  | 2048KB
@@ -621,7 +635,7 @@ UniFlash supports the following flash chips:
   -------                         |
   F29C51001T = Mosel V29C51001T   | 128KB
   F29C51001B = Mosel V29C51001B   | 128KB
-  F29C51002T = Mosel V29C51002T   | 256KB
+ #F29C51002T = Mosel V29C51002T   | 256KB
   F29C51002B = Mosel V29C51002B   | 256KB
   F29C51004T = Mosel V29C51004T   | 512KB
   F29C51004B = Mosel V29C51004B   | 512KB
@@ -685,7 +699,8 @@ If you're trying to flash 12V chip, first check that you have 12V on the VPP
 pin in the socket on motherboard. Flash write protect jumper usually removes
 12V from this pin.
 When some parts of the chip are write protected, 12V on VPP/RESET pin will
-usually allow these protected parts to be flashed.
+usually allow these protected parts to be flashed (unless the chip has N in
+the name - e.g. MX29F002NT - this means that RESET pin is not connected).
 
 Be sure that Flash ROM is inserted the correct way in the socket (key on the
 chip must match with key on the socket) BEFORE powering up (if you're
@@ -696,16 +711,16 @@ and if there's 12V on the VPP pin, it will be connected to Q3 data pin...
 Flash ROM pinout (32-pin DIP):
           _____KEY_____
     VPP -|     \_/     |- VCC     VPP = Programming voltage (12V)
-    A16 -|             |- /WE     VCC = Operating voltage (5V)
+    A16 -|             |- #WE     VCC = Operating voltage (5V)
     A15 -|             |- A17     GND = Ground
     A12 -|             |- A14     A0..A17 = Address input pins
      A7 -|             |- A13     Q0..Q7  = Data input/output pins
-     A6 -|             |- A8      /WE = Write enable
-     A5 -|             |- A9      /OE = Output enable
-     A4 -|             |- A11     /CE = Chip enable
-     A3 -|             |- /OE
+     A6 -|             |- A8      #WE = Write enable
+     A5 -|             |- A9      #OE = Output enable
+     A4 -|             |- A11     #CE = Chip enable
+     A3 -|             |- #OE     (# means active low signal)
      A2 -|             |- A10
-     A1 -|             |- /CE     Notes:
+     A1 -|             |- #CE     Notes:
      A0 -|             |- Q7        - some chips have RESET instead of VPP
      Q0 -|             |- Q6        - this is 256KB chip
      Q1 -|             |- Q5        - 512KB chips have A18 instead of VPP
@@ -734,6 +749,9 @@ Flash ROM in UniFlash is working! If you're trying to fix a bad-flashed BIOS,
 ALWAYS try first to FLASH WITHOUT OVERWRITING THE BOOTBLOCK! If flashing
 completes successfully (no verify errors) but BIOS doesn't work because of
 bootblock incompatibility with the BIOS, THEN overwrite the bootblock.
+
+NOTE: If you want to change between AMI <-> Award BIOS or flash BIOS for
+another motherboard, ALWAYS flash including bootblock.
 
 5.1            Making an emergency disk
 ---------------------------------------
@@ -779,7 +797,7 @@ long continuous beep: some error occured, press any key to retry operation
 --------------------------------------
 UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]
           [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]
-          [-CMOSS fname][-CMOSR fname][-CMOSC]]
+          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT]
 
 -H or -?        Shows command-line parameters (this list)
 -E fname        Flashes bios image from file fname to Flash ROM without any
@@ -792,6 +810,7 @@ UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]
 -CMOSS fname    Save current CMOS settings to file fname
 -CMOSR fname    Restore CMOS settings from file fname
 -CMOSC          Clears CMOS settings
+-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)
 
 Parameters are executed in the same order as they are entered on the command
 line - so you can use e.g. "uniflash -cmoss cmos.bak -cmosc" to save CMOS
@@ -836,14 +855,28 @@ advertised, etc...
 You can contact me (Rainbow Software) by:
 web    : http://rainbow.ht.st
 web    : http://rainbow.host.sk
-web    : http://www.geocities.com/rnbw1
-(new versions should be on all the addresses above)
-e-mail : rnbw@geocities.com
+(new versions should be at both addresses above)
+e-mail : rainbow@host.sk
 
 When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.26       -added Intel E7500 chipset with 82801CA (ICH3-S) I/O Controller Hub
+           -added some ALi chipsets: Aladdin III (M1521 and M1523(B)) and
+            Aladdin IV/IV+ (M1531(B))
+           -ALi FINALi 486 chipset (M1489) is not supported because it doesn't
+            map Flash ROM below 4GB
+           -added AMD 760MPX chipset with AMD-768 South Bridge
+           -added OPTi Vendetta 82C750 chipset (removed the old disabled code)
+           -added HiNT VXPro-II chipset (I think that it's Utron UC85C501/502,
+            because this one matches it and has programmable Mfg.&Device IDs)
+           -added -QUIT parameter - quits when processed, all comands after
+            will be ignored (useful use: "UNIFLASH -SAVE BACKUP.BIN -QUIT")
+           -added German language support (by Gerald Bottcher)
+           -PCI-to-ISA posted write buffer is disabled on ALi chipsets during
+            flashing to fix problems with some Flash ROMs (e.g. EON)
+           -added unprotect for SST49LF002A/003A/004A/008A FWHs
 1.25       -fixed crash in Windows on some machines - display error message
             (thanks to Alejando Pelaez)
            -pressing ESC in -chiplist will quit
@@ -1102,14 +1135,13 @@ When sending reports that something doesn't work, always send the log file!
    how to disable the protection - please help me if you know!
  - 256KB BIOSes doesn't work on some i430VX/HX boards (AWDFLASH works!)
  - Winbond W49F002U doesn't work - looks like write protected
- - Newer VIA and AMD chipsets don't work - Flash ROM can't be detected. I
-   found no bug in the code, sent e-mails to VIA but they are ignoring them
-   (finally I got reply that they can't help me...)
+ - Some VIA and AMD chipsets don't work - maybe because non-standard flash
+   write protection on some boards.
  - Garbage on screen instead of flashing - on Asus P5A board with Aladdin V
    and 256K Flash ROM, but it works OK on Micronics C200 (same chipset and
-   128K Flash ROM).
-   Got also one report before, but I don't remember it exactly (some VIA
-   chipset, I think...)
+   128K Flash ROM). On PC Partner VIB8x4DS board with VIA Apollo VPX, UniFlash
+   flashes the SyncMOS F29C51002T chip OK but then hangs with garbage on
+   screen. This problem appears to be associated with SyncMOS Flash ROMs only.
 
 
 9.2            What's missing
@@ -1160,6 +1192,11 @@ MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | SST 29EE010/5V
 MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Macronix MX28F1000P/12V
 MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | H.T. M21032T/12V
 PC Chips      | M726 v3.4A        | Aladdin Pro 2 | Macronix MX29F002(N)T/5V
+PC Chips      | M726 v3.4A        | Aladdin Pro 2 | EON EN29F002NT/5V
+Mercury/Kobian| KOB 694X FSX r1.0 | ApolloPro 133A| SST 39VF020/3V (PLCC32)
+QDI           | LegendX           | Intel 440LX   | Winbond W29C020(C)/5V
+PC Chips      | M741LMRT          | SiS 620+5595  | SST 29EE010/5V
+PC Partner    | VIB8x4DS          | Apollo VPX    | SyncMOS F29C51002T/5V
 
 
 11.0            Beta testing stuff

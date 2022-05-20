@@ -119,18 +119,18 @@ Here are examples of use of flags:
    The chip is divided into sectors
        ex:        (INTEL 28F001BX-T/12V)
           $14 : Begin
-                  Flags  := 0;   {sector mode}
-                  PgSize := 128; {'page' size, program 128 bytes at a time}
-                  Progr  := IntelSecProg;
-                  Erase := IntelSecErase;
-                  Sectors[ 0, 0 ] := 1;  {1 x 112k}
-                  Sectors[ 0, 1 ] := 896;
-                  Sectors[ 1, 0 ] := 2;  {2 x 4k}
-                  Sectors[ 1, 1 ] := 32;
-                  Sectors[ 2, 0 ] := 1;  {1 x 8k}
-                  Sectors[ 2, 1 ] := 64;
-                  Size := 128;
-                  Name := ConstPtr( '28F001BX-T/12V or 28F001BN-T/12V' );
+                 Flags  := 0;   {sector mode}
+                 PgSize := 128; {'page' size, program 128 bytes at a time}
+                 Progr  := IntelSecProg;
+                 Erase := IntelSecErase;
+                 Sectors[ 0, 0 ] := 1;  {1 x 112k}
+                 Sectors[ 0, 1 ] := 896;
+                 Sectors[ 1, 0 ] := 2;  {2 x 4k}
+                 Sectors[ 1, 1 ] := 32;
+                 Sectors[ 2, 0 ] := 1;  {1 x 8k}
+                 Sectors[ 2, 1 ] := 64;
+                 Size := 128;
+                 Name := ConstPtr( '28F001BX-T/12V or 28F001BN-T/12V' );
                 End;
 
 2) PAGE MODE (FLAGS=1)
@@ -138,11 +138,11 @@ Here are examples of use of flags:
 page of 128 bytes and the chip does the write&reset operations automatically.
        ex:         (SST 29EE010/5V)
           $07 : Begin
-                Flags  := 1;   {page mode}
-                PgSize := 128; {page size}
-                Progr  := GenPageProgB;
-                Name := ConstPtr( '29EE010/5V' );
-                Size := 128;
+                 Flags  := 1;   {page mode}
+                 PgSize := 128; {page size}
+                 Progr  := GenPageProgB;
+                 Name := ConstPtr( '29EE010/5V' );
+                 Size := 128;
                 End;
 
 3) BULK-ERASE MODE (FLAGS=2)
@@ -150,23 +150,23 @@ page of 128 bytes and the chip does the write&reset operations automatically.
 used in some older flash chips (12V ones)
        ex:         (AMD Am28F010A/12V)
           $22 : Begin
-                Flags  := 2;   {bulk erase}
-                PgSize := 128; {'page' size, program 128 bytes at a time}
-                Progr  := AMDEmbdWrite;
-                Erase := AMDEmbdErase;
-                Size := 128;
-                Name := ConstPtr( 'Am28F010A/12V' );
+                 Flags  := 2;   {bulk erase}
+                 PgSize := 128; {'page' size, program 128 bytes at a time}
+                 Progr  := AMDEmbdWrite;
+                 Erase := AMDEmbdErase;
+                 Size := 128;
+                 Name := ConstPtr( 'Am28F010A/12V' );
                 End;
 
 4) SMALL SECTORS (FLAGS=3)
    Similar to "page-mode". This is the less used mode.
        ex:        (SST 28x040 series (5V/3V/2.7V))
           $04 : Begin
-                Flags  := 3;   {small sectors}
-                PgSize := 128; {sector size}
-                Progr  := SSTSecProg;
-                Name := ConstPtr( '28x040 series (5V/3V/2.7V)' );
-                Size := 512;
+                 Flags  := 3;   {small sectors}
+                 PgSize := 128; {sector size}
+                 Progr  := SSTSecProg;
+                 Name := ConstPtr( '28x040 series (5V/3V/2.7V)' );
+                 Size := 512;
                 End;
 
 
@@ -175,12 +175,12 @@ used in some older flash chips (12V ones)
 used in some older flash chips (12V ones)
        ex:      (INTEL 28F010/12V)
           $B4 : Begin
-                Flags  := 6;   {bulk erase, need blanking}
-                PgSize := 128; {'page' size, program 128 bytes at a time}
-                Progr  := AMDFlashWrite;
-                Erase := AMDFlashErase;
-                Size := 128;
-                Name := ConstPtr( '28F010/12V' );
+                 Flags  := 6;   {bulk erase, need blanking}
+                 PgSize := 128; {'page' size, program 128 bytes at a time}
+                 Progr  := AMDFlashWrite;
+                 Erase := AMDFlashErase;
+                 Size := 128;
+                 Name := ConstPtr( '28F010/12V' );
                 End;
 
 
@@ -194,20 +194,16 @@ programmed nearly the same way. For example, AMDFlashWrite/Erase will work
 on most "bulk-erase, need blanking" chips. (The Intel 28F010/12V uses them,
 for example).
 
+16-bit wide chips (word) are not supported since v1.24.
+
 Here's a list:
--GenPageProgB: This one will work on about 70% of >=5V chips. Programs bytes.
--GenPageProgW: Same as above. Programs words.
+-GenPageProgB: This one will work on about 70% of >=5V chips.
 
 -GenPageProgBAtmel: Similar to GenPageProgB, but uses different commands to
-write. Programs bytes.
--GenPageProgWAtmel: Same as above. Programs words.
+write.
 
 -IntelSecProg: Programs sectored chips compatible with Intel's command set.
-Programs bytes.
--IntelSecProgW: Same as above. Programs words.
 -IntelSecErase: Erases sectored chips compatible with Intel's command set.
-Erases bytes.
--IntelSecEraseW: Same as above. Erases words.
 
 -AMDSecProg: Programs sectored chips compatible with AMD's command set.
 -AMDSecErase: Erases sectored chips compatible with AMD's command set.
@@ -220,6 +216,4 @@ The program procedures MUST be set while adding new chips.
 The erase procedures aren't necessary to be set while adding new chips. Some
 chips (the sectored ones) might need it.
 
-
-
-
+============================== END OF DOCUMENT ===============================

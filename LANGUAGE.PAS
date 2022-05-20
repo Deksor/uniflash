@@ -15,8 +15,8 @@ Type
 LangDef = ARRAY[ 1 .. 150 ] of ^String; {v1.25 130->150}
 
 Var
-MsgPtrs   : ARRAY[ 1 .. 4 ] of ^LangDef;
-LangNames : ARRAY[ 1 .. 4 ] of ^String;
+MsgPtrs   : ARRAY[ 1 .. 5 ] of ^LangDef;
+LangNames : ARRAY[ 1 .. 5 ] of ^String;
 {CurLang   : Byte;}
 
 Function Msg( Id : Word ) : String;

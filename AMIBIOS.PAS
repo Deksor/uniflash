@@ -2,8 +2,7 @@ unit AMIBios; { Unit to use AMI's flash interface when exists }
 { This interface is used to help the flash utility to prepare the system
 for a BIOS upgrade. It can be found in all new AMI WinBIOSes. These functions
 are common to every chipset.
-Uniflash can use these functions if user wants or when chipset is unknown and
-the BIOS is a recent AMIBIOS}
+Uniflash can use these functions if user wants and the BIOS is recent AMIBIOS}
 
 interface
 function AMICheckFor : boolean;

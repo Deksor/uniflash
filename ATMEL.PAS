@@ -27,20 +27,6 @@ Begin
   End;
 End;
 
-(*Procedure AtWordProg( Pos, Data : LongInt ); Far; {v1.24 16-bit removed}
-Var
-X, D : Word;
-
-Begin
- For X := 0 to ( CurCInfo.PgSize shr 1 ) - 1 do
-  Begin
-   FlashCmd( $A0 );
-   D := FIMemW( Data + X + X );
-   FOMemW( Pos + X + X, D );
-   Repeat Until ( FIMemW( Pos + X + X ) and $8000 ) = ( D and $8000 );
-  End;
-End;*)
-
 Procedure AtmelPageProgB( Pos, Data : LongInt ); Far;
 Var
 Attempt,
@@ -63,28 +49,6 @@ Begin
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
 End;
-
-(*Procedure AtmelPageProgW( Pos, Data : LongInt ); Far; {v1.24 16-bit removed}
-Var
-Attempt,
-Ld, X   : Byte;
-
-Begin
- Attempt := 0;
- Repeat
-  FlashCmd( $80 );
-  FlashCmd( $20 );
-  MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
-  Wait( 10000 );  {Wait 10ms} {v1.22 750us->10ms}
-  Ld := FiMemB( Data + 255 ) and $80; {Last data byte, bit 7}
-  Repeat
-   X := FiMemB( Pos + 255 );    {Read last byte written}
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-  X := FiMemB( Pos + 255 );    {Read last byte written}
-  Inc( Attempt );
- Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
- If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
-End;*)
 
 
 Function AtmelIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
@@ -136,14 +100,6 @@ Begin
            Size := 128;
            Progr  := AtmelPageProgB;
           End;
-(*    $05 : Begin
-           Name := ConstPtr( 'AT49BV010/2.7V' );
-           Flags := 2; {bulk erase}
-           PgSize := 128; {whatever}
-           Size := 128;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
-          End;*)
     $17 : Begin {v1.21 Moved AT49BV010/2.7V here - was BAD $05}
            Name := ConstPtr( 'AT49x010 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
@@ -191,28 +147,6 @@ Begin
            Size := 128;
            Name := ConstPtr( 'AT49x001(N) series (5V/3V/2.7V)' ); {Bottom Boot Block}
           End;
-(*    $25 : Begin {v1.24 16-bit removed}
-           Name := ConstPtr( 'AT29C1024/5V' );
-           Flags := 1; {page mode}
-           PgSize := 256; {128 words}
-           Size := 128;
-           Progr := AtmelPageProgW;
-          End;*)
-(*    $26 : Begin {v1.24 16-bit removed}
-           Name := ConstPtr( 'AT29LV1024/3V' );
-           Flags := 1; {page mode}
-           PgSize := 256; {128 words}
-           Size := 128;
-           Progr  := AtmelPageProgW;
-          End;*)
-(*    $87 : Begin {v1.24 16-bit removed}
-           Name := ConstPtr( 'AT49x1024/1025 series (5V/3V)' );
-           Flags := 2; {bulk erase}
-           PgSize := 256; {whatever}
-           Size := 128;
-           Progr := AtWordProg;
-           Erase := AtBulkErase;
-          End;*)
     $DA : Begin
            Name := ConstPtr( 'AT29C020(A)/5V' );
            Flags := 1; {page mode}
@@ -267,18 +201,6 @@ Begin
            Size := 256;
            Name := ConstPtr( 'AT49x002(N) series (5V/3V/2.7V)' ); {Bottom Boot Block}
           End;
-(*    $82 : Begin {v1.21} {v1.24 16-bit removed}
-           Name := ConstPtr( 'AT49x2048(A) series (5V/3V/2.7V)' );
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 3;  {3 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 1;  {1 x 208k}
-           Sectors[ 1, 1 ] := 1664;
-           Size := 256;
-          End;*)
     $A4 : Begin
            Name := ConstPtr( 'AT29C040A/5V' );
            Flags := 1; {page mode}
@@ -347,34 +269,6 @@ Begin
            Progr := AtByteProg;
            Erase := AtBulkErase;
           End;
-(*    $A3 : Begin {v1.21} {v1.24 16-bit removed}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 1;  {1 x 992k}
-           Sectors[ 0, 1 ] := 7936;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 16k}
-           Sectors[ 2, 1 ] := 128;
-           Size := 1024;
-           Name := ConstPtr( 'AT49x8192(A)T series (5V/3V/2.7V)' ); {Top Boot Block}
-          End;
-    $A0 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 992k}
-           Sectors[ 2, 1 ] := 7936;
-           Size := 1024;
-           Name := ConstPtr( 'AT49x8192(A) series (5V/3V/2.7V)' ); {Bottom Boot Block}
-          End; *)
     $4A : Begin {v1.21} {weird sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x8011T series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}

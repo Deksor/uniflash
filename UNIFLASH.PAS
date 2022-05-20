@@ -9,7 +9,7 @@ Uses Crt, Dos,
      Flash, Pci, Tools, GenFlash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
-     Language, English, French, Dutch, Italian;
+     Language, English, French, Dutch, Italian, German;
 
 
 Const
@@ -1604,7 +1604,7 @@ Begin
      WriteLn;
      WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
      WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]' );
-     WrtCenter( '          [-CMOSS fname][-CMOSR fname][-CMOSC]]'); {v1.25}
+     WrtCenter( '          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT]'); {v1.26}
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
@@ -1617,6 +1617,7 @@ Begin
      WrtCenter( Msg( 131 ) ); {v1.25}
      WrtCenter( Msg( 132 ) ); {v1.25}
      WrtCenter( Msg( 133 ) ); {v1.25}
+     WrtCenter( Msg( 134 ) ); {v1.26}
      WriteLn;
      Halt;
     End else
@@ -1722,7 +1723,8 @@ Begin
        WrtCenter('CMOS settings cleared');
       end
      else Err(Msg(24));
-    end;
+    end else
+   if PStr = 'QUIT' then Exit;{v1.26}
    Inc( X );
   End;
 

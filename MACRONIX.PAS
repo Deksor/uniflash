@@ -561,28 +561,6 @@ Begin
            Size := 4096;
            Name := ConstPtr( 'MX29L3211/3.3V' );
           End;
-(*    $77 : Begin  THIS ONE DOESN'T EXIST
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecProg;
-           Erase := MxSecErase;
-           Sectors[ 0, 0 ] := 8;  {8 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Size := 128;
-           Name := ConstPtr( 'MXIC28F1000PC/12V' );
-          End;*)
-(*    $7F : Begin  THIS ONE DOESN'T EXIST
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecProg;
-           Erase := MxSecErase;
-           Sectors[ 0, 0 ] := 7;  {7 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 4;  {4 x 4k}
-           Sectors[ 1, 1 ] := 32;
-           Size := 128;
-           Name := ConstPtr( 'MXIC28F1000PPC/12V' );
-          End;*)
     else Exit;
    End;
   End;

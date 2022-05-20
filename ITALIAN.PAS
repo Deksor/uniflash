@@ -147,4 +147,5 @@ Begin
  AddMsg( Lid, 131, '-CMOSS fname    Save current CMOS settings to file fname' ); {v1.25}
  AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
+ AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
 End.

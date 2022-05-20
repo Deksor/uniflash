@@ -13,7 +13,6 @@ Begin
   Begin
    Case DevId of
     $00 : Begin
-(*           if ROMBase<>0 then FOMemB( ROMBase + $5555, $FF ); {Reset after ID}*)
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;

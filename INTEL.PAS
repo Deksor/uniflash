@@ -140,38 +140,6 @@ Begin
            Size := 256;
            Name := ConstPtr( '28F002-B series (12V/5V)' );
           End;
-(*    $74 : Begin {v1.24 16-bit removed}
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 1;  {1 x 128k}
-           Sectors[ 0, 1 ] := 1024;
-           Sectors[ 1, 0 ] := 1;  {1 x 96k}
-           Sectors[ 1, 1 ] := 768;
-           Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 64;
-           Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 128;
-           Size := 256;
-           Name := ConstPtr( '28F200-T series (12V/5V)' );
-          End;
-    $75 : Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 96k}
-           Sectors[ 2, 1 ] := 768;
-           Sectors[ 3, 0 ] := 1;  {1 x 128k}
-           Sectors[ 3, 1 ] := 1024;
-           Size := 256;
-           Name := ConstPtr( '28F200-B series (12V/5V)' );
-          End;*)
     $78 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
@@ -228,38 +196,6 @@ Begin
            Size := 512;
            Name := ConstPtr( '28F004B3-B/3V' );
           End;
-(*    $70 : Begin {v1.24 16-bit removed}
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 3;  {3 x 128k}
-           Sectors[ 0, 1 ] := 1024;
-           Sectors[ 1, 0 ] := 1;  {1 x 96k}
-           Sectors[ 1, 1 ] := 768;
-           Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 64;
-           Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 128;
-           Size := 512;
-           Name := ConstPtr( '28F400-T series (12V/5V)' );
-          End;
-    $71 : Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 96k}
-           Sectors[ 2, 1 ] := 768;
-           Sectors[ 3, 0 ] := 3;  {3 x 128k}
-           Sectors[ 3, 1 ] := 1024;
-           Size := 512;
-           Name := ConstPtr( '28F400-B series (12V/5V)' );
-          End;*)
     $D2 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
@@ -316,62 +252,6 @@ Begin
            Size := 1024;
            Name := ConstPtr( '28F008-B series (5V/3V/2.7V)' );
           End;
-(*    $9C : Begin {v1.24 16-bit removed}
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 7;  {7 x 128k}
-           Sectors[ 0, 1 ] := 1024;
-           Sectors[ 1, 0 ] := 1;  {1 x 96k}
-           Sectors[ 1, 1 ] := 768;
-           Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 64;
-           Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 128;
-           Size := 1024;
-           Name := ConstPtr( '28F800-T/5V' );
-          End;
-    $9D : Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 128;
-           Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Sectors[ 2, 0 ] := 1;  {1 x 96k}
-           Sectors[ 2, 1 ] := 768;
-           Sectors[ 3, 0 ] := 7;  {7 x 128k}
-           Sectors[ 3, 1 ] := 1024;
-           Size := 1024;
-           Name := ConstPtr( '28F800-B/5V' );
-          End;
-    $F1 : Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 15; {15 x 64k}
-           Sectors[ 0, 1 ] := 512;
-           Sectors[ 1, 0 ] := 8;  {8 x 8k}
-           Sectors[ 1, 1 ] := 64;
-           Size := 1024;
-           Name := ConstPtr( '28F800F3-T/3V' );
-          End;
-    $F2 : Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 256; {'page' size, program 128 words at a time}
-           Progr  := IntelSecProgW;
-           Erase := IntelSecEraseW;
-           Sectors[ 0, 0 ] := 8;  {8 x 8k}
-           Sectors[ 0, 1 ] := 64;
-           Sectors[ 1, 0 ] := 15; {15 x 64k}
-           Sectors[ 1, 1 ] := 512;
-           Size := 1024;
-           Name := ConstPtr( '28F800F3-B/3V' );
-          End;*)
     $D0 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}

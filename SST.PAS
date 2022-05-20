@@ -126,6 +126,47 @@ Begin
  AMDSecProg ( Pos, Data );
 End;
 
+Procedure SSTSecProgFWH( Pos, Data : LongInt ); Far; {49LF003A/4A/8A} {v1.26}
+begin
+  {Unprotect}
+  FOMemB((Pos and $FFBF0000)+2,FIMemB((Pos and $FFBF0000)+2) and $FE);
+  AMDSecProg(Pos,Data);
+  {Protect}
+  FOMemB((Pos and $FFBF0000)+2,FIMemB((Pos and $FFBF0000)+2) or $01);
+end;
+
+Procedure SSTSecEraseFWH( SAddr: LongInt ); Far; {49LF003A/4A/8A} {v1.26}
+begin
+  {Unprotect}
+  FOMemB((SAddr and $FFBF0000)+2,FIMemB((SAddr and $FFBF0000)+2) and $FE);
+  AMDSecErase(SAddr);
+  {Protect}
+  FOMemB((SAddr and $FFBF0000)+2,FIMemB((SAddr and $FFBF0000)+2) or $01);
+end;
+
+Procedure SSTSecProgFWH2( Pos, Data : LongInt ); Far; {49LF002A} {v1.26}
+var X:LongInt;
+begin
+  X:=(Pos and $FFBF8000)+2;
+  if ((Pos-ROMBase)>=$38000) and ((Pos-ROMBase)<$3C000) then X:=((Pos-$4000) and $FFBF8000)+2;
+  {Unprotect}
+  FOMemB(X,FIMemB(X) and $FE);
+  AMDSecProg(Pos,Data);
+  {Protect}
+  FOMemB(X,FIMemB(X) or $01);
+end;
+
+Procedure SSTSecEraseFWH2( SAddr: LongInt ); Far; {49LF002A} {v1.26}
+var X:LongInt;
+begin
+  X:=(SAddr and $FFBF8000)+2;
+  if ((SAddr-ROMBase)>=$38000) and ((SAddr-ROMBase)<$3C000) then X:=((SAddr-$4000) and $FFBF8000)+2;
+  {Unprotect}
+  FOMemB(X,FIMemB(X) and $FE);
+  AMDSecErase(SAddr);
+  {Protect}
+  FOMemB(X,FIMemB(X) or $01);
+end;
 
 
 Function SSTIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
@@ -329,51 +370,11 @@ Begin
            Size := 2048;
            Name := ConstPtr( '39xF016 series (3V/2.7V)' );
           End;
-(*    $89 : Begin {v1.21} {v1.24 16-bit removed}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 64;  {64 x 4k}
-           Sectors[ 0, 1 ] := 32;
-           Size := 256;
-           Name := ConstPtr( '39xF200A series (3V/2.7V)' );
-          End;
-    $80 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 128;  {128 x 4k}
-           Sectors[ 0, 1 ] := 32;
-           Size := 512;
-           Name := ConstPtr( '39xF400A series (3V/2.7V)' );
-          End;
-    $81 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 256;  {256 x 4k}
-           Sectors[ 0, 1 ] := 32;
-           Size := 1024;
-           Name := ConstPtr( '39xF800A series (3V/2.7V)' );
-          End;
-    $82 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProgW;
-           Erase := AMDSecEraseW;
-           Sectors[ 0, 0 ] := 512;  {512 x 4k}
-           Sectors[ 0, 1 ] := 32;
-           Size := 2048;
-           Name := ConstPtr( '39xF160 series (3V/2.7V)' );
-          End;*)
     $57 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           Progr  := SSTSecProgFWH2;
+           Erase := SSTSecEraseFWH2;
            Sectors[ 0, 0 ] := 64;  {64 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 256;
@@ -382,8 +383,8 @@ Begin
     $1B : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           Progr  := SSTSecProgFWH;
+           Erase := SSTSecEraseFWH;
            Sectors[ 0, 0 ] := 96;  {96 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 384;
@@ -402,8 +403,8 @@ Begin
     $60 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           Progr  := SSTSecProgFWH;
+           Erase := SSTSecEraseFWH;
            Sectors[ 0, 0 ] := 128;  {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 512;
@@ -422,8 +423,8 @@ Begin
     $5A : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           Progr  := SSTSecProgFWH;
+           Erase := SSTSecEraseFWH;
            Sectors[ 0, 0 ] := 256;  {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 1024;

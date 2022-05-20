@@ -12,26 +12,7 @@ Begin
  With CInfo do
   Begin
    Case DevId of
-    {28F010}
-    $B4 and $7F : Begin
-           Flags  := 6;   {bulk erase, need blanking}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDFlashWrite;
-           Erase := AMDFlashErase;
-           Size := 128;
-           Name := ConstPtr( '28F010/12V' );
-          End;
-    {28F020}
-    $BD and $7F : Begin
-           Flags  := 6;   {bulk erase, need blanking}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDFlashWrite;
-           Erase := AMDFlashErase;
-           Size := 256;
-           Name := ConstPtr( '28F020/12V' );
-          End;
-
-         {28F001BX-T}
+    {28F001BX-T}
     $14 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}

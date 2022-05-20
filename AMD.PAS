@@ -2,7 +2,6 @@ Unit AMD; { Unit to communicate with AMD chips }
 
 Interface
 
-
 Implementation
 
 Uses Flash, GenFlash, Tools;

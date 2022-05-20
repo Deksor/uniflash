@@ -101,21 +101,21 @@ Begin
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $25 : Begin
            Name := ConstPtr( 'AT29C1024/5V' );
            Flags := 1; {page mode}
            PgSize := 256; {128 words!}
            Size := 128;
-           Progr := GenPageProgWAtmel;
+           Progr := GenPageProgW;
           End;
     $26 : Begin
            Name := ConstPtr( 'AT29LV1024/3V' );
            Flags := 1; {page mode}
            PgSize := 256; {128 words!}
            Size := 128;
-           Progr  := GenPageProgWAtmel;
+           Progr  := GenPageProgW;
           End;
     $27 : Begin
            Name := ConstPtr( 'AT49F080T/5V' );
@@ -131,56 +131,56 @@ Begin
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $3A : Begin
            Name := ConstPtr( 'AT29xV020 series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $3C : Begin
            Name := ConstPtr( 'AT29LV256/3V' );
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $44 : Begin
            Name := ConstPtr( 'AT29xV040A series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
-    $D5 and $7f : Begin
+    $55 : Begin
            Name := ConstPtr( 'AT29C010A/5V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $5A : Begin
            Name := ConstPtr( 'AT29C020/5V' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $5C : Begin
            Name := ConstPtr( 'AT29C256/5V or AT29C257/5V' );
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     $5D : Begin
            Name := ConstPtr( 'AT29C512/5V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := GenPageProgBAtmel;
+           Progr  := GenPageProgB;
           End;
     else Exit;
    End;
@@ -190,5 +190,5 @@ Begin
 End;
 
 Begin
- RegisterFlashManu( $1f, AtmelIdChip );
+ RegisterFlashManu( $1F, AtmelIdChip );
 End.

@@ -1,4 +1,4 @@
-                     UniFlash version 1.35 documentation
+                     UniFlash version 1.36 documentation
                      -----------------------------------
                    (C) 2004 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -149,7 +149,7 @@ Here's a list of chipsets suported by Uniflash:
           | Apollo Pro 266       |
           | Apollo Pro 266T      | These North Bridges are detected, but
           | ProSavage P4M266     | aren't used in any VIA's chipset (??):
-          | P4X266(A)/P4X333/400 | VT8662, VT8615, VT8361, VT3133
+          |*P4X266(A)/P4X333/400 | VT8662, VT8615, VT8361, VT3133
 ----------|----------------------|--------------------------------------------
  AMD      |*AMD 640 (same as VIA | Works just fine
           | Apollo VP2)          |
@@ -158,6 +158,8 @@ Here's a list of chipsets suported by Uniflash:
           | AMD 760MP            | similar to VIA. AMD 760 should work with
           | AMD 760MPX           | both VIA and AMD (does it really exist?)
           |                      | south bridges.
+          | Geode SC1100         | Geode bought from National, these chips
+          | Geode SCx200         | have integrated south bridge
 ----------|----------------------|--------------------------------------------
  SiS      |*85C496+497           | I got the datasheets, but not from SiS.
           |*501/5101/5501        |
@@ -223,8 +225,8 @@ Here's a list of chipsets suported by Uniflash:
  National/| Vesuvius-LS          | Never seen this one.
  PicoPower|                      | Untested
 ----------|----------------------|--------------------------------------------
- National/| Geode GX1 (MediaGX)  | Supported with Geode CS5530(A) South Bridge
- Cyrix    |                      | (Cyrix CX5530(A))
+ National/| Geode GX1 (MediaGX)  | With Cx5510, Cx5520 and Cx5530(A) chips.
+ Cyrix    |                      | New Geode chips are AMD.
 ----------|----------------------|--------------------------------------------
  OPTi     | Vendetta 82C750      | Not tested
 ----------|----------------------|--------------------------------------------
@@ -1006,6 +1008,14 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.36       -c't Flasher can now be used on systems without PCI bus
+           -fixed a bug causing -save and -e parameters to not work correctly
+            when used together
+           -added AMD 8000 chipset detection
+           -fixed 256B CMOS size detection on chipsets that provide access to
+            full CMOS range using 72/73h registers
+           -added AMD Geode SC1100 and SC1200/2200/3200 support and Cx5510
+            and Cx5520 device IDs
 1.35       -fixed i82378ZB vs. i82379AB identify
            -fixed a bug causing hangs with Winbond LPC Super I/O chips
            -added SiS 964 south bridge detection
@@ -1557,6 +1567,7 @@ c't Flasher   | 8-bit ISA card     |                | SST 39VF020/3V (PLCC32)
 Gemlight/DTK  | GMB-P6BIAK-V1 RB   | Intel 440BX    | Winbond W29C020/5V
 ASRock        | K7S8XE+ r1.03      | SiS748+W83697HF| Winbond W49F002U/5V
 ECS           | K7VTA3 rev. 1      | VIA KT266A     | Winbond W49F002U/5V
+Mercury       | KOB P4X266NFSX v1.0| VIA P4X266     | Winbond W49F002U/5V
 
 UniFlash does NOT work on boards made by Intel. They use custom BIOS write
 protection and have soldered Flash ROM chips (often in TSOP package) - so

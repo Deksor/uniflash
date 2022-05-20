@@ -57,6 +57,7 @@ SStarts     : ARRAY[ 0 .. 512 ] of LongInt; {38 -> 512 v1.21}
 PCIROMCnt,
 CMOSSize    : Byte;
 EMFName,
+SaveName, {v1.36}
 PStr        : String[ 127 ];
 AnswYes,
 AnswNo      : Char;
@@ -482,7 +483,7 @@ IFile : File;
 X     : LongInt;
 
 Begin
- If SaveBIOS then IName := EMFName else
+ If SaveBIOS then IName := SaveName else
   Begin
    GotoXY( 18, 20 );
    Write( Msg( 6 ) );
@@ -940,23 +941,22 @@ Begin
 
  Port[$70]:=$10;
  S1:=Port[$71];
- Port[$72]:=$10;
+ Port[$72]:=$90; {v1.36}
  S2:=Port[$73];
  Port[$70]:=$10;
  Port[$71]:=$55;
- Port[$72]:=$10;
+ Port[$72]:=$90; {v1.36}
  Port[$73]:=$AA;
  Port[$70]:=$10;
  if Port[$71]=$55 then {v1.29}
   begin
-   Port[$72]:=$10;
+   Port[$72]:=$90; {v1.36}
    if Port[$73]=$AA then GetCMOSSize:=255;
   end;
  Port[$70]:=$10;
  Port[$71]:=S1;
- Port[$72]:=$10;
+ Port[$72]:=$90; {v1.36}
  Port[$73]:=S2;
-
 End;
 
 function CMOSClr:Boolean;
@@ -1677,9 +1677,6 @@ end;
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
-var savefile : file;
-    savename : string;
-
 Begin
  FileMode:=0; {Reset will open files as Read-Only} {v1.31}
  {Hack to be able to write to StdOut - better ideas anyone ?}
@@ -1858,7 +1855,7 @@ Begin
      Inc( X );
      If ParamCount < X then Err( Msg( 29 ) );
      SaveBIOS := True;
-     EMFName := ParamStr( X );
+     SaveName := ParamStr( X );
     End else
    if PStr = 'CMOSS' then {v1.25}
     begin
@@ -1939,7 +1936,7 @@ Begin
  if CMOS and not Emergency and not SaveBIOS then Exit;
  if Windows then Err( Msg( 110 ) ); {v1.22}
 
- if (not LocatePIIX) and (BaseForced=0) then Err(Msg(111)); {v1.22}
+ if (not LocatePIIX) and (BaseForced=0) and not CTFlash then Err(Msg(111)); {v1.22}
 
  GotoXY( 2, 7 );
  Text_Color(yellow);

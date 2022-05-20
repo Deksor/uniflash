@@ -199,19 +199,15 @@ Begin
    If ( GetPCIRegD( $00, Pos shr 3,
                     Pos and $07, $08 ) shr 8 ) = $60100 then Break;
  If Pos = $FF then {v1.22 for i430MX}
-  Begin
-   For Pos := 0 to $FF do
-    If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-     If ( GetPCIRegD( $00, Pos shr 3,
-                      Pos and $07, $08 ) shr 8 ) = $68000 then Break;
-     If Pos = $FF then {v1.31 for old chipsets}
-      begin
-       For Pos := 0 to $FF do
-        If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-         If ( GetPCIRegD( $00, Pos shr 3,
-                          Pos and $07, $08 ) shr 8 ) = $00000 then Break;
-      end;
-  End;
+  For Pos := 0 to $FF do
+   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
+    If ( GetPCIRegD( $00, Pos shr 3,
+                     Pos and $07, $08 ) shr 8 ) = $68000 then Break;
+ If Pos = $FF then {v1.31 for old chipsets}
+  For Pos := 0 to $FF do
+   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
+    If ( GetPCIRegD( $00, Pos shr 3,
+                     Pos and $07, $08 ) shr 8 ) = $00000 then Break;
  SouthPos := Pos;
  {Get south bridge MID & DID}
  SouthMan := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $07, $00 );
@@ -304,6 +300,7 @@ Begin
     $7006: NorthName:='AMD-751';
     $700E: NorthName:='AMD-761';
     $700C: NorthName:='AMD-762';
+    $7454: NorthName:='AMD-8151'; {v1.36}
    End;
   End else
  If NorthMan = $1039 {SiS} then
@@ -466,7 +463,7 @@ Begin
  If NorthMan = $1078 {Cyrix} then {v1.25}
   Begin
    case NorthId of
-    $0001: NorthName:='Geode GX1';
+    $0001: NorthName:='MediaGX';
    End;
   End else
  If NorthMan = $1045 {OPTi} then {v1.26}
@@ -565,6 +562,7 @@ Begin
     $7408: SouthName:='AMD-756';
     $7410: SouthName:='AMD-766';
     $7440: SouthName:='AMD-768';
+    $7468: SouthName:='AMD-8111'; {v1.36}
    end;
   End else
  If SouthMan = $1039 {SiS} then
@@ -623,11 +621,21 @@ Begin
     $0002,$8002 : SouthName:='Vesuvius V3-LS';
    End;
   End else
- If SouthMan = $1078 {PicoPower} then {v1.25}
+ If SouthMan = $100B {National} then {v1.36}
   Begin
    SouthFunc:=$1100;
    case SouthId of
-    $0100 : SouthName:='Geode CS5530(A)';
+    $0500 : begin SouthName:='Geode SCx200'; LPCFunc:=LPCDetect; end;
+    $0510 : begin SouthName:='Geode SC1100'; LPCFunc:=LPCDetect; end;
+   End;
+  End else
+ If SouthMan = $1078 {Cyrix} then {v1.25}
+  Begin
+   SouthFunc:=$1100;
+   case SouthId of
+    $0000 : SouthName:='Cyrix Cx5510'; {v1.36}
+    $0002 : SouthName:='Cyrix Cx5520'; {v1.36}
+    $0100 : SouthName:='Cyrix Cx5530(A)';
    End;
   End else
  If SouthMan = $1045 {OPTi} then {v1.26}
@@ -834,6 +842,8 @@ Begin
   then CurrentChipset:='AMD 760MP';
  if (NorthName='AMD-762') and (SouthName='AMD-768')
   then CurrentChipset:='AMD 760MPX';
+ if (NorthName='AMD-8151') and (SouthName='AMD-8111')
+  then CurrentChipset:='AMD 8000'; {v1.36}
 
  if (NorthName='SiS 85C496+497') then CurrentChipset:='SiS 85C496+497';
  if (NorthName='SiS 501/5101/5501') and (SouthName='SiS South Bridge')
@@ -898,8 +908,17 @@ Begin
 
  if (NorthName='Vesuvius V1-LS') and (SouthName='Vesuvius V3-LS')
   then CurrentChipset:='National PicoPower Vesuvius-LS';
- if (NorthName='Geode GX1') and (SouthName='Geode CS5530(A)')
+
+ if (NorthName='MediaGX') and (SouthName='Cyrix Cx5510')
+  then CurrentChipset:='Cyrix MediaGX + Cx5510'; {v1.36}
+ if (NorthName='MediaGX') and (SouthName='Cyrix Cx5520')
+  then CurrentChipset:='Cyrix MediaGX + Cx5520'; {v1.36}
+ if (NorthName='MediaGX') and (SouthName='Cyrix Cx5530(A)')
   then CurrentChipset:='National Geode GX1 + CS5530(A)';
+ if (NorthName='MediaGX') and (SouthName='Geode SC1100')
+  then CurrentChipset:='AMD Geode SC1100'; {v1.36}
+ if (NorthName='MediaGX') and (SouthName='Geode SCx200')
+  then CurrentChipset:='AMD Geode SC1200/2200/3200'; {v1.36}
 
  if (NorthName='OPTi 82C750') and (SouthName='OPTi 82C750')
   then CurrentChipset:='OPTi Vendetta 82C750';

@@ -44,7 +44,7 @@ begin
  AddMsg(33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg(34, '-PCIROM         Flash ROM on a PCI card instead of system ROM' ); {v1.29}
  AddMsg(35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
- AddMsg(36, '-AMI            Use AMI Flash Interface' ); {v1.24}
+ AddMsg(36, '-AMI, -ASUS     Use AMI Flash Interface, Use Asus Flash Interface' ); {v1.24}
  AddMsg(37, 'Unable to access memory beyond 1Mb - try using HIMEM.SYS.' );
  AddMsg(38, 'Sorry, but either you don''t have a 486+ or CPU is in V86 mode.' );
  AddMsg(39, 'Select PCI card from list below:' ); {v1.29}
@@ -152,6 +152,7 @@ begin
  AddMsg(136, '-REPAIR         Repair erased chip ID (Winbond and SST chips)'); {v1.28}
  AddMsg(137, '-REPAIR must be preceded by -FORCE parameter with correct ID'); {v1.28}
  AddMsg(138, 'Only Winbond and SST chips can be repaired'); {v1.28}
+ AddMsg(139, '-UNLOCK         Unlock locked bootblocks (e.g. on W29C020)'); {v1.39}
 end;
 {$F-}
 

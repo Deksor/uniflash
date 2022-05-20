@@ -3,7 +3,7 @@ unit PCI;  { Unit to communicate with chipsets }
 
 interface
 
-uses AMIBIOS;
+uses AMIBIOS, AsusBIOS;
 
 Const
 PCICfIdx    = $CF8;
@@ -14,6 +14,7 @@ NorthFunc, SouthFunc, LPCFunc: Word;
 NorthPos,SouthPos,PMUPos,CurPCIROM,PCIROMBus,PCIROMDev,PCIROMFun,LPCBase: Byte;
 CurrentChipset, CurrentPCICard: string;
 WantToUseAMI, AMIUsed, ChipsetFound, ROMEnabled, PCIROMEnabled: Boolean;
+WantToUseAsus, AsusUsed: Boolean;
 PCIROMs: array[1..20] of
           record
             MaxSize      : LongInt;
@@ -27,13 +28,14 @@ Function  IPortD( Prt : Word ) : LongInt;
 Function  GetPCIRegD( Bus, Dev, Func, Reg : Byte ) : LongInt;
 Procedure SetPCIRegD( Bus, Dev, Func, Reg : Byte; Value : LongInt );
 Function  LocatePIIX : {byte}Boolean; {v1.22 byte->boolean}
+procedure GetBIOSID;
 Procedure RomEnable( Map : boolean);
 procedure ShadowDisable_Aladdin; {v1.31}
 procedure ShadowRestore_Aladdin; {v1.31}
 
 implementation
 
-Uses Tools,Flash,Crt;
+Uses Tools,Flash,Crt,DMI;
 
 { PortD[ x ] := y }
 Procedure OPortD( Prt : Word; Val : LongInt ); Assembler;
@@ -79,34 +81,44 @@ Begin
  OPortD( PCICfData, Value );
 End;
 
-function LPCRead(Base,Index:Byte):Byte; {v1.27}
+function LPCRead(Index:Byte):Byte; {v1.27}
 begin
-  Port[Base]:=Index;
-  LPCRead:=Port[Base+1];
+  Port[LPCBase]:=Index;
+  LPCRead:=Port[LPCBase+1];
 end;
 
-procedure LPCWrite(Base,Index,Data:Byte); {v1.27}
+procedure LPCWrite(Index,Data:Byte); {v1.27}
 begin
-  Port[Base]:=Index;
-  Port[Base+1]:=Data;
+  Port[LPCBase]:=Index;
+  Port[LPCBase+1]:=Data;
 end;
 
-procedure ITEUnlock(Base:Byte); {v1.27}
+procedure LPCUnlock; {v1.27}
 begin
-  Port[Base]:=$87;
-  Port[Base]:=$87;
-  Port[Base]:=$87;
-  Port[Base]:=$01;
-  Port[Base]:=$55;
-  case Base of
-   $2E: Port[Base]:=$55;
-   $4E: Port[Base]:=$AA;
+  Port[LPCBase]:=$87;
+  Port[LPCBase]:=$87;
+  Port[LPCBase]:=$87;
+  Port[LPCBase]:=$01;
+  Port[LPCBase]:=$55;
+  case LPCBase of
+   $2E: Port[LPCBase]:=$55;
+   $4E: Port[LPCBase]:=$AA;
   end;
+end;
+
+procedure LPCLock_ITE; {v1.39}
+begin
+  LPCWrite($02,LPCRead($02) or 2);
+end;
+
+procedure LPCLock_WB; {v1.39}
+begin
+  Port[LPCBase]:=$AA;
 end;
 
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Var
-Pos,
+Pos_,
 NorthRev,
 SouthRev  : Byte;
 SouthMan,
@@ -117,76 +129,70 @@ NorthName,
 SouthName,
 LPCName : String;
 
-  function LPCDetect:Word; {v1.27}
+  function LPCDetectAt(Base: Byte):Word;
   var ID:Word;
   begin
-    LPCDetect:=0;
-    LPCName:=''; {v1.31}
-    ITEUnlock($2E);
-    ID:=256*word(LPCRead($2E,$20));
-    ID:=ID+LPCRead($2E,$21);
+    LPCBase:=Base;
+    LPCName:='';
+    LPCDetectAt:=$0;
+    LPCUnlock;
+    ID:=256*word(LPCRead($20));
+    ID:=ID+LPCRead($21);
     case ID of
-     $8705: begin LPCDetect:=$0100; LPCName:='ITE IT8700F/05F'; end;
-     $8710: begin LPCDetect:=$0100; LPCName:='ITE IT8710'; end;
+     $8702: begin LPCDetectAt:=$0000; LPCName:='ITE IT8702F'; end; {v1.39}
+     $8705: begin LPCDetectAt:=$0100; LPCName:='ITE IT8700F/05F'; end;
+     $8710: begin LPCDetectAt:=$0100; LPCName:='ITE IT8710F'; end;
+     $8711: begin LPCDetectAt:=$0000; LPCName:='ITE IT8711F'; end; {v1.39}
+     $8712: begin LPCDetectAt:=$0000; LPCName:='ITE IT8712F'; end; {v1.39}
+     $8722: begin LPCDetectAt:=$0000; LPCName:='ITE IT8722F'; end; {v1.39}
     end;
     if LPCName<>'' then
      begin
-       LPCBase:=$2E;
-       LPCWrite($2E,$02,LPCRead($2E,$02) or 2);
+       LPCLock_ITE;
        Exit;
      end;
     case ID and $FFF0 of
-     $6010: begin LPCDetect:=$0200; LPCName:='Winbond W83697(H)F'; end;
-     $6800: begin LPCDetect:=$0200; LPCName:='Winbond W83697SF'; end;
-     $6810: begin LPCDetect:=$0200; LPCName:='Winbond W83697UF'; end;
+     $5210,
+     $5230: begin LPCDetectAt:=$0000; LPCName:='Winbond W83627(H)F'; end; {v1.39}
+     $5950: begin LPCDetectAt:=$0000; LPCName:='Winbond W83627SF/GF'; end; {v1.39}
+     $6010: begin LPCDetectAt:=$0200; LPCName:='Winbond W83697(H)F'; end;
+     $6800: begin LPCDetectAt:=$0200; LPCName:='Winbond W83697SF'; end;
+     $6810: begin LPCDetectAt:=$0200; LPCName:='Winbond W83697UF'; end;
+     $7080: begin LPCDetectAt:=$0000; LPCName:='Winbond W83637HF'; end; {v1.39}
+     $8280: begin LPCDetectAt:=$0000; LPCName:='Winbond W83627THF'; end; {v1.39}
      end;
     if LPCName<>'' then
      begin
-       LPCBase:=$2E;
-       Port[$2E]:=$AA;
+       LPCLock_WB;
        Exit;
      end;
-    ITEUnlock($4E);
-    ID:=256*word(LPCRead($4E,$20));
-    ID:=ID+LPCRead($4E,$21);
-    case ID of
-     $8705: begin LPCDetect:=$0100; LPCName:='ITE IT8700F/05F'; end;
-     $8710: begin LPCDetect:=$0100; LPCName:='ITE IT8710'; end;
-    end;
-    if LPCName<>'' then
-     begin
-       LPCBase:=$4E;
-       LPCWrite($4E,$02,LPCRead($4E,$02) or 2);
-       Exit;
-     end;
-    case ID and $FFF0 of
-     $6010: begin LPCDetect:=$0200; LPCName:='Winbond W83697(H)F'; end;
-     $6800: begin LPCDetect:=$0200; LPCName:='Winbond W83697SF'; end;
-     $6810: begin LPCDetect:=$0200; LPCName:='Winbond W83697UF'; end;
-     end;
-    if LPCName<>'' then
-     begin
-       LPCBase:=$4E;
-       Port[$4E]:=$AA;
-       Exit;
-     end;
+    LPCBase:=0;
+    LogWrite('Unknown LPC ID '+Hw(ID));
+  end;
+
+  function LPCDetect:Word; {v1.27}
+  begin
+    LogWrite('Detecting LPC Super I/O chip...');
+    LPCDetect:=LPCDetectAt($2E);
+    if LPCBase=0 then LPCDetect:=LPCDetectAt($4E);
+    if LPCBase<>0 then LogWrite('Detected '+LPCName+' at '+Hb(LPCBase));
   end;
 
 Begin
  if Port[$CFB]<>$FF then {v1.26}
   Port[$CFB]:=Port[$CFB] or $1; {Set PCI configuration mechanism #1}
  {Locate north bridge}
- For Pos := 0 to $FF do
-  If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-   If ( GetPCIRegD( $00, Pos shr 3,
-                    Pos and $07, $08 ) shr 8 ) = $60000 then Break;
- If Pos = $FF then {v1.22}
+ For Pos_ := 0 to $FF do
+  If ( GetPCIRegD( $00, Pos_ shr 3, Pos_ and $07, $00 ) and $FFFF ) <> $FFFF then
+   If ( GetPCIRegD( $00, Pos_ shr 3,
+                    Pos_ and $07, $08 ) shr 8 ) = $60000 then Break;
+ If Pos_ = $FF then {v1.22}
   Begin
    LocatePIIX := False;
    Exit;
   End
  else LocatePIIX:=True;
- NorthPos := Pos;
+ NorthPos := Pos_;
  {Get north bridge MID & DID}
  NorthMan := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $07, $00 );
  NorthId  := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $07, $00 ) shr 16;
@@ -194,21 +200,21 @@ Begin
  NorthRev := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $07, $08 );
 
  {Locate south bridge}
- For Pos := 0 to $FF do
-  If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-   If ( GetPCIRegD( $00, Pos shr 3,
-                    Pos and $07, $08 ) shr 8 ) = $60100 then Break;
- If Pos = $FF then {v1.22 for i430MX}
-  For Pos := 0 to $FF do
-   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-    If ( GetPCIRegD( $00, Pos shr 3,
-                     Pos and $07, $08 ) shr 8 ) = $68000 then Break;
- If Pos = $FF then {v1.31 for old chipsets}
-  For Pos := 0 to $FF do
-   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-    If ( GetPCIRegD( $00, Pos shr 3,
-                     Pos and $07, $08 ) shr 8 ) = $00000 then Break;
- SouthPos := Pos;
+ For Pos_ := 0 to $FF do
+  If ( GetPCIRegD( $00, Pos_ shr 3, Pos_ and $07, $00 ) and $FFFF ) <> $FFFF then
+   If ( GetPCIRegD( $00, Pos_ shr 3,
+                    Pos_ and $07, $08 ) shr 8 ) = $60100 then Break;
+ If Pos_ = $FF then {v1.22 for i430MX}
+  For Pos_ := 0 to $FF do
+   If ( GetPCIRegD( $00, Pos_ shr 3, Pos_ and $07, $00 ) and $FFFF ) <> $FFFF then
+    If ( GetPCIRegD( $00, Pos_ shr 3,
+                     Pos_ and $07, $08 ) shr 8 ) = $68000 then Break;
+ If Pos_ = $FF then {v1.31 for old chipsets}
+  For Pos_ := 0 to $FF do
+   If ( GetPCIRegD( $00, Pos_ shr 3, Pos_ and $07, $00 ) and $FFFF ) <> $FFFF then
+    If ( GetPCIRegD( $00, Pos_ shr 3,
+                     Pos_ and $07, $08 ) shr 8 ) = $00000 then Break;
+ SouthPos := Pos_;
  {Get south bridge MID & DID}
  SouthMan := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $07, $00 );
  SouthID := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $07, $00 ) shr 16;
@@ -255,10 +261,17 @@ Begin
     $2570: NorthName:='i82865'; {v1.34}
     $2578: NorthName:='i82875';
     $255D: NorthName:='iE7205';
+    $2578: NorthName:='iE7210'; {v1.39}
+    $2588: NorthName:='iE7221'; {v1.39}
+    $3592: NorthName:='iE7320'; {v1.39}
     $2540: NorthName:='iE7500';
     $254C: NorthName:='iE7501';
     $2550: NorthName:='iE7505';
-    $2580: NorthName:='i82915G/P/925X'; {v1.37}
+    $3590: NorthName:='iE7520'; {v1.39}
+    $359E: NorthName:='iE7525'; {v1.39}
+    $0500: NorthName:='iE8870'; {v1.39}
+    $2580: NorthName:='i829xxx'; {v1.37}
+    $2590: NorthName:='i829xxxM'; {v1.39}
    End;
   End else
  If NorthMan = $1106 {VIA} then
@@ -297,6 +310,7 @@ Begin
     $3148: NorthName:='VT8751';
     $3128: NorthName:='VT8753(A)/8754';
     $3189: NorthName:='VT8377';
+    $3205: NorthName:='VT8378';
    End;
   End else
  If NorthMan = $1022 {AMD} then {v1.20}
@@ -517,7 +531,8 @@ Begin
  {Id southbridge}
  If SouthMan = $8086 {Intel} then
   Begin
-   if Hi(SouthId)=$24 then SouthFunc := $0200 else SouthFunc := $0100; {v1.21}
+   if (Hi(SouthId)=$24) or (Hi(SouthId)=$25) then SouthFunc := $0200
+     else SouthFunc := $0100; {v1.21}
    if Hi(SouthId)=$26 then SouthFunc := $1700; {v1.37}
    case SouthId of {case v1.21}
      $484: Begin
@@ -547,9 +562,11 @@ Begin
     $2480: SouthName:='i82801CA ICH3-S';
     $24C0: SouthName:='i82801DB ICH4';
     $24CC: SouthName:='i82801DBM ICH4-M';
-    $24D0: SouthName:='i82801EB ICH5';
+    $24D0: SouthName:='i82801EB ICH5(R)';
     $2640: SouthName:='i82801FB/R ICH6(R)'; {v1.37}
+    $2641: SouthName:='i82801FBM ICH6-M'; {v1.39}
     $2642: SouthName:='i82801F(R)W ICH6(R)W'; {v1.37}
+    $25A1: SouthName:='i6300ESB ICH'; {v1.39}
    End;
   End else
  If SouthMan = $1106 {VIA} then
@@ -562,6 +579,7 @@ Begin
     $8231: SouthName:='VT8231';
     $3074,$3147: begin SouthName:='VT8233(A|C)'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
     $3177: begin SouthName:='VT8235'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
+    $3227: begin SouthName:='VT8237'; SouthFunc := $0310; LPCFunc:=LPCDetect; end; {v1.39}
    End;
   End else
  If SouthMan = $1022 {AMD} then {v1.20}
@@ -603,10 +621,10 @@ Begin
   End else
  If SouthMan = $10AD {Winbond/Symphony Labs} then {v1.21}
   Begin
-   If SouthId = $0565 then {W83C553F} {v1.21}
+   If SouthId = $0565 then {W83C553F/4F} {v1.21}
     Begin
      SouthFunc := $0700; {Winbond method}
-     SouthName:='Winbond W83C553F';
+     SouthName:='Winbond W83C553F/4F';
     End;
   End else
  If SouthMan = $1283 {ITE} then {v1.21}
@@ -753,28 +771,40 @@ Begin
   then CurrentChipset:='Intel 845MP/MZ'; {v1.31}
  if (NorthName='i82850') and (SouthName='i82801BA ICH2')
   then CurrentChipset:='Intel 850(E)';
- if (NorthName='i8285xGM') and (SouthName='i82801DBM ICH4-M')
-  then CurrentChipset:='Intel 852GM/855GM'; {v1.31}
- if (NorthName='i8285xGM') and (SouthName='i82801DB ICH4')
-  then CurrentChipset:='Intel 852GM/855GM non-mobile'; {v1.34}
+ if (NorthName='i8285xGM') and ((SouthName='i82801DBM ICH4-M') or (SouthName='i82801DB ICH4') or (SouthName='i6300ESB ICH'))
+  then CurrentChipset:='Intel 852GM(E)/855GM(E)'; {v1.31}
  if (NorthName='i82855PM') and (SouthName='i82801DBM ICH4-M')
   then CurrentChipset:='Intel 855PM'; {v1.31}
  if (NorthName='i82860') and (SouthName='i82801BA ICH2')
   then CurrentChipset:='Intel 860';
- if (NorthName='i82865') and (SouthName='i82801EB ICH5')
+ if (NorthName='i82865') and (SouthName='i82801EB ICH5(R)')
   then CurrentChipset:='Intel 865P(E)/G(V)/848P'; {v1.34}
- if (NorthName='i82875') and (SouthName='i82801EB ICH5')
+ if (NorthName='i82875') and ((SouthName='i82801EB ICH5(R)') or (SouthName='i6300ESB ICH'))
   then CurrentChipset:='Intel 875P'; {v1.31}
  if (NorthName='iE7205') and (SouthName='i82801DB ICH4')
   then CurrentChipset:='Intel E7205'; {v1.31}
+ if (NorthName='iE7210') and (SouthName='i6300ESB ICH')
+  then CurrentChipset:='Intel E7210'; {v1.39}
+ if (NorthName='iE7221') and ((SouthName='i82801FB/R ICH6(R)') or (SouthName='i82801F(R)W ICH6(R)W'))
+  then CurrentChipset:='Intel E7221'; {v1.39}
  if (NorthName='iE7500') and (SouthName='i82801CA ICH3-S')
   then CurrentChipset:='Intel E7500';
+ if (NorthName='iE7320') and ((SouthName='i82801EB ICH5(R)') or (SouthName='i6300ESB ICH'))
+  then CurrentChipset:='Intel E7320'; {v1.39}
  if (NorthName='iE7501') and (SouthName='i82801CA ICH3-S')
   then CurrentChipset:='Intel E7501'; {v1.31}
  if (NorthName='iE7505') and (SouthName='i82801DB ICH4')
   then CurrentChipset:='Intel E7505'; {v1.31}
- if (NorthName='i82915G/P/925X') and ((SouthName='i82801FB/R ICH6(R)') or (SouthName='i82801F(R)W ICH6(R)W'))
-  then CurrentChipset:='Intel 915G/P/925X'; {v1.37}
+ if (NorthName='iE7520') and ((SouthName='i82801EB ICH5(R)') or (SouthName='i6300ESB ICH'))
+  then CurrentChipset:='Intel E7520'; {v1.39}
+ if (NorthName='iE7525') and ((SouthName='i82801EB ICH5(R)') or (SouthName='i6300ESB ICH'))
+  then CurrentChipset:='Intel E7525'; {v1.39}
+ if (NorthName='iE8870') and (SouthName='i82801DB ICH4')
+  then CurrentChipset:='Intel E8870'; {v1.39}
+ if (NorthName='i829xxx') and ((SouthName='i82801FB/R ICH6(R)') or (SouthName='i82801F(R)W ICH6(R)W'))
+  then CurrentChipset:='Intel 910/915/925 series'; {v1.37}
+ if (NorthName='i829xxxM') and (SouthName='i82801FBM ICH6-M')
+  then CurrentChipset:='Intel mobile 910/915 series'; {v1.39}
 
  if (NorthName='VT82C505') then CurrentChipset:='VIA 486 chipset with VT82C505'; {v1.37}
  if (NorthName='VT82C576M') then CurrentChipset:='VIA Apollo Master';
@@ -808,6 +838,8 @@ Begin
   then CurrentChipset:='VIA Apollo KT333'; {v1.31}*)
  if (NorthName='VT8377') and (SouthName='VT8235')
   then CurrentChipset:='VIA Apollo KT400(A)'; {v1.31}
+ if (NorthName='VT8378') and ((SouthName='VT8233(A|C)') or (SouthName='VT8235') or (SouthName='VT8237'))
+  then CurrentChipset:='VIA UniChrome KM400(A)'; {v1.39}
  if (NorthName='VT8633') and (SouthName='VT8233(A|C)')
   then CurrentChipset:='VIA Apollo Pro 266';
  if (NorthName='VT8653') and (SouthName='VT8233(A|C)')
@@ -974,12 +1006,40 @@ Begin
                       ',' + Hb( SouthRev ) + ')';
   End;
  if LPCName<>'' then CurrentChipset:=CurrentChipset+' + '+LPCName; {v1.27}
- If {( ( not ChipsetFound ) or (} WantToUseAMI {) )} and AMICheckFor then {v1.24}
+ If WantToUseAMI and AMICheckFor then {v1.24}
   Begin
    AMIUsed := True;
    ChipsetFound := True;
    CurrentChipset := CurrentChipset + ' [AMI FLASH]';
+   LogWrite('AMI flash interface enabled');
   End;
+ If WantToUseAsus and AsusCheckFor then {v1.39}
+  Begin
+   AsusUsed := True;
+   ChipsetFound := True;
+   CurrentChipset := CurrentChipset + ' [ASUS FLASH]';
+   LogWrite('Asus flash interface enabled');
+  End;
+end;
+
+procedure GetBIOSID;
+var Buf: array[1..80] of Char;
+    b,e: Byte;
+begin
+  MoveLinBlockB($FFFFFFE8,LongInt(Seg(BIOSID)) shl 4+LongInt(Ofs(BIOSID)),8); {v1.34}
+  if (BIOSID=#0#0#0#0#0#0#0#0) or (BIOSID=#$FF#$FF#$FF#$FF#$FF#$FF#$FF#$FF) then {v1.39}
+   begin
+     BIOSID:=#0#0#0#0#0#0#0#0;
+     MoveLinBlockB($FEC71,LongInt(Seg(Buf)) shl 4+LongInt(Ofs(Buf)),SizeOf(Buf));
+     e:=Pos(#0,Buf)-1;
+     b := e;
+     while ((Buf[b]<>'-') or (e-b<3)) and (b>1) do Dec(b);
+     if e-b>8 then e:=b+8;
+     Move(Buf[b+1],BIOSID,e-b);
+   end;
+  GotoXY(73,23);
+  Write(BIOSID); {v1.38}
+  LogWrite('Detected Award BIOS ID: '+BIOSID);
 end;
 
 Var
@@ -989,18 +1049,7 @@ PIIXReg, PIIXReg2, PIIXReg3, PIIXReg4, PIIXReg5 : LongInt;
 Procedure ROMEnable( Map : Boolean );
 Var
 Mask : LongInt;
-Pos: Byte;
-
- procedure GetBIOSID;
- begin
-   if BIOSID=#0#0#0#0#0#0#0#0 then
-    begin
-      MoveLinBlockB($FFFFFFE8,LongInt(Seg(BIOSID)) shl 4+LongInt(Ofs(BIOSID)),8); {v1.34}
-      GotoXY(72,24);
-      Write(BIOSID); {v1.38}
-      LogWrite('Detected BIOS ID: '+BIOSID);
-    end;
- end;
+Pos_: Byte;
 
 Begin
  if ROMEnabled=Map then Exit; {v1.22}
@@ -1008,6 +1057,13 @@ Begin
  if AMIUsed then
   begin
     if Map then AMIEnable else AMIDisable;
+    ROMEnabled:=Map;
+    Exit;
+  end;
+ if AsusUsed then
+  begin
+    if Map then AsusEnable else AsusDisable;
+    ROMEnabled:=Map;
     Exit;
   end;
 
@@ -1172,10 +1228,11 @@ Begin
            PIIXReg4:=0;
            if Lo(SouthFunc)=3 then {v1.29}
             begin
-              GetBIOSID;
               if (BIOSID='6A69KA19') {Abit BF6, BE6-II v1.0 and v1.1}
                or (BIOSID='6A69KA1B') {Abit BE6-II v1.2}
-               or (BIOSID='6A69KA1C') then {Abit BE6-II v2.0 and BX133-RAID}
+               or (BIOSID='6A69KA1C') {Abit BE6-II v2.0 and BX133-RAID}
+               or (BIOSID='2A69KA1Q') {Abit ZM6}
+               or (BIOSID='2A69KA1U') then {Abit BE6}
                begin
                  PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, 4, $40 ); {v1.29}
                  LogWrite('Intel method: PM Base = '+Hl(PIIXReg2));
@@ -1200,7 +1257,11 @@ Begin
            LogWrite('Intel method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
-           if BIOSID='6A69KA1C' then
+           if (BIOSID='6A69KA19') {Abit BF6, BE6-II v1.0 and v1.1}
+            or (BIOSID='6A69KA1B') {Abit BE6-II v1.2}
+            or (BIOSID='6A69KA1C') {Abit BE6-II v2.0 and BX133-RAID}
+            or (BIOSID='2A69KA1Q') {Abit ZM6}
+            or (BIOSID='2A69KA1U') then {Abit BE6}
             if PIIXReg4=1 then {v1.29}
              begin
                LogWrite('Intel method: restoring GPO from '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
@@ -1229,7 +1290,6 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 or $FF000000 ); {C0 -> FF} {v1.31}
            LogWrite('Intel 8xx method: reg $E0 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
-           GetBIOSID;
            if (BIOSID='6A69RM4E') or {MSI MS-6337 v3.x}
             (BIOSID='6A69RM4L') then {MSI MS-6337 v5.x}
             begin
@@ -1272,12 +1332,70 @@ Begin
                SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or $7F10 );
                LogWrite('VT8233 method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                 SouthPos and $7, $40 ))); {v1.23}
+               if (DMI_Board_String='MSI MS-6380 2.0')
+                or (DMI_Board_String='MSI MS-6380E 1.0') then
+                begin
+                  Port[$84D]:=Port[$84D] or $10;
+                end;
+               if (BIOSID='A7V266'#0#0) then {Asus A7V266} {v1.39}
+                begin
+                  LogWrite('A7V266: enabling write access');
+                  LPCUnlock;
+                  {flash access enable}
+                  LPCWrite($2A, LPCRead($2A) or $80);
+                  LPCWrite($07, $07);
+                  LPCWrite($F0, LPCRead($F0) and $BF);
+                  LPCWrite($F1, LPCRead($F1) or $40);
+                  LPCWrite($30, LPCRead($30) or $01);
+                  {write enable}
+                  LPCWrite($07, $0C);
+                  LPCWrite($F0, LPCRead($F0) and $FD);
+                  LPCWrite($60, $03);
+                  LPCWrite($61, $70);
+                  LPCWrite($30, LPCRead($30) or $01);
+                  LPCLock_WB;
+                  Port[$370]:=Port[$370] or $02;
+                end;
+               if (BIOSID='A7V8X-X'#0) then {Asus A7V8X-X} {v1.39}
+                begin
+                  LogWrite('A7V8X-X: enabling write access');
+                  Port[$372]:=Port[$372] or $04; {GP32 pin of Super I/O}
+                end;
              end
             else
              begin
                LogWrite('VT8233 method: restoring reg $40 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                 SouthPos and $7, $40 ))); {v1.23}
                SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+               if (DMI_Board_String='MSI MS-6380 2.0')
+                or (DMI_Board_String='MSI MS-6380E 1.0') then
+                begin
+                  Port[$84D]:=Port[$84D] and $EF;
+                end;
+               if (BIOSID='A7V266'#0#0) then {Asus A7V266} {v1.39}
+                begin
+                  LogWrite('A7V266: disabling write access');
+                  LPCUnlock;
+                  {flash access enable}
+                  LPCWrite($2A, LPCRead($2A) or $80);
+                  LPCWrite($07, $07);
+                  LPCWrite($F0, LPCRead($F0) and $BF);
+                  LPCWrite($F1, LPCRead($F1) and $BF);
+                  LPCWrite($30, LPCRead($30) or $01);
+                  {write enable}
+                  LPCWrite($07, $0C);
+                  LPCWrite($F0, LPCRead($F0) and $FD);
+                  LPCWrite($60, $03);
+                  LPCWrite($61, $70);
+                  LPCWrite($30, LPCRead($30) or $01);
+                  LPCLock_WB;
+                  Port[$370]:=Port[$370] and $FD;
+                end;
+               if (BIOSID='A7V8X-X'#0) then {Asus A7V8X-X} {v1.39}
+                begin
+                  LogWrite('A7V8X-X: disabling write access');
+                  Port[$372]:=Port[$372] and $FB;
+                end;
              end;
           end
          else
@@ -1293,7 +1411,6 @@ Begin
               LogWrite('VIA/AMD method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $40 ))); {v1.23}
 
-              GetBIOSID;
               if (BIOSID='6A6S6A1A') {Abit KG7}
                or (BIOSID='6A6LMA19') {Abit KT7}
                or (BIOSID='6A6LMA1A') then {Abit KT7A v1.3}
@@ -1360,11 +1477,11 @@ Begin
                begin
                 LogWrite('ALi method: using GPO to control A17');
                 {Locate PMU}
-                for Pos:=0 to $FF do
-                 if GetPCIRegD($00,Pos shr 3,Pos and $07,$00) and $FFFF<>$FFFF then
-                  if GetPCIRegD($00,Pos shr 3,
-                                   Pos and $07,$00)=$710110B9 then Break;
-                if Pos=$FF then PMUPos:=SouthPos else PMUPos:=Pos;
+                for Pos_:=0 to $FF do
+                 if GetPCIRegD($00,Pos_ shr 3,Pos_ and $07,$00) and $FFFF<>$FFFF then
+                  if GetPCIRegD($00,Pos_ shr 3,
+                                   Pos_ and $07,$00)=$710110B9 then Break;
+                if Pos_=$FF then PMUPos:=SouthPos else PMUPos:=Pos_;
                 PIIXReg5:=GetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0);
                 LogWrite('ALi method: PMU reg $C0 = '+Hl(PIIXReg5));
                 Flash_Read:=FIMemB_Flash_ALiGPO;
@@ -1741,37 +1858,37 @@ Begin
    $01: begin
           if Map then
            begin
-             ITEUnlock(LPCBase);
-             PIIXReg:=LPCRead(LPCBase,$24);
+             LPCUnlock;
+             PIIXReg:=LPCRead($24);
              LogWrite('ITE LPC method: reg $24 = '+Hl(PIIXReg));
              {512K enable, write enable}
-             LPCWrite(LPCBase,$24,PIIXReg or $7C);
-             LogWrite('ITE LPC method: reg $24 changed to '+Hl(LPCRead(LPCBase,$24)));
-             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
+             LPCWrite($24,PIIXReg or $7C);
+             LogWrite('ITE LPC method: reg $24 changed to '+Hl(LPCRead($24)));
+             LPCLock_ITE;
            end else
            begin
-             ITEUnlock(LPCBase);
-             LogWrite('ITE LPC method: restoring reg $24 from '+Hl(LPCRead(LPCBase,$24)));
-             LPCWrite(LPCBase,$24,PIIXReg);
-             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
+             LPCUnlock;
+             LogWrite('ITE LPC method: restoring reg $24 from '+Hl(LPCRead($24)));
+             LPCWrite($24,PIIXReg);
+             LPCLock_ITE;
            end;
         end;
    $02: begin {v1.33}
           if Map then
            begin
-             ITEUnlock(LPCBase);
-             PIIXReg:=LPCRead(LPCBase,$24);
+             LPCUnlock;
+             PIIXReg:=LPCRead($24);
              LogWrite('Winbond LPC method: reg $24 = '+Hl(PIIXReg));
              {512K enable, write enable}
-             LPCWrite(LPCBase,$24,PIIXReg and $C7 or $28);
-             LogWrite('Winbond LPC method: reg $24 changed to '+Hl(LPCRead(LPCBase,$24)));
-             Port[LPCBase]:=$AA; {v1.35}
+             LPCWrite($24,PIIXReg and $C7 or $28);
+             LogWrite('Winbond LPC method: reg $24 changed to '+Hl(LPCRead($24)));
+             LPCLock_WB;
            end else
            begin
-             ITEUnlock(LPCBase);
-             LogWrite('Winbond LPC method: restoring reg $24 from '+Hl(LPCRead(LPCBase,$24)));
-             LPCWrite(LPCBase,$24,PIIXReg);
-             Port[LPCBase]:=$AA; {v1.35}
+             LPCUnlock;
+             LogWrite('Winbond LPC method: restoring reg $24 from '+Hl(LPCRead($24)));
+             LPCWrite($24,PIIXReg);
+             LPCLock_WB;
            end;
         end;
  end;
@@ -1790,7 +1907,9 @@ end;
 
 begin
  AMIUsed:=False;
- WantToUseAMI :=False;
+ WantToUseAMI:=False;
+ AsusUsed:=False;
+ WantToUseAsus:=False;
  ChipsetFound:=False;
  ROMEnabled:=False; {v1.22}
  {v1.22 Initialization moved to UNIFLASH.PAS}

@@ -67,7 +67,7 @@ Begin
    Progr  := GenPageProgB;
    Case DevId of
     $C8 : Begin
-           Name := ConstPtr( 'W29EE512/5V' );
+           Name := ConstPtr( 'W29x512/5V series' );
            Size := 64;
           End;
     $C1 : Begin {W29EE011, W29C010, W29C010M, W29C011A, W29EE012}
@@ -124,6 +124,24 @@ Begin
            Sectors[ 0, 1 ] := 32;
            Size := 512;
            Name := ConstPtr( 'W39L040/3.3V' );
+          End;
+    $D6 : Begin {v1.39}
+           Flags  := 0;   {sector mode}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 8; {8 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           Size := 512;
+           Name := ConstPtr( 'W39L040A/3.3V' );
+          End;
+    $3D : Begin {v1.39}
+           Flags  := 0;   {sector mode}
+           Progr  := AMDSecProg;
+           Erase := WbSecErase;
+           Sectors[ 0, 0 ] := 128; {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 512;
+           Name := ConstPtr( 'W39V040A/3.3V (LPC)' );
           End;
     $34 : Begin {v1.29}
            Flags  := 0;   {sector mode}

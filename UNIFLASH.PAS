@@ -6,7 +6,7 @@
 Program Uniflash;
 
 Uses Crt, Dos,
-     Flash, PCI, PCICards, Tools, GenFlash, CT_Flash,
+     Flash, PCI, PCICards, Tools, GenFlash, CT_Flash, DMI,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu, SHARP,
      Language, English{, French, Dutch, Italian, German};
@@ -22,6 +22,7 @@ ForceId     : Boolean = False;
 CMOS        : Boolean = False;
 Quit        : Boolean = False;
 Repair      : Boolean = False;
+Unlock      : Boolean = False;
 Reboot      : Boolean = False;
 BaseForced  : LongInt = 0;
 
@@ -1745,9 +1746,9 @@ Begin
     Begin
      WriteLn;
      WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]' );
+     WrtCenter( 'UNIFLASH [-H|-?|[-PCIROM [B D F]|-AMI|-ASUS|-BASE xxxxx|CTFLASH [xxx]]' );
      WrtCenter( ' [-E fname][-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]' );
-     WrtCenter( ' [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]'); {v1.26}
+     WrtCenter( ' [-CMOSS fname][-CMOSR fname][-CMOSC]][-UNLOCK][-QUIT][-REBOOT]'); {v1.26}
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
@@ -1763,6 +1764,7 @@ Begin
      WrtCenter( Msg( 109 ) );
      WrtCenter( Msg( 131 ) ); {v1.25}
      WrtCenter( Msg( 133 ) ); {v1.25}
+     WrtCenter( Msg( 139 ) ); {v1.39}
      WrtCenter( Msg( 134 ) ); {v1.26}
      WrtCenter( Msg( 25 ) ); {v1.28}
      Halt;
@@ -1800,6 +1802,7 @@ Begin
     end
    else
    If PStr = 'AMI' then WantToUseAmi := True else
+   If PStr = 'ASUS' then WantToUseAsus := True else {v1.39}
    If PStr = 'MONO' then Mono := True else {v1.27}
    If PStr = 'LOG' then
     begin
@@ -1849,6 +1852,10 @@ Begin
       if not ForceID then Err(Msg(137));
       if (Hi(ForceIDVal)<>$BF) and (Hi(ForceIDVal)<>$DA) then Err(Msg(138));
       Repair:=True;
+    End else
+   If PStr = 'UNLOCK' then {v1.39}
+    Begin
+      Unlock:=True;
     End else
    If PStr = 'SAVE' then
     Begin
@@ -1954,7 +1961,10 @@ Begin
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
 
- BIOSID:=#0#0#0#0#0#0#0#0; {v1.34}
+ BIOSID:=#0#0#0#0#0#0#0#0;
+ if not DMI_Info or (Copy(DMI_BIOS.Vendor, 1, 5)='Award')
+  or (Copy(DMI_BIOS.Version, 1, 5)='Award') then
+   GetBIOSID; {v1.39}
  ROMSelect; {v1.24}
 
  If ForceId then
@@ -1998,6 +2008,14 @@ Begin
     Flash_Write(1,Lo(ForceIdVal));
     Delay(100);
     FlashCmd($F0);
+    Halt;
+  end;
+
+ if Unlock then
+  begin
+    FlashCmd($80);
+    FlashCmd($40);
+    Flash_Write($2AAA,$AA);
     Halt;
   end;
 

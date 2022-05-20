@@ -1,4 +1,4 @@
-                     UniFlash version 1.38 documentation
+                     UniFlash version 1.40 documentation
                      -----------------------------------
                    (C) 2005 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -32,9 +32,8 @@ NOBODY EXCEPT YOU IS RESPONSIBLE FOR ANY DAMAGE THIS PROGRAM MAY CAUSE !!!
 0.1            COPYRIGHT and CO.
 --------------------------------
 
-This program is public domain. You may do whatever you want with it: copy it,
-delete it, rip it, modify it, etc...
-If you do something with it, it would be great if you credited us.
+UniFlash is licensed under GNU GPL v2 since UniFlash v1.4.
+See LICENSE.TXT for the license text.
 
 
 1.0            UniFlash? UNIFLASH??? What the HELL is it ??!!!
@@ -124,10 +123,17 @@ Here's a list of chipsets suported by Uniflash:
           | i865P(E)/G(V)/848P   |
           | i875P                |
           | E7205                |
+          | E7210                |
+          | E7221                |
+          | E7320                |
           | E7500                |
           | E7501                |
           | E7505                |
-          |*i915G/P/925X         |
+          | E7520                |
+          | E7525                |
+          | E8870                |
+          |*i910/915/925 series  |
+          | mobile 910/925 series|
 ----------|----------------------|--------------------------------------------
  VIA      | 486 with VT82C505    | 486 chipsets with VT82C505 PCI bridge
           | Appollo Master       |
@@ -141,13 +147,14 @@ Here's a list of chipsets suported by Uniflash:
           |*Apollo Pro           | don't.
           |*Apollo Pro Plus/133  |
           |*Apollo Pro 133A      | If you have "Flash Write protect" in BIOS,
-          | Apollo ProMedia      | disable it and it should work.
+          |*Apollo ProMedia      | disable it and it should work.
           | Apollo Pro 133Z/PM133|
           | Apollo KX133         |
           |*Apollo KT133(A)      |
           | ProSavage KM133(A)   |
           |*Apollo KT266(A)/KT333|
-          | Apollo KT400(A)      |
+          |*Apollo KT400(A)      |
+          |*UniChrome KM400(A)   |
           | Apollo Pro 266       |
           | Apollo Pro 266T      | These North Bridges are detected, but
           | ProSavage P4M266     | aren't used in any VIA's chipset (??):
@@ -188,7 +195,7 @@ Here's a list of chipsets suported by Uniflash:
           | 733                  |
           |*735                  |
           | 740                  |
-          | 745                  |
+          |*745                  |
           | 746                  |
           |*748                  |
           | 755                  |
@@ -211,15 +218,23 @@ Here's a list of chipsets suported by Uniflash:
  SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
           |                      | South Bridge (UDMA-66 support)
 ----------|----------------------|--------------------------------------------
- Winbond/ | W83C553F South Bridge| I don't know if this one was ever used.
+ Winbond/ | W83C553F/4F          | South Bridge, probably very rare thing
  Symphony |*Winbond W83697(H)F   | LPC Super I/Os with Flash ROM support
  Labs     | Winbond W83697SF     |
           | Winbond W83697UF     |
+          | Winbond W83627(H)F   | LPC Super I/Os without Flash ROM interface
+          |*Winbond W83627SF/GF  |
+          | Winbond W83627THF    |
+          | Winbond W83637HF     |
 ----------|----------------------|--------------------------------------------
  ITE      | IT8871F/2F and       | Don't know where used, untested.
           | IT8888F South Bridges| (No known chipset with these SBs)
           |*IT8700F/8705F        | LPC Super I/Os with Flash ROM support
-          | IT8710               | (used with SiS 540, SiS 630 and newer)
+          | IT8710F              | (used with SiS 540, SiS 630 and newer)
+          | IT8702F              | LPC Super I/Os without Flash ROM interface
+          | IT8711F              |
+          | IT8712F              |
+          | IT8722F              |
 ----------|----------------------|--------------------------------------------
  Reliance/| ServerSet III LE     | All chipsets with OSB4 South Bridge should
  Server   | ServerSet III HE     | work. Untested.
@@ -246,7 +261,7 @@ Here's a list of chipsets suported by Uniflash:
  Cypress  | 386/486 with PCI     | CY82C596/597+CY82C599
 ----------|----------------------|--------------------------------------------
  nVidia   |*nForce               | Tested and works
-          | nForce2              | nForce2 might not work
+          |#nForce2              | nForce2 might not work
 ------------------------------------------------------------------------------
 
 If your chipset is marked BXCel, VXPro, TXPro or something like that, it's a
@@ -259,6 +274,11 @@ use this feature). Starting from version 1.24, you must force using this mode,
 if you want to use it by giving the -AMI parameter. This is neccessary because
 it often doesn't work and hangs, preventing users from making BIOS backup.
 
+UniFlash 1.39 and newer includes support for Asus Flash Interface. If you have
+an Asus board and UniFlash is unable to detect flash ROM or the flashing
+fails, try using -ASUS parameter. This uses code from BIOS to enable/disable
+flash ROM access.
+
 2.1            Support for specific boards
 ------------------------------------------
 These boards use non-standard write protection using general purpose outputs
@@ -266,6 +286,8 @@ These boards use non-standard write protection using general purpose outputs
 They're detected by reading the BIOS ID string from the top of 4GB. This means
 that the correct BIOS MUST be present in the socket when starting UniFlash or
 the flashing will not work.
+If the BIOS ID is not present at the top of 4GB, UniFlash tries to read it
+from F000 segment. This will not work if running in Bootblock BIOS.
 
 6A69RM4E = MicroStar MSI MS-6337 v3.0 (815EP Pro)
 6A69RM4L = MicroStar MSI MS-6337 v5.0 (815EPT Pro, MS-6337LE5)
@@ -273,8 +295,16 @@ the flashing will not work.
 6A69KA19 = Abit BF6, BE6-II v1.0 and v1.1
 6A69KA1B = Abit BE6-II v1.2
 6A69KA1C = Abit BE6-II v2.0 and BX133-RAID
+2A69KA1Q = Abit ZM6
+2A69KA1U = Abit BE6
 6A6LMA19 = Abit KT7(-RAID), KT7A(-RAID), KT7E
 6A6LMA1A = Abit KT7A(-RAID) v1.3
+A7V266   = Asus A7V266
+A7V8X-X  = Asus A7V8X-X
+
+These boards detected using DMI - by using board vendor, name and version:
+MSI MS-6380 2.0 = MicroStar MSI K7T266 Pro2(-RU) v2.0, MS-6380LE v2.0
+MSI MS-6380E 1.0 = MicroStar MSI K7T266 Pro2-A, KT3 Ultra(-ARU), Ultra2(-R)
 
 2.2            Tested PCI cards
 -------------------------------
@@ -839,12 +869,14 @@ UniFlash supports the following flash chips:
  *W29x010/011/012 series          | 128KB
  *W29C020(C)                      | 256KB
   W29C040                         | 512KB
-  W29EE512                        | 64KB
+  W29x512 series                  | 64KB
   W39F010                         | 128KB
   W39L512                         | 64KB
   W39L010                         | 128KB
   W39L020                         | 256KB
   W39L040                         | 512KB
+  W39L040A                        | 512KB
+  W39V040A (LPC)                  | 512KB
   W39V040FA (Firmware Hub)        | 512KB
  *W49F002U                        | 256KB
   W49F020                         | 256KB
@@ -949,9 +981,9 @@ long continuous beep: some error occured, press any key to retry operation
 
 5.2            Command-line parameters
 --------------------------------------
-UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]
+UNIFLASH [-H|-?|[-PCIROM [B D F]|-AMI|-ASUS|-BASE xxxxx|CTFLASH [xxx]]
  [-E fname][-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]
- [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]
+ [-CMOSS fname][-CMOSR fname][-CMOSC]][-UNLOCK][-QUIT][-REBOOT]
 
 -H or -?        Shows this help screen
 -E fname        Flashes fname to Flash ROM with no prompts
@@ -960,7 +992,7 @@ UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]
 -CTFLASH        Flash ROM in c't Flasher 8-bit ISA card [xxx=port]
 -PCIROM         Flash ROM on a PCI card instead of system ROM
   [BUS DEV FUN] Manually specify PCI device (decimal numbers)
--AMI            Use AMI Flash Interface
+-AMI, -ASUS     Use AMI Flash Interface, Use Asus Flash Interface
 -CHIPLIST       Show list of supported flash chips with their numbers
 -FORCE xxxx     Force using routines for chip xxxx (4 hex digits)
 -BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)
@@ -968,6 +1000,7 @@ UNIFLASH [-H|-?|[-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx|CTFLASH [xxx]]
 -SAVE fname     Write current bios image to file fname
 -CMOSS/R fname  Save/restore CMOS settings to/from file fname
 -CMOSC          Clears CMOS settings
+-UNLOCK         Unlock locked bootblocks (e.g. on W29C020)
 -QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)
 -REBOOT         Reboot after flashing (use together with -E)
 
@@ -989,6 +1022,8 @@ Some parameters can't be used together - e.g. -AMI can't be used with -PCIROM.
 -AMI: Uses interface supported by some AMI BIOSes instead of detecting the
       chipset and writing to chipset registers to disable write protection.
       (I haven't seen this working anywhere yet...)
+-ASUS: Uses interface supported by newer Asus BIOSes. This one really works
+       (tested on A7V133-C, A7V266 and A7V8X-X)
 -CHIPLIST: Displays a list of supported chips with their IDs which are needed
            for use with -FORCE parameter.
 -FORCE: Disable Flash ROM autodetection and set chip type to the one specified
@@ -1006,6 +1041,8 @@ Some parameters can't be used together - e.g. -AMI can't be used with -PCIROM.
 -CMOSR: Restore CMOS settings from file fname. CMOS memory size is detected
         automatically.
 -CMOSC: Clear CMOS memory.
+-UNLOCK: Bootblock lock can be disabled on some chips (tested on W29C020) by
+         using this parameter.
 
 
 6.0            How to support UniFlash?
@@ -1052,6 +1089,27 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.40       -changed license to GNU GPL v2
+1.39       -added -UNLOCK parameter to unlock bootblocks on some chips (like
+            Winbond W29C020)
+           -added logging to LPC detection
+           -added Winbond W83627(H)F, SF/GF, THF and W83637HF and also
+            ITE IT8702F, IT8711F, IT8712F and IT8722F detection (these don't
+            have flash ROM interface but they have GPIO pins)
+           -simplified LPC detection and access code
+           -added BIOS ID reading from F000 segment if not found at top of 4GB
+           -added specific support for Asus A7V266 and A7V8X-X (they use
+            Super I/O GPO pins) and Abit ZM6, BE6 (same as BX133-RAID)
+           -added Winbond W39V040A (LPC) and W39L040A chips
+           -added support for Asus flash interface! (-ASUS parameter) - with
+            this, it should be possible to flash all newer Asus boards
+           -added support for SMBIOS/DMI board identification (needed for
+            specific support for boards with non-Award BIOSes)
+           -added specific support for MSI MS-6380 2.0 and MS-6380E 1.0
+           -added new Intel chipsets: E7210, E7221, E7320, E7520, E7525,
+            E8870, mobile 910/915 series
+           -added VIA VT8237 south bridge and UniChrome KM400(A) chipset
+           -was never released
 1.38       -fixed quitting on some boards immediately after running
            -fixed unprotect for ST FWH and LPC chips (one F is missing from
             the (un)protect register adresses)
@@ -1521,9 +1579,6 @@ When sending reports that something doesn't work, always send the log file!
 
 9.2            What's missing
 -----------------------------
- - Boot Block on Winbond W29C020 can be flashed even if the Boot Block
-   protection is enabled on the chip - AMIFLASH v8.15.02 can do it but
-   UniFlash can't (I don't know how to do it)
  - Support for ServerWorks, UMC, new VIA and new SiS chipsets because
    datasheets are unavailable (these companies are simply ignoring e-mails)
    I can't do much with only "unofficial" info.
@@ -1654,6 +1709,27 @@ ECS           | K7VZA rev 3.0      | Apollo KT133A  | Winbond W49F002U/5V
 Microstar MSI | MS-6153VA v2.1     | Apollo Pro 133 | Winbond W29C020C/5V
 Abit          | KT7-RAID v1.02     | Apollo KT133   | Winbond W49F002U/5V
 Abit          | KT7A v1.0          | Apollo KT133A  | PMC Pm29F002T/5V
+QDI           | LegenX V           | Intel 440LX    | SST 29EE020/5V
+DTK           | PRM0080I VBX RG    | Apollo Pro Plus| Winbond W29C020C/5V
+ECS           | K7S6A rev 1.0      | SiS745+IT8705F | EON EN29F002T/5V
+Asus          | A7V266 rev.1.07.   | Apollo KT266   | SST 49LF020/3V
+DFI           | CS62-TC rev.B      | Intel 815EP    | SST 49LF002A/3.3V
+Asus          | A7V8X-X            | Apollo KT400A  | SST 49LF020/3V
+Abit          | ZM6                | Intel 440ZX    | Winbond W29C020(C)/5V
+Asus   [-ASUS]| A7V133-C rev.1.05. | Apollo KT133A  | Winbond W49F002U/5V
+Gigabyte      | GA-586VX rev 3.33  | Intel 430VX    | SST 29EE010/5V
+Shuttle       | AV11 v3.0          | Apollo Pro 133 | Winbond W29C020(C)/5V
+AOpen         | MX36LE             | Apollo ProMedia| SST 39SF020(A)/5V
+PCPartner     | K333ASA-270        | Apollo KT333   | Winbond W49F002U/5V
+MicroStar MSI | MS-6340 ver.1      | Apollo KT133   | Winbond W49F002U/5V
+MicroStar MSI | K7T266 Pro2 v2.0   | Apollo KT266   | Winbond W49F002U/5V
+MicroStar MSI | KT3 Ultra 2-R v1.0 | Apollo KT333   | Winbond W49F002U/5V
+Asus          | TUV4X              | Apollo Pro 133T| SST 39SF020(A)/5V
+TrangBow      | TB-6BX             | Intel 440BX    | Atmel AT29C010(A)/5V
+Abit          | BE6                | Intel 440BX    | Winbond W29C020(C)/5V
+Abit          | VA-20              | VIA KM400A     | EON EN29F002(A)T/5V
+
+Note: [-ASUS] means that Asus flash interface (-ASUS parameter) must be used
 
 UniFlash does NOT work on boards made by Intel. They use custom BIOS write
 protection and have soldered Flash ROM chips (often in TSOP package) - so

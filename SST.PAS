@@ -352,7 +352,7 @@ Begin
            Size := 512;
            Name := ConstPtr( '39SF040/5V' );
           End;
-    $D7 : Begin {v1.21}
+    $D7    : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -420,7 +420,7 @@ Begin
            Sectors[ 0, 0 ] := 128;  {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 512;
-           Name := ConstPtr( '49LF004A/3.3V (Firmware Hub)' );
+           Name := ConstPtr( '49LF004A/B/3.3V (Firmware Hub)' );
           End;
     $59 : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -442,7 +442,8 @@ Begin
            Size := 1024;
            Name := ConstPtr( '49LF008A/3.3V (Firmware Hub)' );
           End;
-    $61 : Begin {v1.21}
+    $61,  {v1.21}
+    $52 : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -450,7 +451,10 @@ Begin
            Sectors[ 0, 0 ] := 64;  {64 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 256;
-           Name := ConstPtr( '49LF020/3V' );
+           Case DevId of
+            $61 : Name := ConstPtr( '49LF020/3V' );
+            $52 : Name := ConstPtr( '49LF020A/3V' );
+           End;
           End;
     $1C : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -460,7 +464,7 @@ Begin
            Sectors[ 0, 0 ] := 96;  {96 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 384;
-           Name := ConstPtr( '49LF030/3V' );
+           Name := ConstPtr( '49LF030(A)/3V' );
           End;
     $51 : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -480,7 +484,7 @@ Begin
            Sectors[ 0, 0 ] := 256;  {256 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 1024;
-           Name := ConstPtr( '49LF080/3V' );
+           Name := ConstPtr( '49LF080(A)/3V' );
           End;
     else Exit;
    End;

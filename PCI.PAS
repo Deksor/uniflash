@@ -258,11 +258,16 @@ Begin
     $2540: NorthName:='iE7500';
     $254C: NorthName:='iE7501';
     $2550: NorthName:='iE7505';
+    $2580: NorthName:='i82915G/P/925X'; {v1.37}
    End;
   End else
  If NorthMan = $1106 {VIA} then
   Begin
    case NorthId of {case v1.21}
+     $505: Begin {v1.37}
+            NorthFunc := $0100; {VIA A8/A9 scheme}
+            NorthName:='VT82C505';
+           End;
      $576: Begin
             NorthFunc := $0100; {VIA A8/A9 scheme}
             NorthName:='VT82C576M';
@@ -469,7 +474,8 @@ Begin
  If NorthMan = $1045 {OPTi} then {v1.26}
   Begin
    case NorthId of
-    $C567: NorthName:='OPTi 82C750';
+    $C557: NorthName:='OPTi 82C557(M)'; {v1.37}
+    $C567: NorthName:='OPTi 82C567';
    end;
   End else
  If NorthMan = $3388 {HiNT} then {v1.26}
@@ -512,6 +518,7 @@ Begin
  If SouthMan = $8086 {Intel} then
   Begin
    if Hi(SouthId)=$24 then SouthFunc := $0200 else SouthFunc := $0100; {v1.21}
+   if Hi(SouthId)=$26 then SouthFunc := $1700; {v1.37}
    case SouthId of {case v1.21}
      $484: Begin
             if SouthRev<$88 then SouthName:='i82378ZB SIO' else
@@ -541,6 +548,8 @@ Begin
     $24C0: SouthName:='i82801DB ICH4';
     $24CC: SouthName:='i82801DBM ICH4-M';
     $24D0: SouthName:='i82801EB ICH5';
+    $2640: SouthName:='i82801FB/R ICH6(R)'; {v1.37}
+    $2642: SouthName:='i82801F(R)W ICH6(R)W'; {v1.37}
    End;
   End else
  If SouthMan = $1106 {VIA} then
@@ -642,7 +651,8 @@ Begin
   Begin
    SouthFunc:=$1200;
    case SouthId of
-    $C568: SouthName:='OPTi 82C750';
+    $C558: SouthName:='OPTi 82C558(M)';
+    $C568: SouthName:='OPTi 82C568';
    end;
   End else
  If SouthMan = $3388 {HiNT} then {v1.26}
@@ -763,7 +773,10 @@ Begin
   then CurrentChipset:='Intel E7501'; {v1.31}
  if (NorthName='iE7505') and (SouthName='i82801DB ICH4')
   then CurrentChipset:='Intel E7505'; {v1.31}
+ if (NorthName='i82915G/P/925X') and ((SouthName='i82801FB/R ICH6(R)') or (SouthName='i82801F(R)W ICH6(R)W'))
+  then CurrentChipset:='Intel 915G/P/925X'; {v1.37}
 
+ if (NorthName='VT82C505') then CurrentChipset:='VIA 486 chipset with VT82C505'; {v1.37}
  if (NorthName='VT82C576M') then CurrentChipset:='VIA Apollo Master';
  if (NorthName='VT82C585VP/VPX') and (SouthName='VT82C586(A|B)/AMD-645')
   then CurrentChipset:='VIA Apollo VP/VPX';
@@ -920,8 +933,10 @@ Begin
  if (NorthName='MediaGX') and (SouthName='Geode SCx200')
   then CurrentChipset:='AMD Geode SC1200/2200/3200'; {v1.36}
 
- if (NorthName='OPTi 82C750') and (SouthName='OPTi 82C750')
-  then CurrentChipset:='OPTi Vendetta 82C750';
+ if (NorthName='OPTi 82C557(M)') and (SouthName='OPTi 82C558(M)')
+  then CurrentChipset:='OPTi Viper M/N/NK/N+/DP';
+ if (NorthName='OPTi 82C567') and (SouthName='OPTi 82C568')
+  then CurrentChipset:='OPTi Viper Max/Vendetta 82C750';
 
  if (NorthName='HiNT VXPro-II North') and (SouthName='HiNT VXPro-II South')
   then CurrentChipset:='HiNT VXPro-II (Utron UT85C50x)';
@@ -1201,7 +1216,7 @@ Begin
             SouthPos and $7, $4C ))); {v1.23}
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0 );
            LogWrite('Intel 8xx method: reg $E0 = '+Hl(PIIXReg2)); {v1.23}
-           {FWH Decode at $FFC00000-$FFFFFFFF = 4MB enable}
+           {FWH Decode at $FF800000-$FFFFFFFF = 8MB enable}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 or $FF000000 ); {C0 -> FF} {v1.31}
            LogWrite('Intel 8xx method: reg $E0 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
@@ -1593,9 +1608,8 @@ Begin
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48 );
            LogWrite('OPTi method: reg $48 = '+Hl(PIIXReg2));
            {256k enable}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48, PIIXReg2 or $FF000000 );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48, PIIXReg2 and $FFFFFF or $3F000000 ); {v1.37}
            LogWrite('OPTi method: reg $48 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48 )));
-
           End else
           Begin
            LogWrite('OPTi method: restoring reg $44 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
@@ -1684,7 +1698,31 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg5 );
           End;
         End;
-
+  $17 : Begin {Intel 9xx (ICH6) method} {v1.37}
+         If Map then
+          Begin
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $DC );
+           LogWrite('Intel 9xx method: reg $DC = '+Hl(PIIXReg));
+           {FWH Write Enable}
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $DC, PIIXReg or $1 );
+           LogWrite('Intel 9xx method: reg $DC changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $DC )));
+           PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $D8 );
+           LogWrite('Intel 9xx method: reg $D8 = '+Hl(PIIXReg2));
+           {FWH Decode at $FF000000-$FFFFFFFF = 16MB enable}
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $D8, PIIXReg2 or $FF0F );
+           LogWrite('Intel 9xx method: reg $D8 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $D8 )));
+          End else
+          Begin
+           LogWrite('Intel 9xx method: restoring reg $DC from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $DC )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $DC, PIIXReg );
+           LogWrite('Intel 9xx method: restoring reg $D8 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $D8 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $D8, PIIXReg2 );
+          End;
+        End;
  End;
 
  case Hi(LPCFunc) of {v1.27}

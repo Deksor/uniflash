@@ -14,7 +14,9 @@ Begin
   Begin
    Case DevId of
     $A0,
-    $A3 : Begin
+    $A3,
+    $A5,
+    $A6 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -25,6 +27,8 @@ Begin
            case DevId of
             $A0 : Name := ConstPtr( 'IM29F001T/5V' );
             $A3 : Name := ConstPtr( 'IM29F001B/5V' );
+            $A5 : Name := ConstPtr( 'IM29LV001T/3.3V' );
+            $A6 : Name := ConstPtr( 'IM29LV001B/3.3V' );
            End;
           End;
     $A1,

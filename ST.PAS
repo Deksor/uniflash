@@ -111,21 +111,17 @@ Begin
            Size := 128;
            Name := ConstPtr( 'M28F101/12V' );
           End;
-    $50 : Begin
+    $F4,
+    $F5 : Begin {v1.37}
            Flags  := 6;   {bulk erase, need blanking}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDFlashWrite;
            Erase := AMDFlashErase;
            Size := 256;
-           Name := ConstPtr( 'M28F102/12V' );
-          End;
-    $F4 : Begin
-           Flags  := 6;   {bulk erase, need blanking}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDFlashWrite;
-           Erase := AMDFlashErase;
-           Size := 256;
-           Name := ConstPtr( 'M28F201/12V' );
+           Case DevId of
+            $F4 : Name := ConstPtr( 'M28F201/12V' );
+            $F5 : Name := ConstPtr( 'M28W201/12V' );
+           End;
           End;
     $24,
     $27 : Begin
@@ -416,7 +412,9 @@ Begin
            End;
           End;
     $26, {v1.29}
-    $2C : Begin
+    $2C,
+    $08, {v1.37}
+    $28 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := STSecProg;
@@ -427,10 +425,14 @@ Begin
            case DevId of
             $2C : Name := ConstPtr( 'M50FW040/3V (FWH)' );
             $26 : Name := ConstPtr( 'M50LPW040/3V (LPC)' );
+            $08 : Name := ConstPtr( 'M50FLW040A/3V (LPC/FWH)' );
+            $28 : Name := ConstPtr( 'M50FLW040B/3V (LPC/FWH)' );
            End;
           End;
     $2D, {v1.29}
-    $2F : Begin
+    $2F,
+    $80, {v1.37}
+    $81 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := STSecProg;
@@ -441,7 +443,19 @@ Begin
            case DevId of
             $2D : Name := ConstPtr( 'M50FW080/3V (FWH)' );
             $2F : Name := ConstPtr( 'M50LPW080/3V (LPC)' );
+            $80 : Name := ConstPtr( 'M50FLW080A/3V (LPC/FWH)' );
+            $81 : Name := ConstPtr( 'M50FLW080B/3V (LPC/FWH)' );
            End;
+          End;
+    $2E : Begin {v1.37}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := STSecProg;
+           Erase := STSecErase;
+           Sectors[ 0, 0 ] := 32; {32 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           Size := 2048;
+           Name := ConstPtr( 'M50FW016/3V (FWH)' );
           End;
     else Exit;
    End;

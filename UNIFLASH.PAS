@@ -8,7 +8,7 @@ Program Uniflash;
 Uses Crt, Dos,
      Flash, PCI, PCICards, Tools, GenFlash, CT_Flash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
-     ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
+     ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu, SHARP,
      Language, English{, French, Dutch, Italian, German};
 
 

@@ -1,4 +1,4 @@
-                     UniFlash version 1.36 documentation
+                     UniFlash version 1.37 documentation
                      -----------------------------------
                    (C) 2004 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -127,8 +127,10 @@ Here's a list of chipsets suported by Uniflash:
           | E7500                |
           | E7501                |
           | E7505                |
+          | i915G/P/925X         |
 ----------|----------------------|--------------------------------------------
- VIA      | Appollo Master       |
+ VIA      | 486 with VT82C505    | 486 chipsets with VT82C505 PCI bridge
+          | Appollo Master       |
           | Apollo VP            |
           |*Apollo VPX           |
           |*Apollo VP2           |
@@ -158,6 +160,7 @@ Here's a list of chipsets suported by Uniflash:
           | AMD 760MP            | similar to VIA. AMD 760 should work with
           | AMD 760MPX           | both VIA and AMD (does it really exist?)
           |                      | south bridges.
+          | AMD 8000             |
           | Geode SC1100         | Geode bought from National, these chips
           | Geode SCx200         | have integrated south bridge
 ----------|----------------------|--------------------------------------------
@@ -228,7 +231,8 @@ Here's a list of chipsets suported by Uniflash:
  National/| Geode GX1 (MediaGX)  | With Cx5510, Cx5520 and Cx5530(A) chips.
  Cyrix    |                      | New Geode chips are AMD.
 ----------|----------------------|--------------------------------------------
- OPTi     | Vendetta 82C750      | Not tested
+ OPTi     |*Viper M/N/NK/N+/DP   | Tested and works
+          | Viper Max/Vendetta   | Untested, but should work too
 ----------|----------------------|--------------------------------------------
  HiNT     | VXPro-II             | Used on some PC Chips boards (like M559)
           |                      | I think that it's Utron UC85C501/502
@@ -390,13 +394,22 @@ UniFlash supports the following flash chips:
   AMIC                            |
   ----                            |
   A29010                          | 128KB
-  A29040                          | 512KB
+  A29040(A/B)                     | 512KB
   A29001(1)T                      | 128KB
   A29001(1)B                      | 128KB
  *A29002(1)T                      | 256KB
   A29002(1)B                      | 256KB
   A29400T                         | 512KB
   A29400B                         | 512KB
+  A29800T                         | 1024KB
+  A29800B                         | 1024KB
+  A29L040                         | 512KB
+  A29L004T/400T                   | 512KB
+  A29L004B/400B                   | 512KB
+  A29L008T/800T                   | 1024KB
+  A29L008B/800B                   | 1024KB
+  A29L160T                        | 2048KB
+  A29L160B                        | 2048KB
 ----------------------------------|-------------------------------------------
   ASD                             |
   ---                             |
@@ -465,12 +478,23 @@ UniFlash supports the following flash chips:
 ----------------------------------|-------------------------------------------
   EON                             |
   ---                             |
-  EN29F040                        | 512KB
+  EN29F512                        | 64KB
+  EN29F010                        | 128KB
+  EN29F040(A)                     | 512KB
   EN29F080                        | 1024KB
- *EN29F002T                       | 256KB
-  EN29F002B                       | 256KB
+ *EN29F002(A)T                    | 256KB
+  EN29F002(A)B                    | 256KB
   EN29F800T                       | 1024KB
   EN29F800B                       | 1024KB
+  EN29LV512                       | 64KB
+  EN29LV010                       | 128KB
+  EN29LV040                       | 512KB
+  EN29LV400T                      | 512KB
+  EN29LV400B                      | 512KB
+  EN29LV800(A)T                   | 1024KB
+  EN29LV800(A)B                   | 1024KB
+  EN29LV160T                      | 2048KB
+  EN29LV160B                      | 2048KB
 ----------------------------------|-------------------------------------------
   Fujitsu                         |
   -------                         |
@@ -515,6 +539,8 @@ UniFlash supports the following flash chips:
   IM29F002B                       | 256KB
   IM29F004T                       | 512KB
   IM29F004B                       | 512KB
+  IM29LV001T                      | 128KB
+  IM29LV001B                      | 128KB
   IM29LV004T                      | 512KB
   IM29LV004B                      | 512KB
 ----------------------------------|-------------------------------------------
@@ -655,6 +681,12 @@ UniFlash supports the following flash chips:
   Pm49FL004                       | 512KB
   Pm49FL008                       | 1024KB
 ----------------------------------|-------------------------------------------
+  SHARP                           |
+  -----                           |
+  LHF00L02/6/7 (LPC)              | 1024KB
+  LHF00L03/4/5 (FWH)              | 1024KB
+  LHF00L01 (LPC)                  | 2048KB
+----------------------------------|-------------------------------------------
   SST                             |
   ---                             |
   28EE010/011                     | 128KB
@@ -674,13 +706,14 @@ UniFlash supports the following flash chips:
   29VF020                         | 256KB
   29VF040                         | 512KB
  *49LF020                         | 256KB
-  49LF030                         | 384KB
+  49LF020A                        | 256KB
+  49LF030(A)                      | 384KB
   49LF040                         | 512KB
-  49LF080                         | 1024KB
+  49LF080(A)                      | 1024KB
  *49LF002(A) (Firmware Hub)       | 256KB
   49LF003A (Firmware Hub)         | 384KB
   49LF004 (Firmware Hub)          | 512KB
-  49LF004A (Firmware Hub)         | 512KB
+  49LF004A/B (Firmware Hub)       | 512KB
   49LF008 (Firmware Hub)          | 1024KB
  *49LF008A (Firmware Hub)         | 1024KB
   39SF512                         | 64KB
@@ -699,8 +732,8 @@ UniFlash supports the following flash chips:
   M28F256                         | 32KB
   M28F512                         | 64KB
   M28F101                         | 128KB
-  M28F102                         | 256KB
   M28F201                         | 256KB
+  M28W201                         | 256KB
   M29F512B                        | 64KB
   M29F010B                        | 128KB
   M29F040(B)                      | 512KB
@@ -738,8 +771,13 @@ UniFlash supports the following flash chips:
   M50LPW002 (LPC)                 | 256KB
   M50FW040 (FWH)                  | 512KB
   M50LPW040 (LPC)                 | 512KB
+  M50FLW040A (LPC/FWH)            | 512KB
+  M50FLW040B (LPC/FWH)            | 512KB
   M50FW080 (FWH)                  | 1024KB
   M50LPW080 (LPC)                 | 1024KB
+  M50FLW080A (LPC/FWH)            | 1024KB
+  M50FLW080B (LPC/FWH)            | 1024KB
+  M50FW016 (FWH)                  | 2048KB
 ----------------------------------|-------------------------------------------
   SyncMOS                         |
   -------                         |
@@ -1008,6 +1046,23 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.37       -removed STMicroelectronics M28F102 (is 16-bit)
+           -added STMicroelectronics M50FW016 (FWH), M50FLW040A (LPC/FWH),
+            M50FLW040B (LPC/FWH), M50FLW080A (LPC/FWH), M50FLW080B (LPC/FWH),
+            M28W201 chips
+           -added AMIC A29800T, A29800B, A29L004T/400T, A29L004B/400B,
+            A29L008T/800T, A29L008B/800B, A29L160T, A29L160B, A29L040 chips
+           -added IMT IM29LV001T, IM29LV001B chips
+           -added EON EN29F512, EN29F010, EN29LV512, EN29LV010, EN29LV040,
+            EN29LV400T, EN29LV400B, EN29LV800(A)T, EN29LV800(A)B, EN29LV160T,
+            EN29LV160B
+           -added SST 49LF020A chip
+           -added SHARP LHF00L02/6/7 (LPC), LHF00L03/4/5 (FWH) and LHF00L01
+            (LPC) chips
+           -added Intel 915G/P/925X chipsets with new ICH6
+           -added OPTi Viper M/N/NK/N+/DP, changed Vendetta 82C750 to
+            Viper Max/Vendetta 82C750 and fixed a bug in OPTi chipset support
+           -added VIA 486 chipsets with VT82C505 PCI bridge
 1.36       -c't Flasher can now be used on systems without PCI bus
            -fixed a bug causing -save and -e parameters to not work correctly
             when used together
@@ -1568,6 +1623,9 @@ Gemlight/DTK  | GMB-P6BIAK-V1 RB   | Intel 440BX    | Winbond W29C020/5V
 ASRock        | K7S8XE+ r1.03      | SiS748+W83697HF| Winbond W49F002U/5V
 ECS           | K7VTA3 rev. 1      | VIA KT266A     | Winbond W49F002U/5V
 Mercury       | KOB P4X266NFSX v1.0| VIA P4X266     | Winbond W49F002U/5V
+c't Flasher   | 8-bit ISA card     |                | SST 29EE010/5V
+A-Trend       | ATC-1545           | OPTi Viper M   | SST 29EE010/5V
+c't Flasher   | 8-bit ISA card     |                | Macronix MX29F001T/5V
 
 UniFlash does NOT work on boards made by Intel. They use custom BIOS write
 protection and have soldered Flash ROM chips (often in TSOP package) - so

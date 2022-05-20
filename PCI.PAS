@@ -81,7 +81,7 @@ End;
 
 Function LocatePIIX : byte;
 Const
-NbName    : ARRAY[ 1 .. $1B ] of String[ 16 ] = { Rainbow }
+NbName    : ARRAY[ 1 .. $2C ] of String[ 16 ] = { Rainbow }
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -108,8 +108,26 @@ NbName    : ARRAY[ 1 .. $1B ] of String[ 16 ] = { Rainbow }
 {18}          'VT82C597',
 {19}          'VT82C598[AT]',
 {1A}          'VT82C685',
-{1B}          'M1621' ); {v1.18}
-SbName    : ARRAY[ 1 .. $D ] of String[ 21 ] =
+{1B}          'VT8501', {v1.20}
+{1C}          'VT82C691/693(A)/694X', {v1.20}
+{1D}          'VT82C693(A)', {v1.20}
+{1E}          'VT8601', {v1.20}
+{1F}          'VT8605', {v1.20}
+{20}          'VT8371', {v1.20}
+{21}          'VT8363(A)', {v1.20}
+{22}          'VT8366', {v1.20}
+{23}          'VT8633', {v1.20}
+{24}          'VT8653', {v1.20} {???}
+{25}          'VT8662', {v1.20} {???}
+{26}          'VT8615', {v1.20} {???}
+{27}          'VT8361', {v1.20} {???}
+{28}          'VT3133', {v1.20} {???}
+{29}          'M1621', {v1.18}
+{2A}          'AMD-751', {v1.20}
+{2B}          'AMD-761', {v1.20}
+{2C}          'AMD-762' ); {v1.20}
+
+SbName    : ARRAY[ 1 .. $12 ] of String[ 21 ] =
 {1}         ( 'i82378IB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -120,11 +138,14 @@ SbName    : ARRAY[ 1 .. $D ] of String[ 21 ] =
 {8}           'i82801AB ICH0', {v1.19}
 {9}           'i82801BA ICH2', {v1.19}
 {A}           'i82801BAM ICH2-M', {v1.19}
-{B}           'VT82C586[A|B]/AMD 645',
-{C}           'VT82C596',
-{D}           'M1543' ); {v1.18}
-
-
+{B}           'VT82C586(A|B)/AMD 645',
+{C}           'VT82C596(A|B)',
+{D}           'VT82C686(A)', {v1.20}
+{E}           'VT8231', {v1.20}
+{F}           'VT8233', {v1.20}
+{10}          'M1543(C)', {v1.18}
+{11}          'AMD-756', {v1.20}
+{12}          'AMD-766' ); {v1.20}
 
 Var
 SbId,
@@ -218,7 +239,27 @@ Begin
     Begin
      NorthFunc := $0100; {VIA A8/A9 scheme}
      NbId := $1A; {82C685}
-    End;
+    End else
+   If NorthId = $501 then NbId := $1B {8501} else
+   If NorthId = $691 then NbId := $1C {82C691/693(A)/694X} else
+   If NorthId = $693 then NbId := $1D {82C693(A)} else
+   If NorthId = $601 then NbId := $1E {82C601} else
+   If NorthId = $605 then NbId := $1F {8605} else
+   If NorthId = $391 then NbId := $20 {82371} else
+   If NorthId = $305 then NbId := $21 {8363(A)} else
+   If NorthId = $3099 then NbId := $22 {8366} else
+   If NorthId = $3091 then NbId := $23 {8633} else
+   If NorthId = $3101 then NbId := $24 {8653} else
+   If NorthId = $3102 then NbId := $25 {8662} else
+   If NorthId = $3103 then NbId := $26 {8615} else
+   If NorthId = $3112 then NbId := $27 {8361} else
+   If NorthId = $3133 then NbId := $28 {3133};
+  End else
+ If NorthMan = $1022 {AMD} then {v.1.20}
+  Begin
+   If NorthId = $7006 then NbId := $2A {AMD-751} else
+   If NorthId = $700E then NbId := $2B {AMD-761} else
+   If NorthId = $700C then NbId := $2C {AMD-762};
   End else
  If NorthMan = $1045 {Opti} then
   Begin
@@ -231,7 +272,7 @@ Begin
   End;
  If NorthMan = $10B9 {ALi} then
   Begin
-   If NorthId = $1621 then NbId := $1B; {M1621} {v1.19}
+   If NorthId = $1621 then NbId := $29; {M1621} {v1.19}
   End;
 
  {Id southbridge}
@@ -275,10 +316,18 @@ Begin
   End else
  If SouthMan = $1106 {VIA} then
   Begin
-   SouthFunc := $0300; {VIA method}
+   SouthFunc := $0300; {VIA/AMD method}
    If SouthId = $586 then SbId := $0B else
-
-   If SouthId = $596 then SbId := $0C;
+   If SouthId = $596 then SbId := $0C else
+   If SouthId = $686 then SbId := $0D else {VT82C686(A)} {v1.20}
+   If SouthId = $8231 then SbId := $0E; {VT8231} {v1.20}
+   If SouthId = $3074 then SbId := $0F else {VT8233} {v1.20}
+  End else
+ If SouthMan = $1022 {AMD} then {v1.20}
+  Begin
+   SouthFunc := $0300; {AMD/VIA method}
+   If SouthId = $7408 then SbId := $11 {AMD-756} else
+   If SouthId = $7410 then SbId := $12 {AMD-766};
   End else
  If SouthMan = $1045 {Opti} then
   Begin
@@ -294,7 +343,7 @@ Begin
    If SouthId = $1533 then {M1543} {v1.19}
     Begin
      SouthFunc := $0400; {ALi method}
-     SbId := $0D;
+     SbId := $10;
     End;
   End;
 
@@ -332,12 +381,27 @@ Begin
   $13 : If (SbId = $07) or (SbId = $08) then CurrentChipset := 'Intel 840'; {v1.19}
   $14 : If SbId = $09 then CurrentChipset := 'Intel 850'; {v1.19}
   $15 : CurrentChipset := 'VIA Apollo Master';
-  $16 : If SbId = $0B then CurrentChipset := 'VIA Apollo-VP/VPX';
-  $17 : If SbId = $0B then CurrentChipset := 'VIA Apollo-VP2/AMD 640';
-  $18 : If SbId = $0B then CurrentChipset := 'VIA Apollo-VP3';
-  $19 : If SbId = $0C then CurrentChipset := 'VIA Apollo-MVP3';
-  $1A : CurrentChipset := 'VIA Apollo-P6';
-  $1B : If SbId = $0D then CurrentChipset := 'ALi Alladin Pro II'; {v1.18}
+  $16 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP/VPX';
+  $17 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP2/AMD 640';
+  $18 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP3';
+  $19 : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
+  $1A : CurrentChipset := 'VIA Apollo P6';
+  $1B : If SbId = $0D then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
+  $1C : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo Pro (Plus/133/133A)'; {v1.20}
+  $1D : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo Pro Plus/133/133A'; {v1.20}
+  $1E : If SbId = $0D then CurrentChipset := 'VIA Apollo ProMedia'; {v1.20}
+  $1F : CurrentChipset := 'VIA Apollo Pro 133Z/PM133'; {v1.20}
+  $20 : If SbId = $0D then CurrentChipset := 'VIA Apollo KX133'; {v1.20}
+  $21 : If SbId = $0D then CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
+  $22 : If SbId = $0F then CurrentChipset := 'VIA Apollo KT266'; {v1.20}
+  $23 : If SbId = $0F then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
+  $29 : If SbId = $10 then CurrentChipset := 'ALi Alladin Pro II'; {v1.18}
+  $2A : If SbId = $11 then CurrentChipset := 'AMD 750'; {v1.20}
+  $2B : case SbId of {v1.20}
+         $0D : CurrentChipset := 'AMD 760 (VIA South)';
+         $12 : CurrentChipset := 'AMD 760 (AMD South)';
+        end;
+  $2C : If SbId = $12 then CurrentChipset := 'AMD 760MP'; {v1.20}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -431,7 +495,7 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $E0, PIIXReg2 );
           End;
         End;
-  $03 : Begin {VIA method}
+  $03 : Begin {VIA method} {AMD method is the same v1.20}
          If Map then
           Begin
            Mask := $C0000001;  {write enable, 512K enable}

@@ -6,7 +6,7 @@ Program Uniflash;
 
 Uses Crt, Dos,
      Flash,Pci,Tools, GenFlash,
-     Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix,
+     Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC,
      Language, English, French, Dutch;
 
 
@@ -17,7 +17,7 @@ Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
 AutoSave    : Boolean = False;
-Version     = '1.19';
+Version     = '1.20';
 ForceId     : Boolean = False;
 
 Var

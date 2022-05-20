@@ -1,4 +1,4 @@
-                    UniFlash's version 1.18 documentation.
+                    UniFlash's version 1.20 documentation.
                     --------------------------------------
                (C) 1998 Pascal Van Leeuwen and Galkowski Adam
                Now developed by Ondrej Zary (Rainbow Software)
@@ -80,18 +80,33 @@ Intel       | 430FX,HX,VX,TX,MX    | No comments It works in 99% of cases
             |                      | 440GX untested
 -----------------------------------------------------------------------------
 VIA         | Appollo Master       | Only VP2 has been tested so far
-            | Apollo-VP            |
-            | Apollo-VPX           |
-            | Apollo-VP2           |
-            | Apollo-VP3           |
-            | Apollo-MVP3          |
-            | Apollo-P6            |
+            | Apollo VP            |
+            | Apollo VPX           |
+            | Apollo VP2           |
+            | Apollo VP3           |
+            | Apollo MVP3          |
+            | Apollo P6            |
             | +our buddy the VXPRO |
             | (which is a remarked |
             |  Apollo VP2)         |
+            | Apollo MVP4          | <- Support for newer VIA chipsets in
+            | Apollo Pro           |    version 1.20 (they're all untested)
+            | Apollo Pro Plus/133  |
+            | Apollo Pro 133A      | There may be problems with chipsets
+            | Apollo ProMedia      | using VT8233 south bridge because I
+            | Apollo Pro 133Z/PM133| don't have full data sheet for this chip.
+            | Apollo KX133         | (KT266 and Pro 266)
+            | Apollo KT133(A)      | These North Bridges are detected, but
+            | Apollo KT266         | aren't used in any VIA's chipset (??):
+            | Apollo Pro 266       | VT8653, VT8662, VT8615, VT8361, VT3133
 -----------------------------------------------------------------------------
 AMD         | AMD 640 (remarked    | Works just fine
             | Apollo VP2)          |
+            | AMD 750              | UniFlash supports true AMD chipsets since
+            | AMD 760              | version 1.20. Their registers are very
+            | AMD 760MP            | similar to VIA. All are untested.
+            |                      | AMD 760 should work with both VIA and
+            |                      | AMD south bridges.
 -----------------------------------------------------------------------------
 OPTi        | Vendetta             | Not tested
 -----------------------------------------------------------------------------
@@ -101,7 +116,7 @@ SiS         | 559X series          | Not supported yet. Uniflash detects it,
             |                      | have to register. It's free, but it
             |                      | doesn't work for me)
             |                      |*If your BIOS is an AMI WinBIOS, try
-            |                      |running Uniflash with the -AMI parameter
+            |                      | running Uniflash with the -AMI parameter
 -----------------------------------------------------------------------------
 ALi         | Alladin Pro II       | I got M1543C datasheets from ALi, so
             | (M1621+M1543C)       | this one is supported now. All chipsets
@@ -168,6 +183,17 @@ fine too))
                 Am28F512
                 Am28F512A
 
+                AMIC
+                ----
+               ?A29001(1)T
+               ?A29001(1)B
+               ?A29010
+               *A29002(1)T
+               ?A29002(1)B
+               ?A29400T
+               ?A29400B
+               ?A29040
+
                 SST
                 ---
                 28x040 series
@@ -178,6 +204,10 @@ fine too))
                 29x512 series
                 29EE512
                 28EE011
+               *PH29EE010 - I had problems with this chip because the
+                identification does not work. Forcing to SST 29EE010 doesn't
+                work too. Then I forced Winbond W29EE011 and it worked.
+                (use parameter "-force 5a41")
 
                 Winbond
                 -------
@@ -370,6 +400,24 @@ This is old info and some of the addresses below are probably dead:
 
 9.0            Revision info
 ----------------------------
+1.20           -added support for these AMIC chips: A29001(1)T, A29001(1)B,
+                A29010, A29002(1)T, A29002(1)B, A29400T, A29400B and A29040
+                They're all sectored and use AMD commands.
+                (For Matt Choudoir's broken ABIT KT7A with AMIC A29002T)
+                A29002(1)T tested and works correctly, others are untested.
+               -added support for newer VIA chipsets (all untested)
+                Apollo MVP4, Apollo Pro, Apollo Pro Plus/133/133A,
+                Apollo ProMedia, Apollo Pro 133Z/PM133, Apollo KX133,
+                Apollo KT133(A), Apollo KT266, Apollo Pro 266.
+                North Bridges: VT8501, VT82C691/693(A)/694X, VT82C693(A),
+                VT8601, VT8605, VT8371, VT8363(A), VT8366, VT8633
+                South Bridges: VT82C686(A), VT8231, VT8233 (last two may or
+                may not work because I don't have datasheets).
+                Plus some north bridges that aren't used anywhere (but are in
+                VIA's INF file) - VT8653, VT8662, VT8615, VT8361, VT3133.
+               -added support for AMD 750, 760 and 760MP chipsets (751,761 and
+                762 north bridges, 756 and 766 south bridges). Registers are
+                almost same as VIA. Untested.
 1.19           -added support for Intel 8xx chipsets (Hub Architecture):
                 i810,810E,810E2,815,815E(P),815EM,820,820E,840,850
                 with these I/O controller hubs:
@@ -467,6 +515,7 @@ Shuttle       | Hot565 rev ?      | Intel TX     | Winbond W29EE011
 Shuttle       | Hot603 rev ?      | AMD 640      | Winbond W29EE011
 ASUSTeK       | P2B rev 1.10      | Intel 440BX  | ?
 PC Chips      | M726 v3.4A        | Alladin Pro 2| ASD AE29F1008
+Abit          | BX6 rev. 2        | Intel 440BX  | AMIC A29002T
 
 
 11.0            Beta testing stuff
@@ -487,6 +536,7 @@ in mind when we started this project. Thanx in advance !
                 Michael L. Croswell
                 Polyvios Simopoulos
                 Matthias David Siebler
+                Matt Choudoir
 
 
 12.0            Biz support

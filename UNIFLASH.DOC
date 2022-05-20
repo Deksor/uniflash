@@ -1,4 +1,4 @@
-                     UniFlash version 1.34 documentation
+                     UniFlash version 1.35 documentation
                      -----------------------------------
                    (C) 2004 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -121,6 +121,7 @@ Here's a list of chipsets suported by Uniflash:
           |*i852GM/855GM         |
           | i855PM               |
           | i860                 |
+          | i865P(E)/G(V)/848P   |
           | i875P                |
           | E7205                |
           | E7500                |
@@ -135,7 +136,7 @@ Here's a list of chipsets suported by Uniflash:
           |*Apollo MVP3          |
           | Apollo P6            |
           | Apollo MVP4          | VIA chipsets are weird - some work, some
-          | Apollo Pro           | don't.
+          |*Apollo Pro           | don't.
           |*Apollo Pro Plus/133  |
           |*Apollo Pro 133A      | If you have "Flash Write protect" in BIOS,
           | Apollo ProMedia      | disable it and it should work.
@@ -159,7 +160,7 @@ Here's a list of chipsets suported by Uniflash:
           |                      | south bridges.
 ----------|----------------------|--------------------------------------------
  SiS      |*85C496+497           | I got the datasheets, but not from SiS.
-          |#501/5101/5501        |
+          |*501/5101/5501        |
           | 5511                 |
           | 5571                 | To support 12 chipsets, I needed to write
           |*5591/5592            | 5 different methods of enabling Flash ROM
@@ -184,7 +185,7 @@ Here's a list of chipsets suported by Uniflash:
           | 740                  |
           | 745                  |
           | 746                  |
-          | 748                  |
+          |*748                  |
           | 755                  |
 ----------|----------------------|--------------------------------------------
  ALi      |*FinALi 486           | FinALi has very weird Flash ROM access but
@@ -206,7 +207,7 @@ Here's a list of chipsets suported by Uniflash:
           |                      | South Bridge (UDMA-66 support)
 ----------|----------------------|--------------------------------------------
  Winbond/ | W83C553F South Bridge| I don't know if this one was ever used.
- Symphony | Winbond W83697(H)F   | LPC Super I/Os with Flash ROM support
+ Symphony |*Winbond W83697(H)F   | LPC Super I/Os with Flash ROM support
  Labs     | Winbond W83697SF     |
           | Winbond W83697UF     |
 ----------|----------------------|--------------------------------------------
@@ -261,6 +262,7 @@ that the correct BIOS MUST be present in the socket when starting UniFlash or
 the flashing will not work.
 
 6A69RM4E = MicroStar MSI MS-6337 v3.0 (815EP Pro)
+6A6S6A1A = Abit KG7(-Lite/-RAID)
 
 2.2            Tested PCI cards
 -------------------------------
@@ -1004,6 +1006,9 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.35       -fixed i82378ZB vs. i82379AB identify
+           -fixed a bug causing hangs with Winbond LPC Super I/O chips
+           -added SiS 964 south bridge detection
 1.34       -fixed a bug causing arithmetic overflow with chips with many
             sectors (such as SST 49LF008A FWH)
            -fixed problems with c't Flasher and 5V chips smaller than 512KB
@@ -1543,6 +1548,20 @@ Procomp       | BVK2A=BioStar M7VKB| Apollo KT133(A)| AMIC A29002(1)T/5V
 LiPPERT       | Thunderbird        | Intel 8255GME  | Intel 82802AC/3.3V
 LiPPERT       | Thunderbird        | Intel 8255GME  | SST 49LF008A/3.3V
 LiPPERT       | Thunderbird        | Intel 8255GME  | Atmel AT49LW080/3.3V
+Gigabyte      | GA-6WMMC7-1        | Intel 810      | Intel 82802AB/3.3V
+AOpen         | AP5CS              | SiS 5501       | Intel 28F010/12V
+LuckyStar     | 6VBX2 rev 1.1      | Apollo Pro     | Winbond W29EE011/5V
+Abit          | KG7-Lite           | AMD761+686B    | PMC Pm29F002T/5V
+LuckyStar     | 5MVP3 rev 4.0+     | Apollo MVP3    | Winbond W29C011/5V
+c't Flasher   | 8-bit ISA card     |                | SST 39VF020/3V (PLCC32)
+Gemlight/DTK  | GMB-P6BIAK-V1 RB   | Intel 440BX    | Winbond W29C020/5V
+ASRock        | K7S8XE+ r1.03      | SiS748+W83697HF| Winbond W49F002U/5V
+ECS           | K7VTA3 rev. 1      | VIA KT266A     | Winbond W49F002U/5V
+
+UniFlash does NOT work on boards made by Intel. They use custom BIOS write
+protection and have soldered Flash ROM chips (often in TSOP package) - so
+there's nothing to hot-flash. They have recovery mode (activated by jumper)
+in case something goes wrong with the BIOS.
 
 
 11.0            Beta testing stuff
@@ -1579,6 +1598,8 @@ in mind when we started this project. Thanx in advance!
                 Ernst Ahlers (c't Flasher author)
                 Alfred Glass, Alex Student, Jurgen Stauffer
                   at LiPPERT Automationstechnik GmbH
+                Marc E.
+                Marek Palka
 
 
 12.0            Biz support

@@ -517,10 +517,8 @@ Begin
    if Hi(SouthId)=$24 then SouthFunc := $0200 else SouthFunc := $0100; {v1.21}
    case SouthId of {case v1.21}
      $484: Begin
-            Case SouthRev of {v1.26}
-             $03 : SouthName:='i82378ZB SIO';
-             $88 : SouthName:='i82379AB SIO.A';
-            End;
+            if SouthRev<$88 then SouthName:='i82378ZB SIO' else
+             SouthName:='i82379AB SIO.A';
             SouthFunc:=$0104; {v1.29}
            End;
     $122E: Begin
@@ -574,6 +572,7 @@ Begin
    case SouthId of {v1.21}
      $8: SouthName:='SiS South Bridge'; {any SiS South Bridge}
     $18: SouthName:='SiS 950'; {SiS 950 can have $8 or $18}
+   $964: SouthName:='SiS 964'; {v1.35}
    End;
   End else
  If SouthMan = $10B9 {ALi} then {v1.18}
@@ -1249,11 +1248,34 @@ Begin
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
               LogWrite('VIA/AMD method: reg $40 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $40 ))); {v1.23}
+
+              GetBIOSID;
+              if BIOSID='6A6S6A1A' then {Abit KG7}
+               begin
+                if GetPCIRegD( $00, SouthPos shr 3, 4, $40 ) and $8000=$8000 then
+                 begin
+                  PIIXReg2:=GetPCIRegD( $00, SouthPos shr 3, 4, $48 ) and $FFFE;
+                  LogWrite('6A6S6A1A: GPO at '+Hw(PIIXReg2));
+                  PIIXReg3:=IPortD(PIIXReg2+$4C);
+                  LogWrite('6A6S6A1A: GPO = '+Hl(PIIXReg3));
+                  OPortD(PIIXReg2+$4C,PIIXReg3 or $10);
+                  LogWrite('6A6S6A1A: GPO changed to '+Hl(IPortD(PIIXReg2+$4C)));
+                 end;
+               end;
              End else
              Begin
               LogWrite('VIA/AMD method: restoring reg $40 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
                SouthPos and $7, $40 ))); {v1.23}
               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+
+              if BIOSID='6A6S6A1A' then {Abit KG7}
+               begin
+                if GetPCIRegD( $00, SouthPos shr 3, 4, $40 ) and $8000=$8000 then
+                 begin
+                  LogWrite('6A6S6A1A: restoring GPO from '+Hl(IPortD(PIIXReg2+$4C)));
+                  OPortD(PIIXReg2+$4C,PIIXReg3);
+                 end;
+               end;
              End;
           end;
         End;
@@ -1674,13 +1696,13 @@ Begin
              {512K enable, write enable}
              LPCWrite(LPCBase,$24,PIIXReg and $C7 or $28);
              LogWrite('Winbond LPC method: reg $24 changed to '+Hl(LPCRead(LPCBase,$24)));
-             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
+             Port[LPCBase]:=$AA; {v1.35}
            end else
            begin
              ITEUnlock(LPCBase);
              LogWrite('Winbond LPC method: restoring reg $24 from '+Hl(LPCRead(LPCBase,$24)));
              LPCWrite(LPCBase,$24,PIIXReg);
-             LPCWrite(LPCBase,$02,LPCRead(LPCBase,$02) or 2);
+             Port[LPCBase]:=$AA; {v1.35}
            end;
         end;
  end;

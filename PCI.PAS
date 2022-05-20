@@ -106,7 +106,7 @@ end;
 
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $56 ] of String[ 24 ] = {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $58 ] of String[ 24 ] = {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -192,9 +192,11 @@ NbName    : ARRAY[ 1 .. $56 ] of String[ 24 ] = {16->24 v1.21}
 {53}          'UMC UM8881F', {v1.28}
 {54}          'Micron MT8LLN21PADF', {v1.29}
 {55}          'CY82C599', {v1.29}
-{56}          'CY82C691');{v1.29}
+{56}          'CY82C691', {v1.29}
+{57}          'nVidia IGP', {v1.30}
+{58}          'nVidia IGP2'); {v1.30}
 
-SbName    : ARRAY[ 1 .. $25 ] of String[ 21 ] =
+SbName    : ARRAY[ 1 .. $28 ] of String[ 21 ] =
 {1}         ( 'i82378ZB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -207,31 +209,34 @@ SbName    : ARRAY[ 1 .. $25 ] of String[ 21 ] =
 {A}           'i82801BAM ICH2-M', {v1.19}
 {B}           'i82801CAM ICH3-M', {v1.23}
 {C}           'i82801CA ICH3-S', {v1.26}
-{D}           'VT82C586(A|B)/AMD-645',
-{E}           'VT82C596(A|B)',
-{F}           'VT82C686(A|B)', {v1.20}
-{10}          'VT8231', {v1.20}
-{11}          'VT8233(A|C)', {v1.20}
-{12}          'VT8235', {v1.29}
-{13}          'M1523(B)', {v1.26}
-{14}          'M1533/1543/1535', {v1.18}
-{15}          'AMD-756', {v1.20}
-{16}          'AMD-766', {v1.20}
-{17}          'AMD-768', {v1.26}
-{18}          'SiS South Bridge', {v1.21}
-{19}          'SiS 950', {v1.21}
-{1A}          'SMSC SLC90E66', {v1.21}
-{1B}          'Winbond W83C553F', {v1.21}
-{1C}          'ITE IT8871F/2F', {v1.21}
-{1D}          'ITE IT8888F', {v1.21}
-{1E}          'Reliance OSB4', {v1.24}
-{1F}          'Vesuvius V3-LS', {v1.25}
-{20}          'Geode CS5530(A)', {v1.25}
-{21}          'OPTi 82C750', {v1.26}
-{22}          'HiNT VXPro-II South', {v1.26}
-{23}          'UMC UM8886BF', {v1.28}
-{24}          'Micron MT7LLN22NCNE', {v1.29}
-{25}          'CY82C693(U/UB)'); {v1.29}
+{D}           'i82801DB ICH4', {v1.30}
+{E}           'VT82C586(A|B)/AMD-645',
+{F}           'VT82C596(A|B)',
+{10}          'VT82C686(A|B)', {v1.20}
+{11}          'VT8231', {v1.20}
+{12}          'VT8233(A|C)', {v1.20}
+{13}          'VT8235', {v1.29}
+{14}          'M1523(B)', {v1.26}
+{15}          'M1533/1543/1535', {v1.18}
+{16}          'AMD-756', {v1.20}
+{17}          'AMD-766', {v1.20}
+{18}          'AMD-768', {v1.26}
+{19}          'SiS South Bridge', {v1.21}
+{1A}          'SiS 950', {v1.21}
+{1B}          'SMSC SLC90E66', {v1.21}
+{1C}          'Winbond W83C553F', {v1.21}
+{1D}          'ITE IT8871F/2F', {v1.21}
+{1E}          'ITE IT8888F', {v1.21}
+{1F}          'Reliance OSB4', {v1.24}
+{20}          'Vesuvius V3-LS', {v1.25}
+{21}          'Geode CS5530(A)', {v1.25}
+{22}          'OPTi 82C750', {v1.26}
+{23}          'HiNT VXPro-II South', {v1.26}
+{24}          'UMC UM8886BF', {v1.28}
+{25}          'Micron MT7LLN22NCNE', {v1.29}
+{26}          'CY82C693(U/UB)', {v1.29}
+{27}          'nVidia MCP/MCP-D', {v1.30}
+{28}          'nVidia MCP2'); {v1.30}
 
 LPCName   : array[1..$2] of String[21]= {v1.27}
             ( 'ITE IT8700F/05F',
@@ -552,6 +557,13 @@ Begin
            end;
     $C691: NbId := $56; {CY82C691}
    end;
+  End else
+ If NorthMan = $10DE {nVidia} then {v1.30}
+  Begin
+   case NorthId of
+    $1A4: NbId := $57; {IGP}
+    $1E0: NbId := $58; {IGP2}
+   end;
   End;
 
  {Id southbridge}
@@ -586,42 +598,43 @@ Begin
     $244C: SbId := $0A; {i82801BAM ICH2-M}
     $248C: SbId := $0B; {i82801CAM ICH3-M}
     $2480: SbId := $0C; {i82801CA ICH3-S}
+    $24C0: SbId := $0D; {i82801DB ICH4}
    End;
   End else
  If SouthMan = $1106 {VIA} then
   Begin
    SouthFunc := $0300; {VIA/AMD method}
    case SouthId of {case v1.21}
-     $586: SbId := $0D;
-     $596: Begin SbId := $0E; Inc( SouthFunc ); End; {VT82C596(A|B)}
-     $686: Begin SbId := $0F; Inc( SouthFunc ); End; {VT82C686(A|B)} {v1.20}
-    $8231: SbId := $10; {VT8231} {v1.20}
-    $3074,$3147: begin SbId := $11; SouthFunc := $0310; end;{VT8233} {v1.20}
-    $3177: begin SbId := $12; SouthFunc := $0310; end;{VT8235} {v1.29}
+     $586: SbId := $0E;
+     $596: Begin SbId := $0F; Inc( SouthFunc ); End; {VT82C596(A|B)}
+     $686: Begin SbId := $10; Inc( SouthFunc ); End; {VT82C686(A|B)} {v1.20}
+    $8231: SbId := $11; {VT8231} {v1.20}
+    $3074,$3147: begin SbId := $12; SouthFunc := $0310; end;{VT8233} {v1.20}
+    $3177: begin SbId := $13; SouthFunc := $0310; end;{VT8235} {v1.29}
    End;
   End else
  If SouthMan = $1022 {AMD} then {v1.20}
   Begin
    SouthFunc := $0300; {AMD/VIA method}
    case SouthId of {case v1.21}
-    $7408: SbId := $15; {AMD-756}
-    $7410: SbId := $16; {AMD-766}
-    $7440: SbId := $17; {AMD-768}
+    $7408: SbId := $16; {AMD-756}
+    $7410: SbId := $17; {AMD-766}
+    $7440: SbId := $18; {AMD-768}
    end;
   End else
  If SouthMan = $1039 {SiS} then
   Begin
    case SouthId of {v1.21}
-     $8: SbId := $18; {any SiS South Bridge}
-    $18: SbId := $19; {SiS 950 can have $8 or $18}
+     $8: SbId := $19; {any SiS South Bridge}
+    $18: SbId := $1A; {SiS 950 can have $8 or $18}
    End;
   End else
  If SouthMan = $10B9 {ALi} then {v1.18}
   Begin
    SouthFunc := $0400; {ALi method}
    case SouthId of
-    $1523: begin SbId:=$13; end; {M1523} {v1.26}
-    $1533: begin SbId:=$14; Inc(SouthFunc); end; {M1533/1543/1535} {v1.19}
+    $1523: begin SbId:=$14; end; {M1523} {v1.26}
+    $1533: begin SbId:=$15; Inc(SouthFunc); end; {M1533/1543/1535} {v1.19}
    end;
   End else
  If SouthMan = $1055 {SMSC} then {v1.21}
@@ -629,7 +642,7 @@ Begin
    If SouthId = $9460 then {SLC90E66} {v1.21}
     Begin
      SouthFunc := $0600; {SMSC method}
-     SbId := $1A;
+     SbId := $1B;
     End;
   End else
  If SouthMan = $10AD {Winbond/Symphony Labs} then {v1.21}
@@ -637,69 +650,77 @@ Begin
    If SouthId = $0565 then {W83C553F} {v1.21}
     Begin
      SouthFunc := $0700; {Winbond method}
-     SbId := $1B;
+     SbId := $1C;
     End;
   End else
  If SouthMan = $1283 {ITE} then {v1.21}
   Begin
    case SouthId of
-    $8872 : Begin SouthFunc := $0801; SbId := $1C; End; {IT8871F/8872F}
-    $8888 : Begin SouthFunc := $0802; SbId := $1D; End; {IT8888F}
+    $8872 : Begin SouthFunc := $0801; SbId := $1D; End; {IT8871F/8872F}
+    $8888 : Begin SouthFunc := $0802; SbId := $1E; End; {IT8888F}
    End;
   End else
  If SouthMan = $1166 {Reliance/ServerWorks} then {v1.24}
   Begin
    SouthFunc:=$0900;
    case SouthId of
-    $0200 : SbId := $1E; {OSB4}
+    $0200 : SbId := $1F; {OSB4}
    End;
   End else
  If SouthMan = $1066 {PicoPower} then {v1.25}
   Begin
    SouthFunc:=$1000;
    case SouthId of
-    $0002,$8002 : SbId := $1F; {Vesuvius V3-LS}
+    $0002,$8002 : SbId := $20; {Vesuvius V3-LS}
    End;
   End else
  If SouthMan = $1078 {PicoPower} then {v1.25}
   Begin
    SouthFunc:=$1100;
    case SouthId of
-    $0100 : SbId := $20; {Geode CS5530(A)}
+    $0100 : SbId := $21; {Geode CS5530(A)}
    End;
   End else
  If SouthMan = $1045 {OPTi} then {v1.26}
   Begin
    SouthFunc:=$1200;
    case SouthId of
-    $C568: SbId:=$21; {OPTi 82C750}
+    $C568: SbId:=$22; {OPTi 82C750}
    end;
   End else
  If SouthMan = $3388 {HiNT} then {v1.26}
   Begin
    SouthFunc:=$1300;
    case SouthId of
-    $8012: SbId:=$22; {HiNT VXPro-II}
+    $8012: SbId:=$23; {HiNT VXPro-II}
    end;
   End;
  If SouthMan = $1060 {UMC} then {v1.28}
   Begin
    SouthFunc:=$1400;
    case SouthId of
-    $886A: SbId:=$23; {UMC UM8886BF}
+    $886A: SbId:=$24; {UMC UM8886BF}
    end;
   End else
  If SouthMan = $1344 {Micron} then {v1.29}
   Begin
    case SouthId of
-    $3470: SbId:=$24; {Micron MT7LLN22NCNE}
+    $3470: SbId:=$25; {Micron MT7LLN22NCNE}
    end;
   End else
  If SouthMan = $1080 {Contaq/Cypress} then {v1.29}
   Begin
    SouthFunc:=$1500;
    case SouthId of
-    $C693: SbId:=$25; {CY82C693(U/UB)}
+    $C693: SbId:=$26; {CY82C693(U/UB)}
+   end;
+  End else
+ If SouthMan = $10DE {nVidia} then {v1.30}
+  Begin
+   SouthFunc:=$1600;
+   case SouthId of
+    $01B2: SbId:=$27; {MCP/MCP-D}
+    $0060: SbId:=$28; {MCP2}
    end;
   End;
 
@@ -718,7 +739,7 @@ Begin
   $09 : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440LX/EX'; {EX v1.18}
   $0A : case SbId of
          $06 : CurrentChipset := 'Intel AGPSet 440BX/ZX'; {v1.18}
-         $1A : CurrentChipset := 'SMSC VictoryBX-66'; {v1.21}
+         $1B : CurrentChipset := 'SMSC VictoryBX-66'; {v1.21}
         End;
   $0B : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440GX'; {v1.18}
   $0C : If SbId = $02 then CurrentChipset := 'Intel 450KX';
@@ -742,73 +763,75 @@ Begin
   $14 : If SbId = $09 then CurrentChipset := 'Intel 850'; {v1.19}
   $15 : If SbId = $09 then CurrentChipset := 'Intel 860'; {v1.22}
   $16 : If SbId = $0B then CurrentChipset := 'Intel 830MP'; {v1.23}
-  $17 : If SbId = $09 then CurrentChipset := 'Intel 845'; {v1.23}
+  $17 : If (SbId = $09) or (SbId = $0D) then CurrentChipset := 'Intel 845'; {v1.23}
   $18 : If SbId = $0C then CurrentChipset := 'Intel E7500'; {v1.26}
   $19 : CurrentChipset := 'VIA Apollo Master';
-  $1A : If SbId = $0D then CurrentChipset := 'VIA Apollo VP/VPX';
-  $1B : If SbId = $0D then CurrentChipset := 'VIA Apollo VP2/AMD 640';
-  $1C : If (SbId = $0D) or (SbId = $0E) then CurrentChipset := 'VIA Apollo VP3'; {0D v1.24}
-  $1D : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
+  $1A : If SbId = $0E then CurrentChipset := 'VIA Apollo VP/VPX';
+  $1B : If SbId = $0E then CurrentChipset := 'VIA Apollo VP2/AMD 640';
+  $1C : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo VP3'; {0D v1.24}
+  $1D : If (SbId = $0F) or (SbId = $10) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
   $1E : CurrentChipset := 'VIA Apollo P6';
-  $1F : If SbId = $0F then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
-  $20 : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo Pro (Plus/133(A|T))'; {v1.20}
-  $21 : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo Pro Plus/133(A)'; {v1.20}
-  $22 : If SbId = $0F then CurrentChipset := 'VIA Apollo ProMedia'; {v1.20}
+  $1F : If SbId = $10 then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
+  $20 : If (SbId = $0F) or (SbId = $10) then CurrentChipset := 'VIA Apollo Pro (Plus/133(A|T))'; {v1.20}
+  $21 : If (SbId = $0F) or (SbId = $10) then CurrentChipset := 'VIA Apollo Pro Plus/133(A)'; {v1.20}
+  $22 : If SbId = $10 then CurrentChipset := 'VIA Apollo ProMedia'; {v1.20}
   $23 : CurrentChipset := 'VIA Apollo Pro 133Z/PM133'; {v1.20}
-  $24 : If SbId = $0F then CurrentChipset := 'VIA Apollo KX133'; {v1.20}
+  $24 : If SbId = $10 then CurrentChipset := 'VIA Apollo KX133'; {v1.20}
   $25 : case SbId of
-         $0F : CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
-         $10 : CurrentChipset := 'VIA ProSavage KM133(A)'; {v1.27}
+         $10 : CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
+         $11 : CurrentChipset := 'VIA ProSavage KM133(A)'; {v1.27}
         end;
-  $26 : If SbId = $11 then CurrentChipset := 'VIA Apollo KT266(A)'; {v1.20}
-  $27 : If SbId = $11 then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
-  $2D : If SbId = $11 then CurrentChipset := 'VIA ProSavage P4M266'; {v1.27}
-  $2E : If SbId = $11 then CurrentChipset := 'VIA P4X266(A)/P4X333'; {v1.27}
+  $26 : If SbId = $12 then CurrentChipset := 'VIA Apollo KT266(A)'; {v1.20}
+  $27 : If SbId = $12 then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
+  $2D : If SbId = $12 then CurrentChipset := 'VIA ProSavage P4M266'; {v1.27}
+  $2E : If SbId = $12 then CurrentChipset := 'VIA P4X266(A)/P4X333'; {v1.27}
   $2F : CurrentChipset := 'ALi FinALi 486'; {v1.26}
-  $30 : If SbId = $13 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
-  $31 : If SbId = $14 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
-  $32 : If SbId = $14 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
-  $33 : If SbId = $14 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
-  $34 : If SbId = $14 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
-  $35 : If SbId = $14 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
-  $36 : If SbId = $15 then CurrentChipset := 'AMD 750'; {v1.20}
+  $30 : If SbId = $14 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
+  $31 : If SbId = $15 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
+  $32 : If SbId = $15 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
+  $33 : If SbId = $15 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
+  $34 : If SbId = $15 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
+  $35 : If SbId = $15 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
+  $36 : If SbId = $16 then CurrentChipset := 'AMD 750'; {v1.20}
   $37 : case SbId of {v1.20}
-         $0F : CurrentChipset := 'AMD 760 (VIA South)';
-         $16 : CurrentChipset := 'AMD 760 (AMD South)';
+         $10 : CurrentChipset := 'AMD 760 (VIA South)';
+         $17 : CurrentChipset := 'AMD 760 (AMD South)';
         end;
   $38 : case SbId of
-         $16 : CurrentChipset := 'AMD 760MP'; {v1.20}
-         $17 : CurrentChipset := 'AMD 760MPX'; {v1.26}
+         $17 : CurrentChipset := 'AMD 760MP'; {v1.20}
+         $18 : CurrentChipset := 'AMD 760MPX'; {v1.26}
         end;
   $39 : CurrentChipset := 'SiS 85C496+497'; {v1.21}
-  $3A : If SbId = $18 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
-  $3B : If SbId = $18 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
-  $3C : If SbId = $18 then CurrentChipset := 'SiS 5571'; {v1.21}
-  $3D : If SbId = $18 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
-  $3E : If SbId = $18 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
-  $3F : If SbId = $18 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
-  $40 : If SbId = $18 then CurrentChipset := 'SiS 530'; {v1.21}
-  $41 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 540'; {v1.21}
-  $42 : If SbId = $18 then CurrentChipset := 'SiS 600'; {v1.21}
-  $43 : If SbId = $18 then CurrentChipset := 'SiS 620'; {v1.21}
-  $44 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 630'; {v1.21}
-  $45 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 635'; {v1.27}
-  $46 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 640'; {v1.27}
-  $47 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 645'; {v1.27}
-  $48 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 645DX'; {v1.27}
-  $49 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 650'; {v1.27}
-  $4A : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 730'; {v1.27}
-  $4B : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 735'; {v1.27}
-  $4C : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 740'; {v1.27}
-  $4D : If SbId = $1E then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
-  $4E : If SbId = $1E then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
-  $4F : If SbId = $1F then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
-  $50 : If SbId = $20 then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
-  $51 : If SbId = $21 then CurrentChipset := 'OPTi Vendetta 82C750'; {v1.26}
-  $52 : If SbId = $22 then CurrentChipset := 'HiNT VXPro-II (Utron UT85C50x)'; {v1.26}
-  $54 : If SbId = $24 then CurrentChipset := 'Micron Copperhead+Coppertail'; {v1.29}
+  $3A : If SbId = $19 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
+  $3B : If SbId = $19 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
+  $3C : If SbId = $19 then CurrentChipset := 'SiS 5571'; {v1.21}
+  $3D : If SbId = $19 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
+  $3E : If SbId = $19 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
+  $3F : If SbId = $19 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
+  $40 : If SbId = $19 then CurrentChipset := 'SiS 530'; {v1.21}
+  $41 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 540'; {v1.21}
+  $42 : If SbId = $19 then CurrentChipset := 'SiS 600'; {v1.21}
+  $43 : If SbId = $19 then CurrentChipset := 'SiS 620'; {v1.21}
+  $44 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 630'; {v1.21}
+  $45 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 635'; {v1.27}
+  $46 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 640'; {v1.27}
+  $47 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 645'; {v1.27}
+  $48 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 645DX'; {v1.27}
+  $49 : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 650'; {v1.27}
+  $4A : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 730'; {v1.27}
+  $4B : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 735'; {v1.27}
+  $4C : If (SbId = $19) or (SbId = $1A) then CurrentChipset := 'SiS 740'; {v1.27}
+  $4D : If SbId = $1F then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
+  $4E : If SbId = $1F then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
+  $4F : If SbId = $20 then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
+  $50 : If SbId = $21 then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
+  $51 : If SbId = $22 then CurrentChipset := 'OPTi Vendetta 82C750'; {v1.26}
+  $52 : If SbId = $23 then CurrentChipset := 'HiNT VXPro-II (Utron UT85C50x)'; {v1.26}
+  $54 : If SbId = $25 then CurrentChipset := 'Micron Copperhead+Coppertail'; {v1.29}
   $55 : CurrentChipset := 'Cypress 386/486 chipset'; {v1.29}
-  $56 : If SbId = $25 then CurrentChipset := 'Cypress hyperCache'; {v1.29}
+  $56 : If SbId = $26 then CurrentChipset := 'Cypress hyperCache'; {v1.29}
+  $57 : If SbId = $27 then CurrentChipset := 'nVidia nForce'; {v1.30}
+  $58 : If SbId = $28 then CurrentChipset := 'nVidia nForce2'; {v1.30}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -838,7 +861,7 @@ Begin
 end;
 
 Var
-PIIXReg, PIIXReg2, PIIXReg3, PIIXReg4 : LongInt;
+PIIXReg, PIIXReg2, PIIXReg3, PIIXReg4, PIIXReg5 : LongInt;
 
 {Generic Intel chipset low ROM enable & ROM write access enable}
 Procedure ROMEnable( Map : Boolean );
@@ -998,7 +1021,7 @@ Begin
                  SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) or 1);
                  LogWrite('Intel method: PM Base set to '+_Str(GetPCIRegD($00,SouthPos shr 3,3,$40)));
                  PIIXReg3:=Port[$6134] or LongInt(Port[$6135]) shl 8
-                   or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24;
+                                                          or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24;
                  LogWrite('Intel method: GPO status '+_Str(PIIXReg3));
                  Port[$6135]:=Port[$6135] and $FD;
                  Port[$6137]:=Port[$6137] and $FB; {Abit BX133-RAID v1.29}
@@ -1409,6 +1432,43 @@ Begin
            LogWrite('Cypress method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $44 )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
+          End;
+        End;
+  $16 : Begin {nForce method} {v1.30}
+         If Map then
+          Begin
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+           LogWrite('nForce method: reg $44 = '+_Str(PIIXReg));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or $100);
+           PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 );
+           LogWrite('nForce method: reg $70 = '+_Str(PIIXReg2));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 and $FFE0FFFF or $C0);
+           PIIXReg3 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $74 );
+           LogWrite('nForce method: reg $74 = '+_Str(PIIXReg3));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $74, 0);
+           PIIXReg4 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 );
+           LogWrite('nForce method: reg $78 = '+_Str(PIIXReg4));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, 0);
+           PIIXReg5 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C );
+           LogWrite('nForce method: reg $7C = '+_Str(PIIXReg5));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, 0);
+          End else
+          Begin
+           LogWrite('nForce method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $44 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
+           LogWrite('nForce method: restoring reg $70 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $70 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 );
+           LogWrite('nForce method: restoring reg $74 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $74 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $74, PIIXReg3 );
+           LogWrite('nForce method: restoring reg $78 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $78 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg4 );
+           LogWrite('nForce method: restoring reg $7C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $7C )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg5 );
           End;
         End;
 

@@ -37,7 +37,7 @@ FlashBase,
 FlashSize   : LongInt;
 X2,Y2       : Longint;
 AdvMenu,
-PnPDMIMenu,
+{PnPDMIMenu,}
 CMOSMenu,   {v1.22}
 MainMenu    : PMenuItem;
 FlashInfo   : PChipInfo;
@@ -207,6 +207,7 @@ Begin
          Dec( NxtUpd );
          If NxtUpd = 0 then
           Begin
+           if FlashError=0 then TextColor(Green) else TextColor(Red);
            Write( 'Û' );
            NxtUpd := UpdStat;
           End;
@@ -251,6 +252,7 @@ Begin
        Dec( NxtUpd );
        If NxtUpd = 0 then
         Begin
+         if FlashError=0 then TextColor(Green) else TextColor(Red);
          Write( 'Û' );
          NxtUpd := UpdStat;
         End;
@@ -272,6 +274,7 @@ Begin
        Dec( NxtUpd );
        If NxtUpd = 0 then
         Begin
+         if FlashError=0 then TextColor(Green) else TextColor(Red);
          Write( 'Û' );
          NxtUpd := UpdStat;
         End;
@@ -295,6 +298,7 @@ Begin
        Dec( NxtUpd );
        If NxtUpd = 0 then
         Begin
+         if FlashError=0 then TextColor(Green) else TextColor(Red);
          Write( 'Û' );
          NxtUpd := UpdStat;
         End;
@@ -328,6 +332,7 @@ Begin
      Dec( NxtUpd );
      If NxtUpd = 0 then
       Begin
+       if FlashError=0 then TextColor(Green) else TextColor(Red);
        Write( 'Û' );
        NxtUpd := UpdStat;
       End;
@@ -450,8 +455,20 @@ Begin
        FlashFile:=False;
        Exit;
       End;
-    End;
-   FlashBIOSImg( NewBIOS, Pos, FileSize( IFile ) - 8192 );
+     Write( Msg( 49 ) ); {v1.30}
+     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+     GotoXY( 2, 22 );
+     ClrEol;
+     If A = AnswNo then
+      Begin
+{       GotoXY( 2, 20 );
+       ClrEol;
+       FlashFile:=False;
+       Exit;}
+       FlashBIOSImg( NewBIOS, Pos, FileSize( IFile ) - 8192 );
+      End else FlashBIOSImg( NewBIOS, Pos, FileSize( IFile ) );
+    End
+   else FlashBIOSImg( NewBIOS, Pos, FileSize( IFile ) - 8192 );
   End;
  SetMenuItemStatus( MainMenu, 2, True );
 End;
@@ -600,7 +617,7 @@ Begin
 End;
 
 {Flash 4K PnP or DMI block to flash ROM}
-Procedure FlashPnPDMI( Typ : String; Pos : LongInt );
+(*Procedure FlashPnPDMI( Typ : String; Pos : LongInt );
 Var
 IName : String;
 X     : LongInt;
@@ -669,7 +686,7 @@ End;
 Procedure FlashPnP; Far;
 Begin
  FlashPnPDMI( 'PnP',{ $FFFFD000}FlashSize-$3000 ); {v1.29}
-End;
+End;*)
 
 (*{Flash DMI data from file to ROM}
 Procedure FlashDMI; Far;
@@ -677,7 +694,7 @@ Begin
  FlashPnPDMI( 'DMI',{ $FFFFC000}FlashSize-$4000 );
 End;*)
 
-Procedure ClearPnPDMI( Typ : String; Pos : LongInt );
+(*Procedure ClearPnPDMI( Typ : String; Pos : LongInt );
 Begin
  Text_Color( 12 );
  GotoXY( 11, 22 );
@@ -710,14 +727,14 @@ End;
 Procedure ClearPnP; Far;
 Begin
  ClearPnPDMI( 'PNP',{ $FFFFD000}FlashSize-$3000 ); {v1.29}
-End;
+End;*)
 
 (*Procedure ClearDMI; Far;
 Begin
  ClearPnPDMI( 'DMI',{ $FFFFC000}FlashSize-$4000 );
 End;*)
 
-Procedure WritePnPDMIImg( Typ : String; Pos : LongInt );
+(*Procedure WritePnPDMIImg( Typ : String; Pos : LongInt );
 Var
 IName : String;
 IFile : File;
@@ -757,7 +774,7 @@ End;
 Procedure WritePnP; Far;
 Begin
  WritePnPDMIImg( 'PnP',{ $FFFFD000 }FlashSize-$3000); {v1.29}
-End;
+End;*)
 
 (*Procedure WriteDMI; Far;
 Begin
@@ -1514,7 +1531,7 @@ begin
     End else
     Begin
      FlashSize := 131072;    {128K default}
-     if ROMBase=0 then {v1.29}
+     if (ROMBase=0) or (ROMBase=$FFF00000) then {v1.30}
       begin
         if BaseForced=0 then FlashBase := $FFFE0000 else FlashBase:=ROMBase; {same}
         ROMBase := FlashBase;
@@ -1604,6 +1621,7 @@ end;
 
 procedure RedetectFlashROM;Far; {v1.24}
 begin
+ ForceID:=False; {v1.30}
  LogWrite('Restarting UniFlash...');
  If PCIROMEn then
   Begin
@@ -1889,7 +1907,7 @@ Begin
         BaseForced:=BaseForced or (Byte(PStr[M])-Byte('0'))
        else
        if (UpCase(PStr[M])>='A') and (UpCase(PStr[M])<='F') then
-        ForceIdVal:=ForceIdVal or (Byte(UpCase(PStr[M]))-Byte('A')+10)
+        BaseForced:=BaseForced or (Byte(UpCase(PStr[M]))-Byte('A')+10)
        else Err(Msg(92));
       End;
     End;
@@ -2021,13 +2039,13 @@ Begin
 
  GetDir(0,SaveDir); {v1.28}
 
- PnPDMIMenu := AddMenuItem( Msg( 73 ), Msg( 112 ), 0, 1, @WritePnp,
+(* PnPDMIMenu := AddMenuItem( Msg( 73 ), Msg( 112 ), 0, 1, @WritePnp,
                AddMenuItem( Msg( 74 ), Msg( 113 ), 1, 1, @FlashPnp,
                AddMenuItem( Msg( 75 ), Msg( 114 ), 2, 1, @ClearPnp,
-(*               AddMenuItem( Msg( 76 ), 4, 1, @WriteDMI,
+               AddMenuItem( Msg( 76 ), 4, 1, @WriteDMI,
                AddMenuItem( Msg( 77 ), 5, 1, @FlashDMI,
-               AddMenuItem( Msg( 78 ), 6, 1, @ClearDMI,*)
-               AddMenuItem( Msg( 79 ), Msg( 130 ), 4, 1, Nil, Nil ) ) ) ) {) ) )};
+               AddMenuItem( Msg( 78 ), 6, 1, @ClearDMI,
+               AddMenuItem( Msg( 79 ), Msg( 130 ), 4, 1, Nil, Nil ) ) ) ) {) ) )};*)
 
  AdvMenu := AddMenuItem( Msg( 82 ), Msg( 115 ), 0, 1, @FlashBIOSBB,
             AddMenuItem( Msg( 83 ), Msg( 116 ), 1, 1, @WriteBootBlk,
@@ -2045,9 +2063,9 @@ Begin
              AddMenuItem( Msg( 87 ),  Msg( 124 ), 2, 0, @FlashOldBIOS,
              AddMenuItem( Msg( 100 ), Msg( 125 ), 3, 1, @RedetectFlashROM,
              AddMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
-             AddMenuItem( Msg( 90 ),  Msg( 127 ), 5, 3, PnPDMIMenu,
-             AddMenuItem( Msg( 91 ),  Msg( 128 ), 6, 3, AdvMenu,
-             AddMenuItem( Msg( 93 ),  Msg( 129 ), 8, 1, Nil, Nil ) ) ) ) ) ) ) );
+{             AddMenuItem( Msg( 90 ),  Msg( 127 ), 5, 3, PnPDMIMenu,}
+             AddMenuItem( Msg( 91 ),  Msg( 128 ), 5, 3, AdvMenu,
+             AddMenuItem( Msg( 93 ),  Msg( 129 ), 7, 1, Nil, Nil ) ) ) ) ) ) ) {)};
 
  If FlashInfo = Nil then
   Begin

@@ -24,10 +24,10 @@ Begin
  AddMsg( Lid, 11, 'FEHLER' );
  AddMsg( Lid, 12, 'ERFOLGREICH' );
  AddMsg( Lid, 13, ' Dateiname: ' );
- AddMsg( Lid, 14, 'Falsche Dateigrîsse - muss genau 4K betragen!'#7 );
+{ AddMsg( Lid, 14, 'Falsche Dateigrîsse - muss genau 4K betragen!'#7 );}
  AddMsg( Lid, 15, 'Wollen Sie weitermachen (Y/N)?' );
- AddMsg( Lid, 16, 'Achtung: Alles wird gelîscht! ' );
- AddMsg( Lid, 17, ' Einstellungen. Weiter [Y,N]?' );
+{ AddMsg( Lid, 16, 'Achtung: Alles wird gelîscht! ' );
+ AddMsg( Lid, 17, ' Einstellungen. Weiter [Y,N]?' );}
  AddMsg( Lid, 18, ' Dateiname: ' );
  AddMsg( Lid, 19, 'Dateiname fÅr Bootblock: ' );
  AddMsg( Lid, 20, 'Flashe Datei in das FLASH ROM [Y,N]?' );
@@ -59,7 +59,7 @@ Begin
  AddMsg( Lid, 46, 'Mîchten Sie das Bios in eine Datei sichern? ' );
  AddMsg( Lid, 47, 'Name der Datei: ' );
  AddMsg( Lid, 48, '            ausgefÅhrt.' );
-{ AddMsg( Lid, 49, 'GewÑhlte Quelle''n Options ROM ist kein a unterstÅtztes Flash ROM.' );}
+ AddMsg( LId, 49, 'BOOTBLOCK MISMATCH. FLASH INCLUDING BOOTBLOCK (HIGHLY RECOMMENDED) [Y,N]?' ); {v1.30}
  AddMsg( Lid, 50, 'Nicht genug freier Speicher.' );
  AddMsg( Lid, 51, '              Flash ROM Chip: ' );
  AddMsg( Lid, 52, 'Unbekannt' );
@@ -84,10 +84,10 @@ Begin
  AddMsg( Lid, 70, ', Speicher Abbild von ' );
  AddMsg( Lid, 71, '              Options ROM fÅr: ' );
  AddMsg( Lid, 72, 'GerÑt an ' );
- AddMsg( Lid, 73, 'Schreibe ESCD (PnP Daten) in Datei' );
+{ AddMsg( Lid, 73, 'Schreibe ESCD (PnP Daten) in Datei' );
  AddMsg( Lid, 74, 'Flashe ESCD (PnP Daten) Datei in Flash ROM' );
  AddMsg( Lid, 75, 'Lîsche ESCD (PnP Daten)' );
-{ AddMsg( Lid, 76, 'Schreibe DMI Daten in Datei' );
+ AddMsg( Lid, 76, 'Schreibe DMI Daten in Datei' );
  AddMsg( Lid, 77, 'Flashe DMI Datei ins Flash ROM' );
  AddMsg( Lid, 78, 'Lîsche DMI Daten' );}
  AddMsg( Lid, 79, 'Æ zurÅck zum HauptmenÅ' );
@@ -101,7 +101,7 @@ Begin
  AddMsg( Lid, 87, 'Flashe BIOS-Image noch 1x ins Flash ROM' );
  AddMsg( Lid, 88, 'Lîsche CMOS Daten' );
  AddMsg( Lid, 89, 'Wiederherstellung des CMOS von DatentrÑger' );
- AddMsg( Lid, 90, 'ESCD (PnP) SubmenÅ Ø' );
+{ AddMsg( Lid, 90, 'ESCD (PnP) SubmenÅ Ø' );}
  AddMsg( Lid, 91, 'Fortgeschrittenen SubmenÅ Ø' );
 { AddMsg( Lid, 92, 'ZusÑtzliche BIOS Info' );}
  AddMsg( Lid, 93, 'Ende' );
@@ -125,9 +125,9 @@ Begin
  AddMsg( Lid, 109, '-SAVE fname     schreibt verwendetes Bios in Datei fname' );
  AddMsg( Lid, 110, 'Dieses programm kann nicht unter Windows laufen.' ); {v1.22}
  AddMsg( Lid, 111, 'PCI Bus nicht gefunden oder antwortet nicht.' ); {v1.22}
- AddMsg( Lid, 112, 'Schreibe ESCD (Plug & Play) Daten in Datei' ); {v1.23}
+(* AddMsg( Lid, 112, 'Schreibe ESCD (Plug & Play) Daten in Datei' ); {v1.23}
  AddMsg( Lid, 113, 'Flashe ESCD (Plug & Play) Daten von Datei in Flash ROM' ); {v1.23}
- AddMsg( Lid, 114, 'Lîsche ESCD (Plug & Play) daten im Flash ROM' ); {v1.23}
+ AddMsg( Lid, 114, 'Lîsche ESCD (Plug & Play) daten im Flash ROM' ); {v1.23}*)
  AddMsg( Lid, 115, 'Flashe BIOS Image aus Datei in Flash ROM inklusive BootBlock' ); {v1.23}
  AddMsg( Lid, 116, 'Sichere BootBlock in Datei' ); {v1.23}
  AddMsg( Lid, 117, 'Flashe BootBlock aus Datei in Flash ROM' ); {v1.23}
@@ -140,7 +140,7 @@ Begin
  AddMsg( Lid, 124, 'Flashe eingelesenes BIOS Image aus RAM in das Flash ROM' ); {v1.23}
  AddMsg( Lid, 125, 'Identifiziere Flash ROM Typ und lese Inhalt zur Sicherung in den Speicher' ); {v1.23}
  AddMsg( Lid, 126, 'WÑhle CMOS Einstellungen UntermenÅ...' ); {v1.23}
- AddMsg( Lid, 127, 'WÑhle ESCD (PnP) UntwermenÅ...' ); {v1.23}
+(* AddMsg( Lid, 127, 'WÑhle ESCD (PnP) UntwermenÅ...' ); {v1.23}*)
  AddMsg( Lid, 128, 'WÑhle Fortgeschrittenen UntermenÅ...' ); {v1.23}
  AddMsg( Lid, 129, 'Beende UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'ZurÅck zum HauptmenÅ' ); {v1.23}

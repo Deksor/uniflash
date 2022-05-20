@@ -6,32 +6,43 @@ Implementation
 Uses Flash, GenFlash, Tools;
 
 Procedure AtBulkErase( SAddr : LongInt ); Far;
+var TimeOut:Word; {v1.30}
 Begin
  FlashCmd( $80 );
  FlashCmd( $10 );
- Repeat Until ( Flash_Read(0) and $80 ) <> 0; {v1.29}
+ TimeOut:=20000;
+ Repeat
+   Wait(1000);
+   Dec(TimeOut);
+ Until ((Flash_Read(0) and $80)<>0) or (TimeOut<1); {v1.29}
+ if TimeOut<1 then FlashError:=3;
 End;
 
 Procedure AtByteProg( Pos, Data : LongInt ); Far;
 Var
 X : Word;
 D : Byte;
-
+TimeOut:Word;
 Begin
  For X := 0 to CurCInfo.PgSize - 1 do
   Begin
    FlashCmd( $A0 );
    D := FIMemB( Data + X );
    Flash_Write(Pos+X,D); {v1.29}
-   Repeat Until ( Flash_Read(Pos+X) and $80 ) = ( D and $80 );
+   TimeOut:=10;
+   Repeat
+     Wait(10);
+     Dec(TimeOut);
+   Until ((Flash_Read(Pos+X) and $80)=(D and $80)) or (TimeOut<1);
+   if TimeOut<1 then FlashError:=2;
   End;
 End;
 
-Procedure AtmelPageProgB( Pos, Data : LongInt ); Far;
+Procedure AtmelPageProg( Pos, Data : LongInt ); Far;
 Var
 Attempt,
 Ld, X   : Byte;
-
+TimeOut:Word;
 Begin
  Attempt := 0;
  Repeat
@@ -40,13 +51,17 @@ Begin
   Wait( 10000 );  {Wait 10ms} {v1.22 750us->10ms}
 
   Ld := FiMemB( Data + 127 ) and $80; {Last data byte, bit 7}
+  TimeOut:=100;
   Repeat
    X := Flash_Read(Pos+127);    {Read last byte written}
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+   Wait(10);
+   Dec(TimeOut);
+  Until ((X and $80)=Ld) {or ((X and $20)<>0)} or (TimeOut<1);
+  if TimeOut<1 then FlashError:=2;
   X := Flash_Read(Pos+127);    {Read last byte written}
   Inc( Attempt );
- Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
- If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
+ Until ( Attempt > 3 ) or  ( ( X and $80 ) = Ld );
+ If ( ( X and $80 ) <> Ld ) then FlashError := 2; {programming error, timeout}
 End;
 
 
@@ -61,28 +76,28 @@ Begin
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $BC : Begin
            Name := ConstPtr( 'AT29LV256/3V' );
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $5D : Begin
            Name := ConstPtr( 'AT29C512/5V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $3D : Begin {v1.21}
            Name := ConstPtr( 'AT29LV512/3V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $03 : Begin {v1.21}
            Name := ConstPtr( 'AT49x512 series (5V/3V/2.7V)' );
@@ -97,7 +112,7 @@ Begin
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $17 : Begin {v1.21 Moved AT49BV010/2.7V here - was BAD $05}
            Name := ConstPtr( 'AT49x010 series (5V/3V/2.7V)' );
@@ -112,7 +127,7 @@ Begin
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $04 : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -151,14 +166,14 @@ Begin
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $BA : Begin
            Name := ConstPtr( 'AT29xV020 series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $0B : Begin
            Name := ConstPtr( 'AT49x020 series (5V/3V/2.7V)' );
@@ -205,14 +220,14 @@ Begin
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $C4 : Begin
            Name := ConstPtr( 'AT29xV040A series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := AtmelPageProgB;
+           Progr  := AtmelPageProg;
           End;
     $13 : Begin
            Name := ConstPtr( 'AT49x040 series (5V/3V/2.7V)' );

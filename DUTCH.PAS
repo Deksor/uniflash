@@ -24,10 +24,10 @@ Begin
  AddMsg( Lid, 11, 'FOUT' );
  AddMsg( Lid, 12, 'SUCCES' );
  AddMsg( Lid, 13, ' bestandsnaam: ' );
- AddMsg( Lid, 14, 'Foutieve bestandsgrootte - moet exact 4K zijn !'#7 );
+{ AddMsg( Lid, 14, 'Foutieve bestandsgrootte - moet exact 4K zijn !'#7 );}
  AddMsg( Lid, 15, 'Wilt u doorgaan (J/N)?' );
- AddMsg( Lid, 16, 'WAARSCHUWING: U ZAL ALLE ' );
- AddMsg( Lid, 17, ' GEGEVENS VERLIEZEN. DOORGAAN [J,N]?' );
+{ AddMsg( Lid, 16, 'WAARSCHUWING: U ZAL ALLE ' );
+ AddMsg( Lid, 17, ' GEGEVENS VERLIEZEN. DOORGAAN [J,N]?' );}
  AddMsg( Lid, 18, ' bestandsnaam : ' );
  AddMsg( Lid, 19, 'Bootblock bestandsnaam: ' );
  AddMsg( Lid, 20, 'OUDE BIOS TERUG FLASHEN NAAR FLASH ROM CHIP [J,N]?' );
@@ -59,7 +59,7 @@ Begin
  AddMsg( Lid, 46, 'Wilt u dit BIOS naar een bestand wegschrijven? ' );
  AddMsg( Lid, 47, 'Bestandsnaam: ' );
  AddMsg( Lid, 48, '           Klaar.' );
- AddMsg( Lid, 49, 'Optie ROM van geselecteerde device is geen ondersteund Flash ROM.' );
+ AddMsg( LId, 49, 'BOOTBLOCK MISMATCH. FLASH INCLUDING BOOTBLOCK (HIGHLY RECOMMENDED) [Y,N]?' ); {v1.30}
  AddMsg( Lid, 50, 'Niet genoeg vrij geheugen' );
  AddMsg( Lid, 51, '              Flash ROM chip: ' );
  AddMsg( Lid, 52, 'ONBEKEND' );
@@ -84,10 +84,10 @@ Begin
  AddMsg( Lid, 70, ', geheugen dump op ' );
  AddMsg( Lid, 71, '              Optie ROM voor: ' );
  AddMsg( Lid, 72, 'device op ' );
- AddMsg( Lid, 73, 'Schrijf ESCD blok (PnP gegevens) naar schijf' );
+{ AddMsg( Lid, 73, 'Schrijf ESCD blok (PnP gegevens) naar schijf' );
  AddMsg( Lid, 74, 'Flash ESCD blok (PnP gegevens) naar Flash ROM' );
  AddMsg( Lid, 75, 'Wis ESCD blok (PnP data)' );
-{ AddMsg( Lid, 76, 'Schrijf DMI gegevensblok naar disk' );
+ AddMsg( Lid, 76, 'Schrijf DMI gegevensblok naar disk' );
  AddMsg( Lid, 77, 'Flash DMI gegevensblok naar Flash ROM' );
  AddMsg( Lid, 78, 'Wis DMI gegevensblok' );}
  AddMsg( Lid, 79, 'Terug naar hoofdmenu' );
@@ -101,7 +101,7 @@ Begin
  AddMsg( Lid, 87, 'Flash oude BIOS terug naar Flash ROM' );
  AddMsg( Lid, 88, 'Wis CMOS gegevens' );
  AddMsg( Lid, 89, 'Schrijf oude CMOS gegevens terug naar CMOS' );
- AddMsg( Lid, 90, 'ESCD (PnP) submenu' );
+{ AddMsg( Lid, 90, 'ESCD (PnP) submenu' );}
  AddMsg( Lid, 91, 'Geavanceerde opties submenu' );
 { AddMsg( Lid, 92, 'Additionele BIOS informatie' );}
  AddMsg( Lid, 93, 'Verlaat UNIFLASH' );
@@ -125,9 +125,9 @@ Begin
  AddMsg( Lid, 109, '-SAVE bnaam     Schrijf huidige bios image naar bestand bnaam' );
  AddMsg( Lid, 110, 'This program can''t be run under Windows.' ); {v1.22}
  AddMsg( Lid, 111, 'PCI bus not found or not responding.' ); {v1.22}
- AddMsg( Lid, 112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
+(* AddMsg( Lid, 112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
  AddMsg( Lid, 113, 'Flash ESCD (Plug & Play) data from file to Flash ROM' ); {v1.23}
- AddMsg( Lid, 114, 'Clear ESCD (Plug & Play) data in Flash ROM' ); {v1.23}
+ AddMsg( Lid, 114, 'Clear ESCD (Plug & Play) data in Flash ROM' ); {v1.23}*)
  AddMsg( Lid, 115, 'Flash BIOS image from file to Flash ROM including BootBlock' ); {v1.23}
  AddMsg( Lid, 116, 'Write BootBlock to file' ); {v1.23}
  AddMsg( Lid, 117, 'Flash BootBlock from file to Flash ROM' ); {v1.23}
@@ -140,7 +140,7 @@ Begin
  AddMsg( Lid, 124, 'Flash backup BIOS image from memory to Flash ROM' ); {v1.23}
  AddMsg( Lid, 125, 'Detect Flash ROM type and read its contents to backup in memory' ); {v1.23}
  AddMsg( Lid, 126, 'Enter CMOS settings submenu...' ); {v1.23}
- AddMsg( Lid, 127, 'Enter ESCD (PnP) submenu...' ); {v1.23}
+(* AddMsg( Lid, 127, 'Enter ESCD (PnP) submenu...' ); {v1.23}*)
  AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
  AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}

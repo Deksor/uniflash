@@ -37,23 +37,23 @@ End;
 Procedure WbSecProgFWH( Pos, Data : LongInt ); Far; {W39V040FA} {v1.29}
 begin
   {Unprotect}
-  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $F8);
+  FOMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $F8);
   AMDSecProg(Pos,Data);
   {Protect}
-  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
+  FOMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01);
 end;
 
 Procedure WbSecEraseFWH( SAddr: LongInt ); Far; {W39V040FA} {v1.29}
 begin
   {Unprotect}
-  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $F8);
+  FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $F8);
   WbSecErase(SAddr);
   {Protect}
-  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
+  FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01);
 end;
 
 Function WBIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;

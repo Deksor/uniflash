@@ -24,10 +24,10 @@ Begin
  AddMsg( Lid, 11, 'ERRORE' );
  AddMsg( Lid, 12, 'SUCCESSO' );
  AddMsg( Lid, 13, ' nome file di dati: ' );
- AddMsg( Lid, 14, 'Dimensioni del file non valide - deve essere 4K !'#7 );
+{ AddMsg( Lid, 14, 'Dimensioni del file non valide - deve essere 4K !'#7 );}
  AddMsg( Lid, 15, 'Vuoi Continuare (S/N)?' );
- AddMsg( Lid, 16, 'Attenzione: TUTTI I SETTAGGI SARANNO' );
- AddMsg( Lid, 17, ' CANCELLATI. CONTINUARE [S,N]?' );
+{ AddMsg( Lid, 16, 'Attenzione: TUTTI I SETTAGGI SARANNO' );
+ AddMsg( Lid, 17, ' CANCELLATI. CONTINUARE [S,N]?' );}
  AddMsg( Lid, 18, ' nome file dati: ' );
  AddMsg( Lid, 19, 'nome del file Bootblock: ' );
  AddMsg( Lid, 20, 'RIPRISTINA IL BACKUP DEL BIOS NELLA ROM [S,N]?' );
@@ -59,7 +59,7 @@ Begin
  AddMsg( Lid, 46, 'Vuoi salvare questo bios BIOS in un file? ' );
  AddMsg( Lid, 47, 'Nome del file: ' );
  AddMsg( Lid, 48, '            Fatto.' );
-{ AddMsg( Lid, 49, 'La periferica selezionata non supporta Flash ROM.' );}
+ AddMsg( LId, 49, 'BOOTBLOCK MISMATCH. FLASH INCLUDING BOOTBLOCK (HIGHLY RECOMMENDED) [Y,N]?' ); {v1.30}
  AddMsg( Lid, 50, 'Non c''è abbastanza memoria..' );
  AddMsg( Lid, 51, '              Flash ROM chip: ' );
  AddMsg( Lid, 52, 'SCONOSCIUTO' );
@@ -84,10 +84,10 @@ Begin
  AddMsg( Lid, 70, ', dump memoria a ' );
  AddMsg( Lid, 71, '              Optione ROM per: ' );
  AddMsg( Lid, 72, 'periferica a ' );
- AddMsg( Lid, 73, 'Scrivi ESCD (PnP data) in un file' );
+{ AddMsg( Lid, 73, 'Scrivi ESCD (PnP data) in un file' );
  AddMsg( Lid, 74, 'Programma ESCD (PnP data) nella Flash ROM' );
  AddMsg( Lid, 75, 'Cancella ESCD (PnP data)' );
-{ AddMsg( Lid, 76, 'Scrivi i dati DMI in un file' );
+ AddMsg( Lid, 76, 'Scrivi i dati DMI in un file' );
  AddMsg( Lid, 77, 'Programma i dati DMI nella Flash ROM' );
  AddMsg( Lid, 78, 'Clear DMI data' );}
  AddMsg( Lid, 79, '® Ritorna a l menu principale' );
@@ -101,7 +101,7 @@ Begin
  AddMsg( Lid, 87, 'Programa il backup del BIOS Nella Flash ROM' );
  AddMsg( Lid, 88, 'Cancella i dati CMOS' );
  AddMsg( Lid, 89, 'Ripristina il backup dei dati CMOS' );
- AddMsg( Lid, 90, 'sottomenu'' ESCD (PnP) ¯' );
+{ AddMsg( Lid, 90, 'sottomenu'' ESCD (PnP) ¯' );}
  AddMsg( Lid, 91, 'Sottomenu AVANZATO ¯' );
 { AddMsg( Lid, 92, 'Informazioni aggiuntive BIOS' );}
  AddMsg( Lid, 93, 'ESCI' );
@@ -125,9 +125,9 @@ Begin
  AddMsg( Lid, 109, '-SAVE nomef     Scrive il bios corrente nel file nomef' );
  AddMsg( Lid, 110, 'Questo programma non puo'' funzionare in Windows.' ); {v1.22}
  AddMsg( Lid, 111, 'Il Bus PCI non è presente o non risponde.' ); {v1.22}
- AddMsg( Lid, 112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
+(* AddMsg( Lid, 112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
  AddMsg( Lid, 113, 'Flash ESCD (Plug & Play) data from file to Flash ROM' ); {v1.23}
- AddMsg( Lid, 114, 'Clear ESCD (Plug & Play) data in Flash ROM' ); {v1.23}
+ AddMsg( Lid, 114, 'Clear ESCD (Plug & Play) data in Flash ROM' ); {v1.23}*)
  AddMsg( Lid, 115, 'Flash BIOS image from file to Flash ROM including BootBlock' ); {v1.23}
  AddMsg( Lid, 116, 'Write BootBlock to file' ); {v1.23}
  AddMsg( Lid, 117, 'Flash BootBlock from file to Flash ROM' ); {v1.23}
@@ -140,7 +140,7 @@ Begin
  AddMsg( Lid, 124, 'Flash backup BIOS image from memory to Flash ROM' ); {v1.23}
  AddMsg( Lid, 125, 'Detect Flash ROM type and read its contents to backup in memory' ); {v1.23}
  AddMsg( Lid, 126, 'Enter CMOS settings submenu...' ); {v1.23}
- AddMsg( Lid, 127, 'Enter ESCD (PnP) submenu...' ); {v1.23}
+(* AddMsg( Lid, 127, 'Enter ESCD (PnP) submenu...' ); {v1.23}*)
  AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
  AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}

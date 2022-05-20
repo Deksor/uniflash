@@ -83,7 +83,7 @@ Procedure MxSecPageProg( Pos, Data : LongInt ); Far; {v1.21}
 Var
 Attempt,
 Ld, X   : Byte;
-
+TimeOut:Word; {v1.30}
 Begin
  Attempt := 0;
  Repeat
@@ -92,9 +92,13 @@ Begin
   Wait( 300 );  {Wait min. 300 usec}
 
   {Wait for programming to finish}
+  TimeOut:=5000;
   Repeat
    X:=Flash_Read(Pos+CurCInfo.PgSize-1);
-  Until ( ( X and $80 ) <> 0 );
+   Wait(100);
+   Dec(TimeOut);
+  Until ( ( X and $80 ) <> 0 ) or (TimeOut<1);
+  if TimeOut<1 then FlashError:=2;
   X:=Flash_Read(Pos+CurCInfo.PgSize-1);
   Inc( Attempt );
   FlashCmd( $50 );  {Clear status}
@@ -108,7 +112,7 @@ Procedure MxSecPageErase( SAddr : LongInt ); Far; {v1.21}
 Var
 Attempt,
 X        : Byte;
-TimeOut  : Word;
+TimeOut  : Word; {v1.30}
 
 Begin
  Attempt := 0;
@@ -119,9 +123,13 @@ Begin
   Flash_Write(SAddr,$30); {Erase sector containing address SAddr}
 
   {Wait for erase to finish}
+  TimeOut:=10000;
   Repeat
    X:=Flash_Read(SAddr);
-  Until ( ( X and $80 ) <> 0 );
+   Wait(1000);
+   Dec(TimeOut);
+  Until ( ( X and $80 ) <> 0 ) or (TimeOut<1);
+  if TimeOut<1 then FlashError:=3;
   Inc( Attempt );
   X:=Flash_Read(SAddr);
   FlashCmd( $50 ); {Clear status}
@@ -144,9 +152,13 @@ Begin
   FlashCmd( $10 );      {Erase confirm}
 
   {Wait for erase to finish}
+  TimeOut:=10000;
   Repeat
    X:=Flash_Read(SAddr);
-  Until ( ( X and $80 ) <> 0 );
+   Wait(1000);
+   Dec(TimeOut);
+  Until ( ( X and $80 ) <> 0 ) or (TimeOut<1);
+  if TimeOut<1 then FlashError:=3;
   Inc( Attempt );
   X:=Flash_Read(SAddr);
   FlashCmd( $50 ); {Clear status}

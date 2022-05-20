@@ -37,16 +37,16 @@ Begin
    X:=Flash_Read(Pos+CurCInfo.PgSize-1); {Read last byte written}
    Wait( 50 );
    Dec( TimeOut );
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 ) or ( TimeOut<1 );
+  Until ( ( X and $80 ) = Ld ) {or ( ( X and $20 ) <> 0 )} or ( TimeOut<1 );
   if TimeOut < 1 then {v1.23}
    Begin
      FlashError := 2;
-     Exit;
+{     Exit;}
    End;
   X:=Flash_Read(Pos+CurCInfo.PgSize-1); {Read last byte written}
   Inc( Attempt );
- Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
- If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
+ Until ( Attempt > 3 ) or  ( ( X and $80 {A0}) = Ld );
+ If ( ( X and $80 {A0}) <> Ld ) then FlashError := 2; {programming error, timeout}
 End;
 
 Procedure IntelResetB;
@@ -57,9 +57,8 @@ End;
 
 Procedure IntelSecProg( Pos, Data : LongInt );
 Var
-Attempt,
-X, Y, Ld : Byte;
-
+Attempt,X,Y,Ld: Byte;
+TimeOut: Word; {v1.30}
 Begin
  For Y := 0 to CurCInfo.PgSize - 1 do
   Begin
@@ -74,9 +73,13 @@ Begin
       Flash_Write(Pos+Y,$40);    {Write setup}
       Flash_Write(Pos+Y,Ld);     {Write data}
       {Wait for programming to finish}
+      TimeOut:=100;
       Repeat
        X:=Flash_Read(Pos+Y);
-      Until ( ( X and $80 ) <> 0 );
+       Wait(10);
+       Dec(TimeOut);
+      Until ((X and $80)<>0) or (TimeOut<1);
+      if TimeOut<1 then FlashError:=2;
       Inc( Attempt );
       X := Flash_Read(Pos+Y);
       Flash_Write(Pos+Y,$50);    {Clear status}
@@ -96,16 +99,20 @@ Procedure IntelSecErase( SAddr : LongInt );
 Var
 Attempt,
 X        : Byte;
-
+TimeOut:Word;
 Begin
  Attempt := 0;
  Repeat
   Flash_Write(SAddr,$20); {Erase setup}
   Flash_Write(SAddr,$D0); {Erase confirm}
   {Wait for erase to finish}
+  TimeOut:=65000;
   Repeat
    X := Flash_Read(SAddr);
-  Until ( ( X and $80 ) <> 0 );
+   Wait(1000);
+   Dec(TimeOut);
+  Until ((X and $80)<>0) or (TimeOut<1);
+  if TimeOut<1 then FlashError:=3;
   Inc( Attempt );
   X := Flash_Read(Saddr);
   Flash_Write(SAddr,$50); {Clear status}
@@ -247,17 +254,23 @@ Begin
 End;
 
 Procedure AMDEmbdErase( SAddr : LongInt );
+var TimeOut:Word; {v1.30}
 Begin
  Flash_Write(0,$30);
  Flash_Write(0,$30);
- Repeat Until (Flash_Read(0) and $80 ) <> 0;
+ TimeOut:=25000;
+ Repeat
+   Wait(1000);
+   Dec(TimeOut);
+ Until ((Flash_Read(0) and $80)<>0) or (TimeOut<1);
+ if TimeOut<1 then FlashError:=3;
 End;
 
 Procedure AMDEmbdWrite( Pos, Data : LongInt );
 Var
 Attempt,
 X, Y, Ld : Byte;
-
+TimeOut:Word; {v1.30}
 Begin
  For Y := 0 to CurCInfo.PgSize - 1 do
   Begin
@@ -269,9 +282,13 @@ Begin
       Flash_Write(Pos+Y,$10);
       Flash_Write(Pos+Y,Ld);
       Ld := Ld and $80; {Last data byte, bit 7}
+      TimeOut:=1000;
       Repeat
        X:=Flash_Read(Pos+Y);    {Read last byte written}
-      Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+       Wait(100);
+       Dec(TimeOut);
+      Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 ) or (TimeOut<1);
+      if TimeOut<1 then FlashError:=2;
       X:=Flash_Read(Pos+Y);    {Read last byte written}
       Inc( Attempt );
      Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );

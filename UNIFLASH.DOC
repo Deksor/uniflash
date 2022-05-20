@@ -1,4 +1,4 @@
-                     UniFlash version 1.29 documentation
+                     UniFlash version 1.30 documentation
                      -----------------------------------
                    (C) 2003 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -102,16 +102,17 @@ Here's a list of chipsets suported by Uniflash:
           | Neptune 430NX        |
           |*AGPSet 440BX/ZX      |
           | AGPSet 440GX         |
-          | i810                 | Hub architecture chipsets (i8xx) are
-          | i810E                | not tested.
+          |*i810                 | i810 tested and works OK, others should too
+          | i810E                |
           | i810E2               |
-          | i815                 |
-          | i815E(P)             |
+          | i815(G)              |
+          | i815E(P/P)           |
           | i815EM               |
           | i820                 |
           | i820E                |
           | i830MP               |
           | i840                 |
+          | i845                 |
           | i850                 |
           | i860                 |
           | E7500                |
@@ -147,8 +148,8 @@ Here's a list of chipsets suported by Uniflash:
 ----------|----------------------|--------------------------------------------
  SiS      |*85C496+497           | I got the datasheets, but not from SiS.
           |#501/5101/5501        |
-          | 5511                 | These chipsets are really crappy - to
-          | 5571                 | support 12 chipsets, I needed to write
+          | 5511                 |
+          | 5571                 | To support 12 chipsets, I needed to write
           |*5591/5592            | 5 different methods of enabling Flash ROM
           | 5596                 | write access. (The more code, the more
           |*5597/5598/5581/5120  | bugs :-)
@@ -209,9 +210,14 @@ Here's a list of chipsets suported by Uniflash:
 ----------|----------------------|--------------------------------------------
  Contaq/  | hyperCache           | CY82C691+CY82C693(U/UB)
  Cypress  | 386/486 with PCI     | CY82C596/597+CY82C599
+----------|----------------------|--------------------------------------------
+ nVidia   | nForce               | Untested.
+          | nForce2              |
 ------------------------------------------------------------------------------
 
-PC100 BXCel is relabelled ALi Aladdin Pro II on PC Chips M726 motherboard.
+If your chipset is marked BXCel, VXPro, TXPro or something like that, it's a
+relabelled chipset (ALi, SiS or VIA) on a PC Chips board, with the exception
+of VXPro-II which is Utron.
 
 The version 1.16d+ includes support for AMI's Flash Interface. It allows you
 to flash even if you have an unknown chipset (new AMI WinBIOS is necessary to
@@ -225,7 +231,8 @@ it often doesn't work and hangs, preventing users from making BIOS backup.
  # means tested, but doesn't work
 
 Cards with no specific support in UniFlash:
-* Adaptec 19160 (AIC-7892B chip) - Winbond W29EE512
+* Adaptec 19160/29160N (AIC-7892B chip) - Winbond W29EE512
+* Adaptec 39160
 # AdvanSys ASB-3940UA
 # ATI Rage Magnum AGP
 # Matrox Millennium PCI
@@ -479,7 +486,7 @@ UniFlash supports the following flash chips:
   28F640J5                        | 8192KB
   28F640J3A                       | 8192KB
   28F128J3A                       | 16384KB
-  82802AB (Firmware Hub)          | 512KB
+ *82802AB (Firmware Hub)          | 512KB
   82802AC (Firmware Hub)          | 1024KB
 ----------------------------------|-------------------------------------------
   ISSI                            |
@@ -489,7 +496,7 @@ UniFlash supports the following flash chips:
 ----------------------------------|-------------------------------------------
   Macronix                        |
   --------                        |
-  MX28F1000                       | 128KB
+ *MX28F1000                       | 128KB
  *MX28F1000P                      | 128KB
   MX28F2000P                      | 256KB
   MX28F2000T                      | 256KB
@@ -933,6 +940,27 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.30       -added timeouts to all program/erase routines so there should never
+            be any lockups, even if Flash ROM does not respond
+           -fixed incorrect ROM Base when no Flash ROM detected
+           -fixed (forced) displayed when chip was forced and then redetected
+           -graph color during flashing now represents the write status -
+            green means write OK, red means write failed (timeout/error)
+           -fixed GenPageProg and AtmelPageProg to avoid extra retries for
+            chips that do not support error bit - it slowed down flashing and
+            reduced chip life (nice to see how fast W29EE011 really is)
+           -added support for i82801DB ICH4
+           -added a question when flashing without bootblock and there's
+            bootblock mismatch allowing user to flash including bootblock
+            (to prevent users from killing the BIOS because of not reading
+            this manual...)
+           -removed PnP (ESCD) manipulation (DMI was removed some time ago),
+            it was very dangerous (no checks if there really is ESCD data -
+            easy way to kill the BIOS) and useless
+           -fixed a bug in -BASE parameter (thanks to Krystian Rozycki)
+           -fixed bug in protect/unprotect code for all FWHs that prevented
+            flashing from working
+           -added nVidia nForce support
 1.29       -added some Winbond Flash ROMs: W39L512, W39F010, W39L010, W39L020,
             W39L040, W39V040FA (FWH) and W49F020
            -found old Catalyst datasheets - fixed CAT28F150T, added CAT28F015T
@@ -1367,6 +1395,14 @@ PC Chips      | M919 V3.4B/F      | UM8881F+8886BF| Winbond W29EE011/5V
 PC Chips      | M715 V1.2A        | Intel 440LX   | ASD AE29F1008/5V
 Zida          | 4DPS              | SiS 85C496+497| SST 29EE010/5V
 PC Chips      | M571LMR v5.0      | SiS 5598      | Macronix MX29F001T/5V
+Iwill         | P55A2 v1.0        | Intel 430FX   | Intel 28F001BX/BN-T/12V
+Asus          | P2B-F             | Intel 440BX   | Winbond W29C020(C)/5V
+QDI           | WinneX 2 P6I810/W2| Intel 810     | Intel 82802AB/3.3V
+Asus          | P5A Rev 1.04      | ALi Aladdin V | SST 39SF020(A)/5V
+AOpen         | AP43              | SiS 85C496+497| SST 29EE010/5V
+FIC           | PT-2006 v2.2      | Intel 430VX   | Winbond W29C020(C)/5V
+FIC           | PT-2006 v2.2      | Intel 430VX   | H.T. M38705/12V
+MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Macronix MX28F1000/12V
 
 
 11.0            Beta testing stuff
@@ -1399,6 +1435,7 @@ in mind when we started this project. Thanx in advance!
                 David Russell
                 Highlander
                 Kuzvesov
+                Spec
 
 
 12.0            Biz support

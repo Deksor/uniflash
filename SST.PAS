@@ -34,16 +34,20 @@ Var
 X        : Word;
 Attempt,
 Ld, Y    : Byte;
-
+TimeOut:Word; {v1.30}
 Begin
  {Unprotect chip}
  SSTUnprot;
  {Erase the sector}
  Flash_Write(0,$20);     {Erase sector setup}
  Flash_Write(Pos,$D0);   {Erase sector containing address Pos}
+ TimeOut:=500;
  Repeat
   X:=Flash_Read(Pos+127);    {Read last byte written}
- Until ( ( X and $A0 ) <> 0 );
+  Wait(100);
+  Dec(TimeOut);
+ Until ( ( X and $A0 ) <> 0 ) or (TimeOut<1);
+ if TimeOut<1 then FlashError:=3;
  If ( ( X and $A0 ) <> $80 ) then
   Begin
    FlashError := 3; {erasing error}
@@ -69,9 +73,13 @@ Begin
     Flash_Write(0,$10);       {program setup}
     Flash_Write(Pos+X,Ld);    {program data byte}
     Ld := Ld and $80;
+    TimeOut:=60;
     Repeat
      Y:=Flash_Read(Pos+X);    {Read last byte written}
-    Until ( ( Y and $80 ) = Ld ) or ( ( Y and $20 ) <> 0 );
+     Wait(1);
+     Dec(TimeOut);
+    Until ( ( Y and $80 ) = Ld ) or ( ( Y and $20 ) <> 0 ) or (TimeOut<1);
+    if TimeOut<1 then FlashError:=2;
     Y:=Flash_Read(Pos+X);    {Read last byte written}
     Inc( Attempt );
    Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
@@ -129,30 +137,30 @@ End;
 Procedure SSTSecProgFWH( Pos, Data : LongInt ); Far; {49LF003A/4A/8A} {v1.26}
 begin
   {Unprotect}
-  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $FC);
+  FOMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $FC);
   AMDSecProg(Pos,Data);
   {Protect}
-  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
+  FOMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01);
 end;
 
 Procedure SSTSecEraseFWH( SAddr: LongInt ); Far; {49LF003A/4A/8A} {v1.26}
 begin
   {Unprotect}
-  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $FC);
+  FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $FC);
   AMDSecErase(SAddr);
   {Protect}
-  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
-   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
+  FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01);
 end;
 
 Procedure SSTSecProgFWH2( Pos, Data : LongInt ); Far; {49LF002A} {v1.26}
 var X:LongInt;
 begin
-  X:=Pos and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
-  if (Pos>=$38000) and (Pos<$3C000) then X:=(Pos-$4000) and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
+  X:=Pos and $FFFF8000+$FFC00002-LongInt(CurCInfo.Size) shl 10;
+  if (Pos>=$38000) and (Pos<$3C000) then X:=(Pos-$4000) and $FFFF8000+$FFC00002-LongInt(CurCInfo.Size) shl 10;
   {Unprotect}
   FOMemB(X,FIMemB(X) and $FC);
   AMDSecProg(Pos,Data);
@@ -163,8 +171,8 @@ end;
 Procedure SSTSecEraseFWH2( SAddr: LongInt ); Far; {49LF002A} {v1.26}
 var X:LongInt;
 begin
-  X:=SAddr and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
-  if (SAddr>=$38000) and (SAddr<$3C000) then X:=(SAddr-$4000) and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
+  X:=SAddr and $FFFF8000+$FFC00002-LongInt(CurCInfo.Size) shl 10;
+  if (SAddr>=$38000) and (SAddr<$3C000) then X:=(SAddr-$4000) and $FFFF8000+$FFC00002-LongInt(CurCInfo.Size) shl 10;
   {Unprotect}
   FOMemB(X,FIMemB(X) and $FC);
   AMDSecErase(SAddr);

@@ -7,23 +7,23 @@ Uses Flash, GenFlash, Tools;
 
 procedure Unprotect(SAddr:LongInt); {v1.29}
 begin
- FOMemB(SAddr and $FFFF0000+$FC00002-CurCInfo.Size shl 10,
-  FIMemB(SAddr and $FFFF0000+$FC00002-CurCInfo.Size shl 10) and $F8); {Disable Write-Lock}
+ FOMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10) and $F8); {Disable Write-Lock}
 end;
 
 procedure Protect(SAddr:LongInt); {v1.29}
 begin
- FOMemB(SAddr and $FFFF0000+$FC00002-CurCInfo.Size shl 10,
-  FIMemB(SAddr and $FFFF0000+$FC00002-CurCInfo.Size shl 10) or $01); {Enable Write-Lock}
+ FOMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10) or $01); {Enable Write-Lock}
 end;
 
 procedure UnprotectB(SAddr:LongInt); {v1.29}
 begin
- if SAddr>=CurCInfo.Size-$8000 then
+ if SAddr>=LongInt(CurCInfo.Size) shl 10-$8000 then
   begin
-    if SAddr>=CurCInfo.Size-$6000 then
+    if SAddr>=LongInt(CurCInfo.Size) shl 10-$6000 then
      begin
-       if SAddr>=CurCInfo.Size-$4000 then
+       if SAddr>=LongInt(CurCInfo.Size) shl 10-$4000 then
         begin
           SAddr:=$FBFC002;
         end
@@ -31,17 +31,17 @@ begin
      end
     else SAddr:=$FBF8002;
   end
- else SAddr:=SAddr and $FFFF0000+$FC00002-CurCInfo.Size;
+ else SAddr:=SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size);
  FOMemB(SAddr,FIMemB(SAddr) and $F8); {Disable Write-Lock}
 end;
 
 procedure ProtectB(SAddr:LongInt); {v1.29}
 begin
- if SAddr>=CurCInfo.Size-$8000 then
+ if SAddr>=LongInt(CurCInfo.Size) shl 10-$8000 then
   begin
-    if SAddr>=CurCInfo.Size-$6000 then
+    if SAddr>=LongInt(CurCInfo.Size) shl 10-$6000 then
      begin
-       if SAddr>=CurCInfo.Size-$4000 then
+       if SAddr>=LongInt(CurCInfo.Size) shl 10-$4000 then
         begin
           SAddr:=$FBFC002;
         end
@@ -49,7 +49,7 @@ begin
      end
     else SAddr:=$FBF8002;
   end
- else SAddr:=SAddr and $FFFF0000+$FC00002-CurCInfo.Size;
+ else SAddr:=SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size);
  FOMemB(SAddr,FIMemB(SAddr) or $01); {Enable Write-Lock}
 end;
 

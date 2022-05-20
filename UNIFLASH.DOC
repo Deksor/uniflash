@@ -1,6 +1,6 @@
-                     UniFlash version 1.28 documentation
+                     UniFlash version 1.29 documentation
                      -----------------------------------
-                   (C) 2002 Rainbow Software (Ondrej Zary)
+                   (C) 2003 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
 
 
@@ -90,17 +90,18 @@ Here's a list of chipsets suported by Uniflash:
 ,----------------------------------------------------------------------------,
 | Mfg     | Chipset(s)           | Comments                                  |
 `---------|----------------------|-------------------------------------------'
- Intel    |*430FX                | No comments It works in 99% of cases
-          |*430HX                | 450 & 434 not tested
-          |*430VX                | 440GX and 440FX untested
-          |*430TX                |
-          |*430MX                |
-          | 440FX                |
-          |*440LX/EX             |
+ Intel    |*Triton 430FX         | No comments It works in 99% of cases
+          |*Triton II 430HX      | 450 & 430LX/NX not tested
+          |*Triton II 430VX      | 440GX and 440FX untested
+          |*Triton III 430TX     |
+          |*Mobile 430MX         |
+          | Natoma 440FX         |
+          |*AGPSet 440LX/EX      |
           | 450KX/GX             |
-          | 434LX/NX             |
-          |*440BX/ZX             |
-          | 440GX                |
+          | Mecrucy 430LX        |
+          | Neptune 430NX        |
+          |*AGPSet 440BX/ZX      |
+          | AGPSet 440GX         |
           | i810                 | Hub architecture chipsets (i8xx) are
           | i810E                | not tested.
           | i810E2               |
@@ -144,7 +145,7 @@ Here's a list of chipsets suported by Uniflash:
           | AMD 760MPX           | both VIA and AMD (does it really exist?)
           |                      | south bridges.
 ----------|----------------------|--------------------------------------------
- SiS      | 85C496+497           | I got the datasheets, but not from SiS.
+ SiS      |*85C496+497           | I got the datasheets, but not from SiS.
           |#501/5101/5501        |
           | 5511                 | These chipsets are really crappy - to
           | 5571                 | support 12 chipsets, I needed to write
@@ -171,7 +172,7 @@ Here's a list of chipsets suported by Uniflash:
           | Aladdin IV/IV+       | Bridge should work.
           |*Aladdin V            | Unlisted chipsets are not fully detected,
           | Aladdin Pro IV       | but should work if they use M1533/43/35 or
-          | ALiMAGiK 1           | M1523 South Bridge.
+          |*ALiMAGiK 1           | M1523 South Bridge.
 ----------|----------------------|--------------------------------------------
  SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
           |                      | South Bridge (UDMA-66 support)
@@ -203,6 +204,11 @@ Here's a list of chipsets suported by Uniflash:
           |                      | Not tested
 ----------|----------------------|--------------------------------------------
  UMC      |*UM8881F+UM8886BF     | Don't have any datasheets, tested and works
+----------|----------------------|--------------------------------------------
+ Micron   | Copperhead+Coppertail| Has no flash write protection. Untested
+----------|----------------------|--------------------------------------------
+ Contaq/  | hyperCache           | CY82C691+CY82C693(U/UB)
+ Cypress  | 386/486 with PCI     | CY82C596/597+CY82C599
 ------------------------------------------------------------------------------
 
 PC100 BXCel is relabelled ALi Aladdin Pro II on PC Chips M726 motherboard.
@@ -218,10 +224,17 @@ it often doesn't work and hangs, preventing users from making BIOS backup.
  * means tested and functional
  # means tested, but doesn't work
 
+Cards with no specific support in UniFlash:
 * Adaptec 19160 (AIC-7892B chip) - Winbond W29EE512
 # AdvanSys ASB-3940UA
 # ATI Rage Magnum AGP
 # Matrox Millennium PCI
+* SIIG SC-PE4612 IDE controller (HighPoint HPT366) - SST 39SF010
+
+I need datasheets for the cards (chips) that do not work.
+
+Cards with specific support in UniFlash:
+  3Dfx Banshee
 
 
 3.0            What flash chips are supported by UniFlash ?
@@ -369,6 +382,8 @@ UniFlash supports the following flash chips:
   --------                        |
   CAT28F512                       | 64KB
  *CAT28F010                       | 128KB
+  CAT28F015T                      | 192KB
+  CAT28F015B                      | 192KB
   CAT28F020                       | 256KB
  *CAT28F001T                      | 128KB
  *CAT28F001B                      | 128KB
@@ -376,8 +391,8 @@ UniFlash supports the following flash chips:
   CAT28F002B                      | 256KB
   CAT28F150T                      | 192KB
   CAT28F150B                      | 192KB
-  CAT29F002T                      | 256KB
-  CAT29F002B                      | 256KB
+  CAT29F(N)002T                   | 256KB
+  CAT29F(N)002B                   | 256KB
 ----------------------------------|-------------------------------------------
   EON                             |
   ---                             |
@@ -481,8 +496,9 @@ UniFlash supports the following flash chips:
   MX28F002T                       | 256KB
   MX28F002B                       | 256KB
   MX29F040                        | 512KB
+  MX29F080                        | 1024KB
   MX29F016                        | 2048KB
-  MX29F001T                       | 128KB
+ *MX29F001T                       | 128KB
  *MX29F001B                       | 128KB
  *MX29F002(N)T                    | 256KB
   MX29F002(N)B                    | 256KB
@@ -551,7 +567,7 @@ UniFlash supports the following flash chips:
 ----------------------------------|-------------------------------------------
   NexFlash Technologies           |
   ---------------------           |
- *NX29F010  = AMD Am29F010        | 128KB
+  NX29F010  = AMD Am29F010        | 128KB
   NX29F400B = AMD Am29F400B       | 512KB
 ----------------------------------|-------------------------------------------
   PMC                             |
@@ -642,7 +658,10 @@ UniFlash supports the following flash chips:
   M29W004(B)B                     | 512KB
   M29W008(A)T                     | 1024KB
   M29W008(A)B                     | 1024KB
+  M50FW002 (FWH)                  | 256KB
+  M50LPW002 (LPC)                 | 256KB
   M50FW040 (FWH)                  | 512KB
+  M50LPW040 (LPC)                 | 512KB
   M50FW080 (FWH)                  | 1024KB
   M50LPW080 (LPC)                 | 1024KB
 ----------------------------------|-------------------------------------------
@@ -697,12 +716,19 @@ UniFlash supports the following flash chips:
 ----------------------------------|-------------------------------------------
   Winbond                         |
   -------                         |
- *W29x010/011 series              | 128KB
+ *W29x010/011/012 series          | 128KB
  *W29C020(C)                      | 256KB
   W29C040                         | 512KB
   W29EE512                        | 64KB
+  W39F010                         | 128KB
+  W39L512                         | 64KB
+  W39L010                         | 128KB
+  W39L020                         | 256KB
+  W39L040                         | 512KB
+  W39V040FA (Firmware Hub)        | 512KB
  *W49F002U                        | 256KB
-  W49V002(A)                      | 256KB
+  W49F020                         | 256KB
+  W49V002(A) (LPC)                | 256KB
   W49V002F(A) (Firmware Hub)      | 256KB
 ------------------------------------------------------------------------------
 
@@ -810,14 +836,14 @@ long continuous beep: some error occured, press any key to retry operation
 
 5.2            Command-line parameters
 --------------------------------------
-UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI|-BASE xxxxx]
+UNIFLASH [-H|-?|[-E fname][-PCIROM [BUS DEV FUN]|-AMI|-BASE xxxxx]
           [-SAVE fname|-CHIPLIST|-FORCE xxxx][-REPAIR][-LOG][-MONO]
           [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT][-REBOOT]
 
 -H or -?        Shows command-line parameters (this list)
 -E fname        Flashes bios image from file fname to Flash ROM without any
                 user intervention
--PCIOR          Flash PCI option ROM instead of system ROM
+-PCIROM         Flash ROM on a PCI card instead of system ROM
   [BUS DEV FUN] Manually specify PCI device (decimal numbers)
 -AMI            Use AMI Flash Interface
 -CHIPLIST       Show list of supported flash chips with their numbers
@@ -834,13 +860,13 @@ UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI|-BASE xxxxx]
 Parameters are executed in the same order as they are entered on the command
 line - so you can use e.g. "uniflash -cmoss cmos.bak -cmosc" to save CMOS
 settings to file called cmos.bak and then clear the CMOS.
-Some parameters can't be used together - e.g. -AMI can't be used with -PCIOR.
+Some parameters can't be used together - e.g. -AMI can't be used with -PCIROM.
 
 -E: Flashes BIOS image from file fname including bootblock without
     any user input
--PCIOR: Selects ROM on a PCI device instead of system ROM. Works only with
-        some cards. You can optionally specify the device you want to use.
-        (e.g. -PCIOR 0 3 1 = BUS 0, DEVICE 3, FUNCTION 1)
+-PCIROM: Selects ROM on a PCI device instead of system ROM. Works only with
+         some cards. You can optionally specify the device you want to use.
+         (e.g. -PCIROM 0 3 1 = BUS 0, DEVICE 3, FUNCTION 1)
 -AMI: Uses interface supported by some AMI BIOSes instead of detecting the
       chipset and writing to chipset registers to disable write protection.
       (I haven't seen this working anywhere yet...)
@@ -907,6 +933,31 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.29       -added some Winbond Flash ROMs: W39L512, W39F010, W39L010, W39L020,
+            W39L040, W39V040FA (FWH) and W49F020
+           -found old Catalyst datasheets - fixed CAT28F150T, added CAT28F015T
+            and CAT28F015B
+           -better PCI ROM flashing, added 3Dfx Banshee support
+           -added Micron Copperhead+Coppertail chipset detection (has no flash
+            write protection)
+           -added Contaq/Cypress hyperCache chipset (CY82C691+CY82C693(U/UB))
+            and 386/486 chipsets with PCI (CY82C599 required)
+           -changed i82378ZB SIO and i82379AB SIO.A detection (it has no class
+            code - now detected by vendor and device ID if 82434LX/NX present)
+           -fixed CMOS size detection detecting falsely 256b on some boards
+           -modified code to allow easier implementation of various flash
+            access methods (external progammers, PCI cards...)
+           -rewrote ALi FinALi support using these new methods (it was a lot
+            easier now)
+           -some cosmetic fixes (misaligned error messages, some german texts)
+           -fixed flashing on PC Chips M715 board (i440LX) with Award
+            BootBlock BIOS (GPO used for write protection)
+           -added VIA VT8235 south bridge support
+           -added STMicroelectronics M50LPW040, M50FW002 and M50LPW002 chips
+           -added unprotect for STMicroelectronics LPC and FWH chips
+           -found a way to unprotect Flash ROM on Abit BX133-RAID (GPO used),
+            might work on other Abit i440BX based boards too
+            BUT: Flashing failed with Winbond W49F002U - some cache problems?
 1.28       -fixed -SAVE paramter (it was completely broken)
            -display Chipset and Flash ROM when only -QUIT parameter specified
            -fixed bug causing reset of ITE LPC Super I/Os (resulting in floppy
@@ -917,7 +968,7 @@ When sending reports that something doesn't work, always send the log file!
            -fixed some SiS chipset support
            -fixed Utron 128KB support (again)
            -fixed showing SUCCESS when bootblock mismatch and user answered NO
-           -fidex the detection routine erased vendor and device IDs from some
+           -fixed the detection routine erased vendor and device IDs from some
             Winbond and SST chips (detected properly once but then unknown,
             BIOS displayed "Unknown Flash Type" message)
            -added repair feature to repair the erased IDs (-repair parameter)
@@ -939,7 +990,7 @@ When sending reports that something doesn't work, always send the log file!
            -added -BASE parameter to set ROM base address manually and allow
             UniFlash to run without PCI bus
 1.27       -added -MONO parameter for monochrome monitors
-           -enhanced -PCIOR functionality, you can now manually specify
+           -enhanced -PCIROM functionality, you can now manually specify
             a device by its BUS, DEVICE and FUNCTION numbers (decimal)
            -fixed HiNT VXPro-II (Utron UC85C501/502) 128KB Flash ROMs
            -added some VIA chipsets: ProSavage KM133(A), P4M266, P4X266(A)/333
@@ -1222,10 +1273,10 @@ When sending reports that something doesn't work, always send the log file!
 9.1            KNOWN BUGS
 -------------------------
  - Intel 28F004-T doesn't work
- - PCI Option ROM Flashing (-pcior parameter) doesn't work on many cards
+ - PCI Option ROM Flashing (-pcirom parameter) doesn't work on many cards
  - 256KB BIOSes don't work on some i430VX/HX boards (AWDFLASH works!)
  - Winbond W49F002U doesn't work - looks like write protected (sometimes???)
- - Some VIA and AMD chipsets don't work - maybe because non-standard flash
+ - Some VIA and AMD chipsets don't work - maybe because of non-standard flash
    write protection on some boards.
  - Garbage on screen instead of flashing - on Asus P5A board with Aladdin V
    and 256K Flash ROM, but it works OK on Micronics C200 (same chipset and
@@ -1310,6 +1361,12 @@ GVC/BCM       | FR500             | SiS 5598      | AMD Am29F002(N)(B)T/5V
 Asus          | A7V266-E          | Apollo KT266A | SST 49LF020/3V
 PC Chips      | M537DMA           | Apollo VPX    | H.T. M20271H/12V
 QDI           | BrillianX 1       | Intel 440BX   | SST 29EE020/5V
+ECS(?)        | TD-4IP-UMC-AIO    | UM8881F+8886BF| Winbond W29EE011/5V
+PC Chips      | M919 V3.4B/F      | UM8881F+8886BF| Macronix MX28F1000P/12V
+PC Chips      | M919 V3.4B/F      | UM8881F+8886BF| Winbond W29EE011/5V
+PC Chips      | M715 V1.2A        | Intel 440LX   | ASD AE29F1008/5V
+Zida          | 4DPS              | SiS 85C496+497| SST 29EE010/5V
+PC Chips      | M571LMR v5.0      | SiS 5598      | Macronix MX29F001T/5V
 
 
 11.0            Beta testing stuff
@@ -1341,6 +1398,7 @@ in mind when we started this project. Thanx in advance!
                 RusH
                 David Russell
                 Highlander
+                Kuzvesov
 
 
 12.0            Biz support
@@ -1355,6 +1413,7 @@ and chipset manufacturers for their support (in random order):
             Henry Ho at Macronix International Co., Ltd.
             Michael Solinas at Silicon Storage Technology, Inc. (SST), USA
             Phillip Chang at Megawin Technology Co., Ltd.
+            Christopher Emerson and David Chu at Cypress Semiconductor Corp.
 
 
 Thanks goes to Intel - all datasheets are freely available on their web page
@@ -1368,6 +1427,7 @@ for independent developers and NOT REPLYING TO E-MAILS:
             Silicon Integrated Systems (SiS)
             United Microelectronics Corporation (UMC)
             ServerWorks
+            NVIDIA Corporation
 
 I finally got some real e-mail from VIA, but only bad news:
 "At this time, datasheets are only available to manufacturers under non

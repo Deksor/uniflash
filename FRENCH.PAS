@@ -44,7 +44,7 @@ Begin
  AddMsg( Lid, 31, '-E fname        Ecrit le bios du fichier fname dans la FLASH ROM' );
  AddMsg( Lid, 32, '                sans intervention de la part de l''utilisateur' );
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
- AddMsg( Lid, 34, '-PCIOR          Utilise la FLASH ROM d''une carte PCI' );
+ AddMsg( Lid, 34, '-PCIROM         Utilise la FLASH ROM d''une carte PCI' );
  AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Forcer UniFlash … utiliser l''interface FLASH de AMI' );
  AddMsg( Lid, 37, 'Impossible d''acc‚der … la m‚moire au-del… de 1Mo - utilisez HIMEM.SYS.' );
@@ -76,6 +76,7 @@ Begin
  AddMsg( Lid, 63, 'pas disponible' );
  AddMsg( Lid, 64, 'Unable to read file!'#7 ); {v1.28}
  AddMsg( Lid, 65, 'Unable to write file!'#7 ); {v1.28}
+ AddMsg( Lid, 66, '           Selected PCI card: ' ); {v1.29}
 (* AddMsg( Lid, 66, ', P‚riph‚rique=' );
  AddMsg( Lid, 67, ' … ' ); *)
  AddMsg( Lid, 68, 'M‚moire: ' );
@@ -147,7 +148,7 @@ Begin
  AddMsg( Lid, 132, '-BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)' ); {v1.28}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
- AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
+ AddMsg( Lid, 135, '-PCIROM must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
  AddMsg( Lid, 136, '-REPAIR         Repair erased chip ID (Winbond and SST chips)'); {v1.28}
  AddMsg( Lid, 137, '-REPAIR must be preceded by -FORCE parameter with correct ID'); {v1.28}
  AddMsg( Lid, 138, 'Only Winbond and SST chips can be repaired'); {v1.28}

@@ -16,12 +16,14 @@ Uses Flash, GenFlash, Tools;
 
 Procedure Unprotect( SAddr : LongInt ); {v1.18}
 Begin
- FOMemB((SAddr and $FFFF0000)-$3FFFFE,0); {Disable Write-Lock}
+ FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $F8); {Disable Write-Lock}
 End;
 
 Procedure Protect( SAddr : LongInt ); {v1.18}
 Begin
- FOMemB((SAddr and $FFFF0000)-$3FFFFE,1); {Enable Write-Lock}
+ FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01); {Enable Write-Lock}
 End;
 
 Procedure IntelSecEraseU( SAddr : LongInt ); Far; {v1.18}

@@ -1,51 +1,11 @@
-Unit WinBond; { Unit to communicate with WinBond chips }
+Unit Winbond; { Unit to communicate with Winbond chips }
 Interface
 
 Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Procedure WBSecProg( Pos, Data : LongInt ); Far; {v1.23}
-Var
-Attempt,
-X, Y, Ld : Byte;
-TimeOut  : Word;
-
-Begin
- For Y := 0 to CurCInfo.PgSize - 1 do
-  Begin
-   Attempt := 0;
-   Ld := FIMemB( Data + Y );
-   If Ld <> $FF then
-    Begin
-     Repeat
-      FlashCmd( $A0 );
-      FOMemB( Pos + Y, Ld );
-
-      TimeOut := 10;   {wait max 100 usec}
-      While ( ( FIMemB( Pos + Y ) and $80 ) <> ( Ld and $80 ) ) and
-            ( ( FIMemB( Pos + Y ) and $20 ) = 0 ) and ( TimeOut > 0 ) do
-       Begin
-        Dec( TimeOut );
-        Wait( 10 );
-       End;
-
-      X := FiMemB( Pos + Y );    {Read last byte written}
-      Inc( Attempt );
-
-     Until ( Attempt > 3 ) or  ( ( X and $80 ) = ( Ld and $80 ) );
-     If ( ( X and $80 ) <> ( Ld and $80 ) ) then
-      Begin
-       FlashError := 2; {programming error, timeout}
-       FlashCmd( $F0 ); {Reset chip}
-       Exit;
-      End;
-    End;
-  End;
- FlashCmd( $F0 ); {Reset chip}
-End;
-
-Procedure WBSecErase( SAddr : LongInt ); Far; {v1.23}
+Procedure WbSecErase( SAddr : LongInt );Far; {v1.29}
 Var
 Attempt,
 X        : Byte;
@@ -55,24 +15,46 @@ Begin
  Attempt := 0;
  Repeat
   FlashCmd( $80 );      {Erase setup}
-  FOMemB( ROMBase + $5555, $AA );
-  FOMemB( ROMBase + $2AAA, $55 );
-  FOMemB( SAddr, $30 ); {Erase sector containing address SAddr}
+  Flash_Write($5555,$AA);
+  Flash_Write($2AAA,$55);
+  Flash_Write(SAddr,$50); {Erase sector containing address SAddr}
 
-  {Wait for erase to finish}
-  TimeOut := 5000; {waits max. 5 sec}
-  While ( ( FiMemB( SAddr ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
-   Begin
-    Wait( 1000 );
-    Dec( TimeOut );
-   End;
+  TimeOut:=25000;
+  X:=Flash_Read(SAddr); {v1.24 Toggle bit method}
+  while ((X and $40) <> (Flash_Read(SAddr) and $40)) and (TimeOut>0) do
+   begin
+     X:=Flash_Read(SAddr);
+     Wait(1000);
+     Dec(TimeOut);
+   end;
 
-  X := FiMemB( SAddr );
   Inc( Attempt );
   FlashCmd( $F0 ); {Reset}
- Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
- If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
+ Until ( Attempt > 3 ) or ( TimeOut>0 );
+ If TimeOut>0 then FlashError := 3; {erasing error}
 End;
+
+Procedure WbSecProgFWH( Pos, Data : LongInt ); Far; {W39V040FA} {v1.29}
+begin
+  {Unprotect}
+  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $F8);
+  AMDSecProg(Pos,Data);
+  {Protect}
+  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
+end;
+
+Procedure WbSecEraseFWH( SAddr: LongInt ); Far; {W39V040FA} {v1.29}
+begin
+  {Unprotect}
+  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $F8);
+  WbSecErase(SAddr);
+  {Protect}
+  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
+end;
 
 Function WBIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
@@ -84,30 +66,85 @@ Begin
    PgSize := 128; {page size}
    Progr  := GenPageProgB;
    Case DevId of
-    $C1 : Begin {W29EE011, W29C010, W29C010M, W29C011A}
-           Name := ConstPtr( 'W29x010/011/5V series' );
-           Size := 128;
-          End;
-    $45 : Begin
-           {note: 2 write-protectable boot blocks}
-           Name := ConstPtr( 'W29C020(C)/5V' );
-           Size := 256;
-          End;
-    $46 : Begin {v1.21}
-           {note: 2 write-protectable boot blocks}
-           Name := ConstPtr( 'W29C040/5V' );
-           PgSize := 256; {page size}
-           Size := 512;
-          End;
     $C8 : Begin
            Name := ConstPtr( 'W29EE512/5V' );
            Size := 64;
           End;
+    $C1 : Begin {W29EE011, W29C010, W29C010M, W29C011A, W29EE012}
+           Name := ConstPtr( 'W29x010/011/012/5V series' );
+           Size := 128;
+          End;
+    $45 : Begin
+           {note: 2 write-protectable boot blocks}
+           Name := ConstPtr( 'W29C020(C)/022/5V' );
+           Size := 256;
+          End;
+    $46 : Begin {v1.21}
+           {note: 2 write-protectable boot blocks}
+           Name := ConstPtr( 'W29C040/043/5V' );
+           PgSize := 256; {page size}
+           Size := 512;
+          End;
+    $38 : Begin {v1.29}
+           Flags  := 0;   {sector mode}
+           Progr  := AMDSecProg;
+           Erase := WbSecErase;
+           Sectors[ 0, 0 ] := 16; {16 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 64;
+           Name := ConstPtr( 'W39L512/3.3V' );
+          End;
+    $A1,
+    $31 : Begin {v1.29}
+           Flags  := 0;   {sector mode}
+           Progr  := AMDSecProg;
+           Erase := WbSecErase;
+           Sectors[ 0, 0 ] := 32; {32 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 128;
+           case DevId of
+            $A1: Name := ConstPtr( 'W39F010/5V' );
+            $31: Name := ConstPtr( 'W39L010/3.3V' );
+           end;
+          End;
+    $B5 : Begin {v1.29}
+           Flags  := 0;   {sector mode}
+           Progr  := AMDSecProg;
+           Erase := WbSecErase;
+           Sectors[ 0, 0 ] := 64; {64 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 256;
+           Name := ConstPtr( 'W39L020/3.3V' );
+          End;
+    $B6 : Begin {v1.29}
+           Flags  := 0;   {sector mode}
+           Progr  := AMDSecProg;
+           Erase := WbSecErase;
+           Sectors[ 0, 0 ] := 128; {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 512;
+           Name := ConstPtr( 'W39L040/3.3V' );
+          End;
+    $34 : Begin {v1.29}
+           Flags  := 0;   {sector mode}
+           Progr  := WbSecProgFWH;
+           Erase := WbSecEraseFWH;
+           Sectors[ 0, 0 ] := 128; {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 512;
+           Name := ConstPtr( 'W39V040FA/3.3V (Firmware Hub)' );
+          End;
+    $8C : Begin {v1.29}
+           Flags  := 2;   {bulk erase}
+           Progr  := AMDSecProg;
+           Erase := AMDBulkErase;
+           Size := 256;
+           Name := ConstPtr( 'W49F020/5V' );
+          End;
     $0B : Begin {v1.21}
            Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := WBSecProg;
-           Erase := WBSecErase;
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 128k}
            Sectors[ 0, 1 ] := 1024;
            Sectors[ 1, 0 ] := 1;  {1 x 96k}
@@ -119,27 +156,11 @@ Begin
            Size := 256;
            Name := ConstPtr( 'W49F002U/5V' );
           End;
-    $B0 : Begin {v1.21}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := WBSecProg;
-           Erase := WBSecErase;
-           Sectors[ 0, 0 ] := 3;  {3 x 64k}
-           Sectors[ 0, 1 ] := 512;
-           Sectors[ 1, 0 ] := 1;  {1 x 32k}
-           Sectors[ 1, 1 ] := 256;
-           Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 64;
-           Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 128;
-           Size := 256;
-           Name := ConstPtr( 'W49V002(A)/3.3V' );
-          End;
+    $B0,
     $32 : Begin {v1.21}
            Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := WBSecProg;
-           Erase := WBSecErase;
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
            Sectors[ 0, 0 ] := 3;  {3 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -149,7 +170,10 @@ Begin
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
            Size := 256;
-           Name := ConstPtr( 'W49V002F(A)/3.3V (Firmware Hub)' );
+           case DevID of
+            $B0: Name := ConstPtr( 'W49V002(A)/3.3V (LPC)' );
+            $32: Name := ConstPtr( 'W49V002F(A)/3.3V (Firmware Hub)' );
+           end;
           End;
     else Exit;
    End;

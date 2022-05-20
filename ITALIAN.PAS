@@ -44,7 +44,7 @@ Begin
  AddMsg( Lid, 31, '-E nomef        Programma il bios con il file nomef nella FLASH' );
  AddMsg( Lid, 32, '                ROM senza intervento dell utente' );
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
- AddMsg( Lid, 34, '-PCIOR          Opzione per flashare una ROM PCI' );
+ AddMsg( Lid, 34, '-PCIROM         Flash ROM on a PCI card instead of system ROM' ); {v1.29}
  AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Forza l''utilizzo dell'' AMI FLASH INTERFACE' );
  AddMsg( Lid, 37, 'Impossibile accedere alla maemoria estesa - prova con HIMEM.SYS.' );
@@ -72,10 +72,11 @@ Begin
  AddMsg( Lid, 59, ' sectori di ' );
  AddMsg( Lid, 60, 'Chip sconosciuto!' );
  AddMsg( Lid, 61, '                 PCI chipset: ' );
- AddMsg( Lid, 62, '           Stato ultima scrittura: ' );
+ AddMsg( Lid, 62, '      Stato ultima scrittura: ' );
  AddMsg( Lid, 63, 'non disponibile' );
  AddMsg( Lid, 64, 'Unable to read file!'#7 ); {v1.28}
  AddMsg( Lid, 65, 'Unable to write file!'#7 ); {v1.28}
+ AddMsg( Lid, 66, '           Selected PCI card: ' ); {v1.29}
 (* AddMsg( Lid, 66, ', Periferica=' );
  AddMsg( Lid, 67, ' at ' ); *)
  AddMsg( Lid, 68, 'Memoria ' );
@@ -147,7 +148,7 @@ Begin
  AddMsg( Lid, 132, '-BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)' ); {v1.28}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
- AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
+ AddMsg( Lid, 135, '-PCIROM must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
  AddMsg( Lid, 136, '-REPAIR         Repair erased chip ID (Winbond and SST chips)'); {v1.28}
  AddMsg( Lid, 137, '-REPAIR must be preceded by -FORCE parameter with correct ID'); {v1.28}
  AddMsg( Lid, 138, 'Only Winbond and SST chips can be repaired'); {v1.28}

@@ -20,20 +20,20 @@ Begin
    Attempt := 0;
    Ld := FIMemB( Data + Y );
    Repeat
-    FOMemB( Pos + Y, $40 );  {Write setup}
-    FOMemB( Pos + Y, Ld );   {Write data}
+    Flash_Write(Pos+Y,$40);    {Write setup}
+    Flash_Write(Pos+Y,Ld);     {Write data}
 
     {Wait for programming to finish}
     TimeOut := 40;  {300 usec max}
-    While  ( ( FiMemB( Pos + Y ) and $40 ) <>
-             ( FiMemB( Pos + Y ) and $40 ) ) and ( TimeOut > 0 ) do
+    While  ( ( Flash_Read(Pos+Y) and $40) <>
+             ( Flash_Read(Pos+Y) and $40 ) ) and ( TimeOut > 0 ) do
      Begin
       Dec( TimeOut );
       Wait( 10 );
      End;
 
     Inc( Attempt );
-    X := FIMemB( Pos + Y );
+    X:=Flash_Read(Pos+Y);
    Until ( Attempt > 3 ) or  ( X = Ld );
    If ( X <> Ld ) then
     Begin
@@ -56,21 +56,21 @@ TimeOut  : Word;
 Begin
  Attempt := 0;
  Repeat
-  FOMemB( SAddr, $20 ); {Erase setup}
-  FOMemB( SAddr, $D0 ); {Erase confirm}
+  Flash_Write(SAddr,$20); {Erase setup}
+  Flash_Write(SAddr,$D0); {Erase confirm}
   Wait( 250 ); {Wait +- 200 usec for erase to start}
 
   {Wait for erase to finish}
   TimeOut := 50000;   {5 sec max}
-  While  ( ( FiMemB( SAddr ) and $40 ) <>
-           ( FiMemB( SAddr ) and $40 ) ) and ( TimeOut > 0 ) do
+  While  ( ( Flash_Read(SAddr) and $40 ) <>
+           ( Flash_Read(SAddr) and $40 ) ) and ( TimeOut > 0 ) do
    Begin
     Dec( TimeOut );
     Wait( 100 );
    End;
 
   {Did erase work?}
-  X := FiMemB( SAddr ) and $80;
+  X:=Flash_Read(SAddr) and $80;
   Inc( Attempt );
  Until ( Attempt > 3 ) or ( X <> $0 );
  If X = 0 then FlashError := 3; {erasing error}
@@ -88,14 +88,14 @@ Begin
  Attempt := 0;
  Repeat
   FlashCmd( $A0 );
-  MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
+  Flash_WriteBlock(Data,Pos,CurCInfo.PgSize);
   Wait( 300 );  {Wait min. 300 usec}
 
   {Wait for programming to finish}
   Repeat
-   X := FiMemB( Pos + CurCInfo.PgSize - 1 );
+   X:=Flash_Read(Pos+CurCInfo.PgSize-1);
   Until ( ( X and $80 ) <> 0 );
-  X := FiMemB( Pos + CurCInfo.PgSize - 1 );
+  X:=Flash_Read(Pos+CurCInfo.PgSize-1);
   Inc( Attempt );
   FlashCmd( $50 );  {Clear status}
  Until ( Attempt > 3 ) or  ( ( X and $B0 ) = $80 );
@@ -114,16 +114,16 @@ Begin
  Attempt := 0;
  Repeat
   FlashCmd( $80 );      {Erase setup}
-  FOMemB( ROMBase + $5555, $AA );
-  FOMemB( ROMBase + $2AAA, $55 );
-  FOMemB( SAddr, $30 ); {Erase sector containing address SAddr}
+  Flash_Write($5555,$AA);
+  Flash_Write($2AAA,$55);
+  Flash_Write(SAddr,$30); {Erase sector containing address SAddr}
 
   {Wait for erase to finish}
   Repeat
-   X := FiMemB( SAddr );
+   X:=Flash_Read(SAddr);
   Until ( ( X and $80 ) <> 0 );
   Inc( Attempt );
-  X := FiMemB( SAddr );
+  X:=Flash_Read(SAddr);
   FlashCmd( $50 ); {Clear status}
  Until ( Attempt > 3 ) or ( ( X and $B0 ) = $80 );
  If ( X and $B0 ) <> $80 then FlashError := 3; {erasing error}
@@ -145,10 +145,10 @@ Begin
 
   {Wait for erase to finish}
   Repeat
-   X := FiMemB( SAddr );
+   X:=Flash_Read(SAddr);
   Until ( ( X and $80 ) <> 0 );
   Inc( Attempt );
-  X := FiMemB( SAddr );
+  X:=Flash_Read(SAddr);
   FlashCmd( $50 ); {Clear status}
  Until ( Attempt > 3 ) or ( ( X and $B0 ) = $80 );
  If ( X and $B0 ) <> $80 then FlashError := 3; {erasing error}

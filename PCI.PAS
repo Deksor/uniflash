@@ -9,30 +9,27 @@ Const
 PCICfIdx    = $CF8;
 PCICfData   = $CFC;
 
-Map         = True;
-Unmap       = False;
-
-
-
 Var
-NorthFunc,
-SouthFunc,
-LPCFunc        : Word;
-NorthPos,
-SouthPos,
-LPCBase        : Byte;
-CurrentChipset : string;
-WantToUseAMI,
-AMIUsed,
-ChipsetFound,
-ROMEnabled     : Boolean; {v1.22}
+NorthFunc, SouthFunc, LPCFunc, PCIBase: Word;
+NorthPos, SouthPos, CurPCIROM, PCIROMBus, PCIROMDev, PCIROMFun, LPCBase: Byte;
+CurrentChipset, CurrentPCICard: string;
+WantToUseAMI, AMIUsed, ChipsetFound, ROMEnabled, PCIROMEnabled: Boolean;
+PCIROMs: array[1..20] of
+          record
+            MaxSize      : LongInt;
+            VenID, DevID : Word;
+            Bus, Pos     : Byte;
+          end;
 
 Procedure OPortD( Prt : Word; Val : LongInt );
-Function IPortD( Prt : Word ) : LongInt;
-Function GetPCIRegD( Bus, Dev, Func, Reg : Byte ) : LongInt;
+Function  IPortD( Prt : Word ) : LongInt;
+Function  GetPCIRegD( Bus, Dev, Func, Reg : Byte ) : LongInt;
 Procedure SetPCIRegD( Bus, Dev, Func, Reg : Byte; Value : LongInt );
-Function LocatePIIX : {byte}Boolean; {v1.22 byte->boolean}
+Function  LocatePIIX : {byte}Boolean; {v1.22 byte->boolean}
 Procedure RomEnable( Map : boolean);
+procedure PCIROMEnable(Map:Boolean); {v1.29}
+function  Flash_PCI_Read(Address:LongInt):Byte; {v1.29}
+procedure Flash_PCI_Write(Address:LongInt;Data:Byte); {v1.29}
 
 implementation
 
@@ -109,7 +106,7 @@ end;
 
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $53 ] of String[ 24 ] = {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $56 ] of String[ 24 ] = {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -138,7 +135,7 @@ NbName    : ARRAY[ 1 .. $53 ] of String[ 24 ] = {16->24 v1.21}
 {1A}          'VT82C585VP/VPX',
 {1B}          'VT82C595/AMD-640',
 {1C}          'VT82C597',
-{1D}          'VT82C598[AT]',
+{1D}          'VT82C598(AT)',
 {1E}          'VT82C685',
 {1F}          'VT8501', {v1.20}
 {20}          'VT82C691/693(A)/694X/T', {v1.20}
@@ -192,9 +189,12 @@ NbName    : ARRAY[ 1 .. $53 ] of String[ 24 ] = {16->24 v1.21}
 {50}          'Geode GX1', {v1.25}
 {51}          'OPTi 82C750', {v1.26}
 {52}          'HiNT VXPro-II North', {v1.26}
-{53}          'UMC UM8881F'); {v1.28}
+{53}          'UMC UM8881F', {v1.28}
+{54}          'Micron MT8LLN21PADF', {v1.29}
+{55}          'CY82C599', {v1.29}
+{56}          'CY82C691');{v1.29}
 
-SbName    : ARRAY[ 1 .. $22 ] of String[ 21 ] =
+SbName    : ARRAY[ 1 .. $25 ] of String[ 21 ] =
 {1}         ( 'i82378ZB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -212,23 +212,26 @@ SbName    : ARRAY[ 1 .. $22 ] of String[ 21 ] =
 {F}           'VT82C686(A|B)', {v1.20}
 {10}          'VT8231', {v1.20}
 {11}          'VT8233(A|C)', {v1.20}
-{12}          'M1523(B)', {v1.26}
-{13}          'M1533/1543/1535', {v1.18}
-{14}          'AMD-756', {v1.20}
-{15}          'AMD-766', {v1.20}
-{16}          'AMD-768', {v1.26}
-{17}          'SiS South Bridge', {v1.21}
-{18}          'SiS 950', {v1.21}
-{19}          'SMSC SLC90E66', {v1.21}
-{1A}          'Winbond W83C553F', {v1.21}
-{1B}          'ITE IT8871F/2F', {v1.21}
-{1C}          'ITE IT8888F', {v1.21}
-{1D}          'Reliance OSB4', {v1.24}
-{1E}          'Vesuvius V3-LS', {v1.25}
-{1F}          'Geode CS5530(A)', {v1.25}
-{20}          'OPTi 82C750', {v1.26}
-{21}          'HiNT VXPro-II South', {v1.26}
-{22}          'UMC UM8886BF'); {v1.28}
+{12}          'VT8235', {v1.29}
+{13}          'M1523(B)', {v1.26}
+{14}          'M1533/1543/1535', {v1.18}
+{15}          'AMD-756', {v1.20}
+{16}          'AMD-766', {v1.20}
+{17}          'AMD-768', {v1.26}
+{18}          'SiS South Bridge', {v1.21}
+{19}          'SiS 950', {v1.21}
+{1A}          'SMSC SLC90E66', {v1.21}
+{1B}          'Winbond W83C553F', {v1.21}
+{1C}          'ITE IT8871F/2F', {v1.21}
+{1D}          'ITE IT8888F', {v1.21}
+{1E}          'Reliance OSB4', {v1.24}
+{1F}          'Vesuvius V3-LS', {v1.25}
+{20}          'Geode CS5530(A)', {v1.25}
+{21}          'OPTi 82C750', {v1.26}
+{22}          'HiNT VXPro-II South', {v1.26}
+{23}          'UMC UM8886BF', {v1.28}
+{24}          'Micron MT7LLN22NCNE', {v1.29}
+{25}          'CY82C693(U/UB)'); {v1.29}
 
 LPCName   : array[1..$2] of String[21]= {v1.27}
             ( 'ITE IT8700F/05F',
@@ -274,14 +277,9 @@ SouthName : String;
   end;
 
 Begin
- if Port[$CFB]<>$FF then {Check for PCI configuration mechanism type} {v1.26}
-  begin
-    Port[$CFB]:=Port[$CFB] or $1;
-  end;
- { Locate north bridge. (NOTE: Just to catch the theoretical case where    }
- { the north bridge is NOT at bus 0, dev 0, func 0 - which should normally }
- { not be the case, but you never know and it doesn't hurt as this thing   }
- { tests bus 0, dev 0, func 0 first and immediately exits if found.)       }
+ if Port[$CFB]<>$FF then {v1.26}
+  Port[$CFB]:=Port[$CFB] or $1; {Set PCI configuration mechanism #1}
+ {Locate north bridge}
  For Pos := 0 to $FF do
   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
    If ( GetPCIRegD( $00, Pos shr 3,
@@ -300,17 +298,24 @@ Begin
  NorthRev := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $07, $08 );
 
  {Locate south bridge}
- For Pos := 0 to $FF do
-  If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-   If ( GetPCIRegD( $00, Pos shr 3,
-                    Pos and $07, $08 ) shr 8 ) = $60100 then Break;
- If Pos = $FF then {v1.22 for i430MX}
-  Begin
-   For Pos := 0 to $FF do
-    If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
-     If ( GetPCIRegD( $00, Pos shr 3,
-                      Pos and $07, $08 ) shr 8 ) = $68000 then Break;
-  End;
+ if (NorthMan=$8086) and (NorthId=$4A3) then {8434LX/NX} {v1.29}
+  begin
+    for Pos:=0 to $FF do if GetPCIRegD($00,Pos shr 3,Pos and $07,$00)=$04848086 then Break;
+  end
+ else
+  begin
+    For Pos := 0 to $FF do
+     If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
+      If ( GetPCIRegD( $00, Pos shr 3,
+                       Pos and $07, $08 ) shr 8 ) = $60100 then Break;
+    If Pos = $FF then {v1.22 for i430MX}
+     Begin
+      For Pos := 0 to $FF do
+       If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
+        If ( GetPCIRegD( $00, Pos shr 3,
+                         Pos and $07, $08 ) shr 8 ) = $68000 then Break;
+     End;
+  end;
  SouthPos := Pos;
  {Get south bridge MID & DID}
  SouthMan := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $07, $00 );
@@ -531,6 +536,22 @@ Begin
    case NorthId of
     $8881: NbId := $53; {UMC UM8881}
    end;
+  End else
+ If NorthMan = $1344 {Micron} then {v1.29}
+  Begin
+   case NorthId of
+    $3320: NbId := $54; {Micron MT8LLN21PADF}
+   end;
+  End else
+ If NorthMan = $1080 {Contaq/Cypress} then {v1.29}
+  Begin
+   case NorthId of
+    $0600: begin {CY82C599}
+             NorthFunc := $0400;
+             NbId := $55;
+           end;
+    $C691: NbId := $56; {CY82C691}
+   end;
   End;
 
  {Id southbridge}
@@ -539,10 +560,12 @@ Begin
   Begin
    if Hi(SouthId)=$24 then SouthFunc := $0200 else SouthFunc := $0100; {v1.21}
    case SouthId of {case v1.21}
-     $484: (*SbId := $02; {82379AB SIO.A}*)
-           Case SouthRev of {v1.26}
-            $03 : SbId := $01;  {82378ZB SIO}
-            $88 : NbId := $02;  {82379AB SIO.A}
+     $484: Begin
+            Case SouthRev of {v1.26}
+             $03 : SbId := $01;  {82378ZB SIO}
+             $88 : SbId := $02;  {82379AB SIO.A}
+            End;
+            SouthFunc:=$0104; {v1.29}
            End;
     $122E: Begin
             SbId := $03; {82371FB PIIX}
@@ -573,31 +596,32 @@ Begin
      $596: Begin SbId := $0E; Inc( SouthFunc ); End; {VT82C596(A|B)}
      $686: Begin SbId := $0F; Inc( SouthFunc ); End; {VT82C686(A|B)} {v1.20}
     $8231: SbId := $10; {VT8231} {v1.20}
-    $3074: begin SbId := $11; SouthFunc := $0310; end;{VT8233} {v1.20}
+    $3074,$3147: begin SbId := $11; SouthFunc := $0310; end;{VT8233} {v1.20}
+    $3177: begin SbId := $12; SouthFunc := $0310; end;{VT8235} {v1.29}
    End;
   End else
  If SouthMan = $1022 {AMD} then {v1.20}
   Begin
    SouthFunc := $0300; {AMD/VIA method}
    case SouthId of {case v1.21}
-    $7408: SbId := $14; {AMD-756}
-    $7410: SbId := $15; {AMD-766}
-    $7440: SbId := $16; {AMD-768}
+    $7408: SbId := $15; {AMD-756}
+    $7410: SbId := $16; {AMD-766}
+    $7440: SbId := $17; {AMD-768}
    end;
   End else
  If SouthMan = $1039 {SiS} then
   Begin
    case SouthId of {v1.21}
-     $8: SbId := $17; {any SiS South Bridge}
-    $18: SbId := $18; {SiS 950 can have $8 or $18}
+     $8: SbId := $18; {any SiS South Bridge}
+    $18: SbId := $19; {SiS 950 can have $8 or $18}
    End;
   End else
  If SouthMan = $10B9 {ALi} then {v1.18}
   Begin
    SouthFunc := $0400; {ALi method}
    case SouthId of
-    $1523: begin SbId:=$12; end; {M1523} {v1.26}
-    $1533: begin SbId:=$13; Inc(SouthFunc); end; {M1533/1543/1535} {v1.19}
+    $1523: begin SbId:=$13; end; {M1523} {v1.26}
+    $1533: begin SbId:=$14; Inc(SouthFunc); end; {M1533/1543/1535} {v1.19}
    end;
   End else
  If SouthMan = $1055 {SMSC} then {v1.21}
@@ -605,7 +629,7 @@ Begin
    If SouthId = $9460 then {SLC90E66} {v1.21}
     Begin
      SouthFunc := $0600; {SMSC method}
-     SbId := $19;
+     SbId := $1A;
     End;
   End else
  If SouthMan = $10AD {Winbond/Symphony Labs} then {v1.21}
@@ -613,58 +637,72 @@ Begin
    If SouthId = $0565 then {W83C553F} {v1.21}
     Begin
      SouthFunc := $0700; {Winbond method}
-     SbId := $1A;
+     SbId := $1B;
     End;
   End else
  If SouthMan = $1283 {ITE} then {v1.21}
   Begin
    case SouthId of
-    $8872 : Begin SouthFunc := $0801; SbId := $1B; End; {IT8871F/8872F}
-    $8888 : Begin SouthFunc := $0802; SbId := $1C; End; {IT8888F}
+    $8872 : Begin SouthFunc := $0801; SbId := $1C; End; {IT8871F/8872F}
+    $8888 : Begin SouthFunc := $0802; SbId := $1D; End; {IT8888F}
    End;
   End else
  If SouthMan = $1166 {Reliance/ServerWorks} then {v1.24}
   Begin
    SouthFunc:=$0900;
    case SouthId of
-    $0200 : SbId := $1D; {OSB4}
+    $0200 : SbId := $1E; {OSB4}
    End;
   End else
  If SouthMan = $1066 {PicoPower} then {v1.25}
   Begin
    SouthFunc:=$1000;
    case SouthId of
-    $0002,$8002 : SbId := $1E; {Vesuvius V3-LS}
+    $0002,$8002 : SbId := $1F; {Vesuvius V3-LS}
    End;
   End else
  If SouthMan = $1078 {PicoPower} then {v1.25}
   Begin
    SouthFunc:=$1100;
    case SouthId of
-    $0100 : SbId := $1F; {Geode CS5530(A)}
+    $0100 : SbId := $20; {Geode CS5530(A)}
    End;
   End else
  If SouthMan = $1045 {OPTi} then {v1.26}
   Begin
    SouthFunc:=$1200;
    case SouthId of
-    $C568: SbId:=$20; {OPTi 82C750}
+    $C568: SbId:=$21; {OPTi 82C750}
    end;
   End else
  If SouthMan = $3388 {HiNT} then {v1.26}
   Begin
    SouthFunc:=$1300;
    case SouthId of
-    $8012: SbId:=$21; {HiNT VXPro-II}
+    $8012: SbId:=$22; {HiNT VXPro-II}
    end;
   End;
  If SouthMan = $1060 {UMC} then {v1.28}
   Begin
    SouthFunc:=$1400;
    case SouthId of
-    $886A: SbId:=$22; {UMC UM8886BF}
+    $886A: SbId:=$23; {UMC UM8886BF}
+   end;
+  End else
+ If SouthMan = $1344 {Micron} then {v1.29}
+  Begin
+   case SouthId of
+    $3470: SbId:=$24; {Micron MT7LLN22NCNE}
+   end;
+  End else
+ If SouthMan = $1080 {Contaq/Cypress} then {v1.29}
+  Begin
+   SouthFunc:=$1500;
+   case SouthId of
+    $C693: SbId:=$25; {CY82C693(U/UB)}
    end;
   End;
+
 
  {Id chipset as a whole}
  CurrentChipset := '';
@@ -673,14 +711,14 @@ Begin
   $02 : If (SbId = $01) or (SbId = $02) then CurrentChipset := 'Intel Neptune 430NX';
   $03 : If SbId = $03 then CurrentChipset := 'Intel Triton 430FX';
   $04 : If SbId = $04 then CurrentChipset := 'Intel 430MX (mobile)';
-  $05 : If SbId = $05 then CurrentChipset := 'Intel Natoma" 440FX';
+  $05 : If SbId = $05 then CurrentChipset := 'Intel Natoma 440FX';
   $06 : If SbId = $05 then CurrentChipset := 'Intel Triton II 430HX';
   $07 : If SbId = $05 then CurrentChipset := 'Intel Triton II 430VX';
   $08 : If SbId = $06 then CurrentChipset := 'Intel Triton III 430TX';
   $09 : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440LX/EX'; {EX v1.18}
   $0A : case SbId of
          $06 : CurrentChipset := 'Intel AGPSet 440BX/ZX'; {v1.18}
-         $18 : CurrentChipset := 'SMSC VictoryBX-66'; {v1.21}
+         $1A : CurrentChipset := 'SMSC VictoryBX-66'; {v1.21}
         End;
   $0B : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440GX'; {v1.18}
   $0C : If SbId = $02 then CurrentChipset := 'Intel 450KX';
@@ -727,47 +765,50 @@ Begin
   $2D : If SbId = $11 then CurrentChipset := 'VIA ProSavage P4M266'; {v1.27}
   $2E : If SbId = $11 then CurrentChipset := 'VIA P4X266(A)/P4X333'; {v1.27}
   $2F : CurrentChipset := 'ALi FinALi 486'; {v1.26}
-  $30 : If SbId = $12 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
-  $31 : If SbId = $13 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
-  $32 : If SbId = $13 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
-  $33 : If SbId = $13 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
-  $34 : If SbId = $13 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
-  $35 : If SbId = $13 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
-  $36 : If SbId = $14 then CurrentChipset := 'AMD 750'; {v1.20}
+  $30 : If SbId = $13 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
+  $31 : If SbId = $14 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
+  $32 : If SbId = $14 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
+  $33 : If SbId = $14 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
+  $34 : If SbId = $14 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
+  $35 : If SbId = $14 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
+  $36 : If SbId = $15 then CurrentChipset := 'AMD 750'; {v1.20}
   $37 : case SbId of {v1.20}
          $0F : CurrentChipset := 'AMD 760 (VIA South)';
-         $15 : CurrentChipset := 'AMD 760 (AMD South)';
+         $16 : CurrentChipset := 'AMD 760 (AMD South)';
         end;
   $38 : case SbId of
-         $15 : CurrentChipset := 'AMD 760MP'; {v1.20}
-         $16 : CurrentChipset := 'AMD 760MPX'; {v1.26}
+         $16 : CurrentChipset := 'AMD 760MP'; {v1.20}
+         $17 : CurrentChipset := 'AMD 760MPX'; {v1.26}
         end;
   $39 : CurrentChipset := 'SiS 85C496+497'; {v1.21}
-  $3A : If SbId = $17 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
-  $3B : If SbId = $17 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
-  $3C : If SbId = $17 then CurrentChipset := 'SiS 5571'; {v1.21}
-  $3D : If SbId = $17 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
-  $3E : If SbId = $17 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
-  $3F : If SbId = $17 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
-  $40 : If SbId = $17 then CurrentChipset := 'SiS 530'; {v1.21}
-  $41 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 540'; {v1.21}
-  $42 : If SbId = $17 then CurrentChipset := 'SiS 600'; {v1.21}
-  $43 : If SbId = $17 then CurrentChipset := 'SiS 620'; {v1.21}
-  $44 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 630'; {v1.21}
-  $45 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 635'; {v1.27}
-  $46 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 640'; {v1.27}
-  $47 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 645'; {v1.27}
-  $48 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 645DX'; {v1.27}
-  $49 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 650'; {v1.27}
-  $4A : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 730'; {v1.27}
-  $4B : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 735'; {v1.27}
-  $4C : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 740'; {v1.27}
-  $4D : If SbId = $1D then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
-  $4E : If SbId = $1D then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
-  $4F : If SbId = $1E then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
-  $50 : If SbId = $1F then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
-  $51 : If SbId = $20 then CurrentChipset := 'OPTi Vendetta 82C750'; {v1.26}
-  $52 : If SbId = $21 then CurrentChipset := 'HiNT VXPro-II (Utron UT85C50x)'; {v1.26}
+  $3A : If SbId = $18 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
+  $3B : If SbId = $18 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
+  $3C : If SbId = $18 then CurrentChipset := 'SiS 5571'; {v1.21}
+  $3D : If SbId = $18 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
+  $3E : If SbId = $18 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
+  $3F : If SbId = $18 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
+  $40 : If SbId = $18 then CurrentChipset := 'SiS 530'; {v1.21}
+  $41 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 540'; {v1.21}
+  $42 : If SbId = $18 then CurrentChipset := 'SiS 600'; {v1.21}
+  $43 : If SbId = $18 then CurrentChipset := 'SiS 620'; {v1.21}
+  $44 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 630'; {v1.21}
+  $45 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 635'; {v1.27}
+  $46 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 640'; {v1.27}
+  $47 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 645'; {v1.27}
+  $48 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 645DX'; {v1.27}
+  $49 : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 650'; {v1.27}
+  $4A : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 730'; {v1.27}
+  $4B : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 735'; {v1.27}
+  $4C : If (SbId = $18) or (SbId = $19) then CurrentChipset := 'SiS 740'; {v1.27}
+  $4D : If SbId = $1E then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
+  $4E : If SbId = $1E then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
+  $4F : If SbId = $1F then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
+  $50 : If SbId = $20 then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
+  $51 : If SbId = $21 then CurrentChipset := 'OPTi Vendetta 82C750'; {v1.26}
+  $52 : If SbId = $22 then CurrentChipset := 'HiNT VXPro-II (Utron UT85C50x)'; {v1.26}
+  $54 : If SbId = $24 then CurrentChipset := 'Micron Copperhead+Coppertail'; {v1.29}
+  $55 : CurrentChipset := 'Cypress 386/486 chipset'; {v1.29}
+  $56 : If SbId = $25 then CurrentChipset := 'Cypress hyperCache'; {v1.29}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -805,13 +846,13 @@ Var
 Mask : LongInt;
 
 Begin
- If ROMEnabled=Map then Exit; {v1.22}
- {AMI FLASH INTERFACE STUFF}
- If AMIUsed then
-  Begin
-   {AMI ROM MAP STUFF}
-   If Map then AMIEnable else AMIDisable;
-  End else
+ if ROMEnabled=Map then Exit; {v1.22}
+
+ if AMIUsed then
+  begin
+    if Map then AMIEnable else AMIDisable;
+    Exit;
+  end;
 
  {Chipset northbridge stuff}
  Case Hi( NorthFunc ) of
@@ -852,7 +893,11 @@ Begin
          if Map then
           begin
             ROMBase:=$FFFF0000;
-            Banked:=True;
+            Flash_Read:=FIMemB_Flash_FinALi;
+            Flash_Write:=FOMemB_Flash_FinALi;
+            Flash_ReadBlock:=MoveLinBlock_From_Flash_D_FinALi;
+            Flash_WriteBlock:=MoveLinBlock_To_Flash_B_FinALi;
+            Flash_Compare:=CompLinBlocks_Flash_FinALi;
             Port[$22]:=$03;
             Port[$23]:=$C5;
 
@@ -907,6 +952,24 @@ Begin
             Port[$23]:=$00;
           end;
         end;
+  $04 : Begin {Contaq/Cypress CY82C599} {v1.29}
+         If Map then
+          Begin
+            Port[$22]:=$12;
+            PIIXReg:=Port[$23];
+            LogWrite('Cypress old method: internal reg $12 = '+_Str(PIIXReg));
+            Port[$22]:=$12;
+            Port[$23]:=PIIXReg and $EF;
+            Port[$22]:=$12;
+            LogWrite('Cypress old method: internal reg $12 changed to '+_Str(Port[$23]));
+          End else
+          Begin
+            Port[$22]:=$12;
+            LogWrite('Cypress old method: restoring internal reg $12 from '+_Str(Port[$23]));
+            Port[$22]:=$12;
+            Port[$23]:=PIIXReg;
+          End;
+        End;
  End;
 
  {Chipset southbridge stuff}
@@ -917,16 +980,48 @@ Begin
            Mask := $00440000;                    {write & 128k enable}
            If ( SouthFunc and 1 ) <> 0 then Mask := Mask or $800000;  {512k enable}
            If ( SouthFunc and 2 ) <> 0 then Mask := Mask or $2000000; {1M enable}
+           If ( SouthFunc and 4 ) <> 0 then Mask := $C00000; {v1.29}
 
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
            LogWrite('Intel method: reg $4C = '+_Str(PIIXReg)); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg or Mask );
            LogWrite('Intel method: reg $4C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C ))); {v1.23}
+           PIIXReg4:=0;
+           if Lo(SouthFunc)=3 then {v1.29}
+            begin
+              PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, 4, $40 ); {v1.29}
+              LogWrite('Intel method: PM Base = '+_Str(PIIXReg2));
+              if PIIXReg2=-1 then
+               begin
+                 PIIXReg4:=1;
+                 SetPCIRegD($00,SouthPos shr 3,3,$40,$6101);
+                 SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) or 1);
+                 LogWrite('Intel method: PM Base set to '+_Str(GetPCIRegD($00,SouthPos shr 3,3,$40)));
+                 PIIXReg3:=Port[$6134] or LongInt(Port[$6135]) shl 8
+                   or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24;
+                 LogWrite('Intel method: GPO status '+_Str(PIIXReg3));
+                 Port[$6135]:=Port[$6135] and $FD;
+                 Port[$6137]:=Port[$6137] and $FB; {Abit BX133-RAID v1.29}
+                 LogWrite('Intel method: GPO changed to '+_Str(Port[$6134] or LongInt(Port[$6135]) shl 8
+                   or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
+               end;
+             end;
           End else
           Begin
            LogWrite('Intel method: restoring reg $4C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
+           if PIIXReg4=1 then {v1.29}
+            begin
+              LogWrite('Intel method: restoring GPO from '+_Str(Port[$6134] or LongInt(Port[$6135]) shl 8
+               or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
+              Port[$6134]:=PIIXReg3 and $FF;
+              Port[$6135]:=PIIXReg3 and $FF00 shr 8;
+              Port[$6136]:=PIIXReg3 and $FF0000 shr 16;
+              Port[$6137]:=PIIXReg3 and $FF000000 shr 24;
+              SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) and $FFFFFFFE);
+              SetPCIRegD($00,SouthPos shr 3,3,$40,PIIXReg2);
+            end;
           End;
         End;
   $02 : Begin {Intel 8xx method} {v1.19}
@@ -955,7 +1050,7 @@ Begin
           End;
         End;
   $03 : Begin {VIA method} {AMD method is the same v1.20}
-         If Lo(SouthFunc)=$10 then {VT8233 method v1.27}
+         If Lo(SouthFunc)=$10 then {VT8233/8235 method v1.27}
           begin
             if Map then
              begin
@@ -1303,6 +1398,19 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
           End;
         End;
+  $15 : Begin {Contaq/Cypress method} {v1.29}
+         If Map then
+          Begin
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+           LogWrite('Cypress method: reg $44 = '+_Str(PIIXReg));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or $E0000000);
+          End else
+          Begin
+           LogWrite('Cypress method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $44 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
+          End;
+        End;
 
  End;
 
@@ -1330,10 +1438,120 @@ Begin
  ROMEnabled:=Map; {v1.22}
 End;
 
+procedure SetPCIFlashAccess;
+var A:Byte;
+    X:LongInt;
+begin
+  A:=$10;
+  repeat
+    X:=GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,A);
+    if X and 7=4 then A:=A+4;
+    if X and 1=0 then A:=A+4;
+  until (X and 1=1) or (A>$28);
+  if A<=$28 then PCIBase:=X shr 2 else PCIBase:=$FFFF;
+  Flash_Read:=Flash_PCI_Read;
+  Flash_Write:=Flash_PCI_Write;
+{  Flash_ReadBlock:=Flash_PCI_ReadBlock;
+  Flash_WriteBlock:=Flash_PCI_WriteBlock;
+  Flash_Compare:=Flash_PCI_Compare;}
+end;
+
+procedure PCIROMEnable(Map: Boolean); {v1.29}
+begin
+  if PCIROMEnabled=Map then Exit;
+  CurrentPCICard:='';
+  if PCIROMBus<>0 then {Configure PCI-to-PCI bridge(s)}
+   begin
+
+   end;
+  with PCIROMs[CurPCIROM] do
+   begin
+    case VenID of
+     $10B7: {3Com}
+      begin
+        CurrentPCICard:='3Com';
+        case DevID of
+         $9001:
+          begin
+            CurrentPCICard:=CurrentPCICard+' EtherLink XL PCI Combo';
+            SetPCIFlashAccess;
+          end;
+        end;
+      end;
+     $121A: {3Dfx}
+      begin
+        CurrentPCICard:='3Dfx';
+        case DevID of
+         $0003: {Banshee}
+          begin
+           CurrentPCICard:=CurrentPCICard+' Banshee';
+           if Map then
+            begin
+              PIIXReg:=GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14);
+              SetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14,PIIXReg or $10);
+            end
+           else
+            begin
+              SetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14,PIIXReg);
+            end;
+          end;
+        end;
+      end;
+     $13F0: {Sundance Technology}
+      begin
+        CurrentPCICard:='Sundance Technology';
+        case DevID of
+         $0201:
+          begin
+            CurrentPCICard:=CurrentPCICard+'ST201';
+            SetPCIFlashAccess;
+          end;
+        end;
+      end;
+    end;
+   end;
+  if CurrentPCICard='' then CurrentPCICard:='PCI or AGP card';
+  PCIROMEnabled:=Map;
+end;
+
+function Flash_PCI_Read(Address:LongInt):Byte; {v1.29}
+begin
+  with PCIROMs[CurPCIROM] do
+   begin
+    case VenID of
+     $10B7:begin
+            OPortD(PCIBase+4,Address);
+            Flash_PCI_Read:=Port[PCIBase+8];
+           end;
+     $13F0:begin
+            OPortD(PCIBase+$40,Address);
+            Flash_PCI_Read:=Port[PCIBase+$44];
+           end;
+    end;
+   end;
+end;
+
+procedure Flash_PCI_Write(Address:LongInt;Data:Byte); {v1.29}
+begin
+  with PCIROMs[CurPCIROM] do
+   begin
+    case VenID of
+     $10B7:begin
+            OPortD(PCIBase+4,Address);
+            Port[PCIBase+8]:=Data;
+           end;
+     $13F0:begin
+            OPortD(PCIBase+$40,Address);
+            Port[PCIBase+$44]:=Data;
+           end;
+    end;
+   end;
+end;
+
 begin
  AMIUsed:=False;
  WantToUseAMI :=False;
- ChipsetFound:=false;
+ ChipsetFound:=False;
  ROMEnabled:=False; {v1.22}
  {v1.22 Initialization moved to UNIFLASH.PAS}
 end.

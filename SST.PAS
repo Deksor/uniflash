@@ -8,25 +8,25 @@ Uses Flash, GenFlash, Tools;
 {Unprotect 28x040(A) series}
 Procedure SSTUnprot;
 Begin
- FIMemB( ROMBase + $1823 );
- FIMemB( ROMBase + $1820 );
- FIMemB( ROMBase + $1822 );
- FIMemB( ROMBase + $0418 );
- FIMemB( ROMBase + $041B );
- FIMemB( ROMBase + $0419 );
- FIMemB( ROMBase + $041A );
+ Flash_Read($1823); {v1.29}
+ Flash_Read($1820);
+ Flash_Read($1822);
+ Flash_Read($0418);
+ Flash_Read($041B);
+ Flash_Read($0419);
+ Flash_Read($041A);
 End;
 
 {Protect 28x040(A) series}
 Procedure SSTProt;
 Begin
- FIMemB( ROMBase + $1823 );
- FIMemB( ROMBase + $1820 );
- FIMemB( ROMBase + $1822 );
- FIMemB( ROMBase + $0418 );
- FIMemB( ROMBase + $041B );
- FIMemB( ROMBase + $0419 );
- FIMemB( ROMBase + $040A );
+ Flash_Read($1823);
+ Flash_Read($1820);
+ Flash_Read($1822);
+ Flash_Read($0418);
+ Flash_Read($041B);
+ Flash_Read($0419);
+ Flash_Read($040A);
 End;
 
 Procedure SSTSecProg( Pos, Data : LongInt ); Far; {for 28x040(A) series}
@@ -39,24 +39,24 @@ Begin
  {Unprotect chip}
  SSTUnprot;
  {Erase the sector}
- FOMemB( ROMBase, $20 ); {Erase sector setup}
- FOMemB( Pos, $D0 );   {Erase sector containing address Pos}
+ Flash_Write(0,$20);     {Erase sector setup}
+ Flash_Write(Pos,$D0);   {Erase sector containing address Pos}
  Repeat
-  X := FiMemB( Pos + 127 );    {Read last byte written}
+  X:=Flash_Read(Pos+127);    {Read last byte written}
  Until ( ( X and $A0 ) <> 0 );
  If ( ( X and $A0 ) <> $80 ) then
   Begin
    FlashError := 3; {erasing error}
-   FOMemB( ROMBase, $FF ); {reset}
+   Flash_Write(0,$FF); {reset}
    SSTProt;
    Exit;
   End;
  {Erase verify}
  For X := 0 to {255}CurCInfo.PgSize - 1 do {v1.21 PgSize}
-  If FIMemB( Pos + X ) <> $FF then
+  If Flash_Read(Pos+X)<>$FF then
    Begin
     FlashError := 3; {erasing error}
-    FOMemB( ROMBase, $FF ); {reset}
+    Flash_Write(0,$FF); {reset}
     SSTProt;
     Exit;
    End;
@@ -66,19 +66,19 @@ Begin
    Attempt := 0;
    Repeat
     Ld := FIMemB( Data + X );
-    FOMemB( ROMBase, $10 ); {program setup}
-    FOMemB( Pos + X, Ld );    {program data byte}
+    Flash_Write(0,$10);       {program setup}
+    Flash_Write(Pos+X,Ld);    {program data byte}
     Ld := Ld and $80;
     Repeat
-     Y := FiMemB( Pos + X );    {Read last byte written}
+     Y:=Flash_Read(Pos+X);    {Read last byte written}
     Until ( ( Y and $80 ) = Ld ) or ( ( Y and $20 ) <> 0 );
-    Y := FiMemB( Pos + X );    {Read last byte written}
+    Y:=Flash_Read(Pos+X);    {Read last byte written}
     Inc( Attempt );
    Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
    If ( ( X and $A0 ) <> Ld ) then
     Begin
      FlashError := 2; {programming error, timeout}
-     FOMemB( ROMBase, $FF ); {reset}
+     Flash_Write(0,$FF); {reset}
      SSTProt;
      Exit;
     End;
@@ -98,13 +98,13 @@ Begin
  Attempt := 0;
  Repeat
   FlashCmd( $80 );      {Erase setup}
-  FOMemB( ROMBase + $5555, $AA );
-  FOMemB( ROMBase + $2AAA, $55 );
-  FOMemB( Pos, $20 ); {Erase sector containing address Pos}
+  Flash_Write($5555,$AA);
+  Flash_Write($2AAA,$55);
+  Flash_Write(Pos,$20); {Erase sector containing address Pos}
 
   TimeOut := 15;    {80 usec max normally, but waits 150usec to be sure}
   {Wait for erase to start}
-  While ( ( FiMemB( Pos ) and $08 ) = 0 ) and ( TimeOut > 0 ) do
+  While ( (Flash_Read(Pos) and $08 ) = 0 ) and ( TimeOut > 0 ) do
    Begin
     Dec( TimeOut );
     Wait( 10 );
@@ -112,13 +112,13 @@ Begin
 
   {Wait for erase to finish}
   TimeOut := 50; {25ms max normally, but waits 50ms to be sure}
-  While ( ( FiMemB( Pos ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
+  While ( (Flash_Read(Pos) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
    Begin
     Dec( TimeOut );
     Wait( 1000 );
    End;
 
-  X := FiMemB( Pos );
+  X:=Flash_Read(Pos);
   Inc( Attempt );
   FlashCmd( $F0 ); {Reset}
  Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
@@ -129,28 +129,32 @@ End;
 Procedure SSTSecProgFWH( Pos, Data : LongInt ); Far; {49LF003A/4A/8A} {v1.26}
 begin
   {Unprotect}
-  FOMemB((Pos and $FFBF0000)+2,FIMemB((Pos and $FFBF0000)+2) and $FE);
+  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $FC);
   AMDSecProg(Pos,Data);
   {Protect}
-  FOMemB((Pos and $FFBF0000)+2,FIMemB((Pos and $FFBF0000)+2) or $01);
+  FOMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(Pos and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
 end;
 
 Procedure SSTSecEraseFWH( SAddr: LongInt ); Far; {49LF003A/4A/8A} {v1.26}
 begin
   {Unprotect}
-  FOMemB((SAddr and $FFBF0000)+2,FIMemB((SAddr and $FFBF0000)+2) and $FE);
+  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) and $FC);
   AMDSecErase(SAddr);
   {Protect}
-  FOMemB((SAddr and $FFBF0000)+2,FIMemB((SAddr and $FFBF0000)+2) or $01);
+  FOMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10,
+   FIMemB(SAddr and $FFFF0000+$FFC00002-CurCInfo.Size shl 10) or $01);
 end;
 
 Procedure SSTSecProgFWH2( Pos, Data : LongInt ); Far; {49LF002A} {v1.26}
 var X:LongInt;
 begin
-  X:=(Pos and $FFBF8000)+2;
-  if ((Pos-ROMBase)>=$38000) and ((Pos-ROMBase)<$3C000) then X:=((Pos-$4000) and $FFBF8000)+2;
+  X:=Pos and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
+  if (Pos>=$38000) and (Pos<$3C000) then X:=(Pos-$4000) and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
   {Unprotect}
-  FOMemB(X,FIMemB(X) and $FE);
+  FOMemB(X,FIMemB(X) and $FC);
   AMDSecProg(Pos,Data);
   {Protect}
   FOMemB(X,FIMemB(X) or $01);
@@ -159,10 +163,10 @@ end;
 Procedure SSTSecEraseFWH2( SAddr: LongInt ); Far; {49LF002A} {v1.26}
 var X:LongInt;
 begin
-  X:=(SAddr and $FFBF8000)+2;
-  if ((SAddr-ROMBase)>=$38000) and ((SAddr-ROMBase)<$3C000) then X:=((SAddr-$4000) and $FFBF8000)+2;
+  X:=SAddr and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
+  if (SAddr>=$38000) and (SAddr<$3C000) then X:=(SAddr-$4000) and $FFFF8000+$FFC00002-CurCInfo.Size shl 10;
   {Unprotect}
-  FOMemB(X,FIMemB(X) and $FE);
+  FOMemB(X,FIMemB(X) and $FC);
   AMDSecErase(SAddr);
   {Protect}
   FOMemB(X,FIMemB(X) or $01);
@@ -415,7 +419,7 @@ Begin
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
            Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 256;  {128 x 4k}
+           Sectors[ 0, 0 ] := 256;  {256 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 1024;
            Name := ConstPtr( '49LF008/3.3V (Firmware Hub)' );
@@ -425,7 +429,7 @@ Begin
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := SSTSecProgFWH;
            Erase := SSTSecEraseFWH;
-           Sectors[ 0, 0 ] := 256;  {128 x 4k}
+           Sectors[ 0, 0 ] := 256;  {256 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 1024;
            Name := ConstPtr( '49LF008A/3.3V (Firmware Hub)' );

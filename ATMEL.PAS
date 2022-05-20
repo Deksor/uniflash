@@ -9,7 +9,7 @@ Procedure AtBulkErase( SAddr : LongInt ); Far;
 Begin
  FlashCmd( $80 );
  FlashCmd( $10 );
- Repeat Until ( FIMemB( ROMBase ) and $80 ) <> 0;
+ Repeat Until ( Flash_Read(0) and $80 ) <> 0; {v1.29}
 End;
 
 Procedure AtByteProg( Pos, Data : LongInt ); Far;
@@ -22,8 +22,8 @@ Begin
   Begin
    FlashCmd( $A0 );
    D := FIMemB( Data + X );
-   FOMemB( Pos + X, D );
-   Repeat Until ( FIMemB( Pos + X ) and $80 ) = ( D and $80 );
+   Flash_Write(Pos+X,D); {v1.29}
+   Repeat Until ( Flash_Read(Pos+X) and $80 ) = ( D and $80 );
   End;
 End;
 
@@ -36,14 +36,14 @@ Begin
  Attempt := 0;
  Repeat
   FlashCmd( $A0 ); {v1.28}
-  MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
+  Flash_WriteBlock(Data,Pos,CurCInfo.PgSize);
   Wait( 10000 );  {Wait 10ms} {v1.22 750us->10ms}
 
   Ld := FiMemB( Data + 127 ) and $80; {Last data byte, bit 7}
   Repeat
-   X := FiMemB( Pos + 127 );    {Read last byte written}
+   X := Flash_Read(Pos+127);    {Read last byte written}
   Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-  X := FiMemB( Pos + 127 );    {Read last byte written}
+  X := Flash_Read(Pos+127);    {Read last byte written}
   Inc( Attempt );
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}

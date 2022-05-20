@@ -24,12 +24,11 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.28';
+Version    = '1.29';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
 Mono       : Boolean = False; {v1.27}
-Banked     : Boolean = False; {v1.28}
 FirstBank  : Boolean = True;  {v1.28}
 var Wait:WaitProc;
 
@@ -60,10 +59,7 @@ Procedure RunMenu( Menu : PMenuItem );
 Procedure WrtProgressBar( Msg : String );
 Procedure ClearProgressBar;
 Procedure Beep( Hz, Ms : Word );
-{Procedure Wait( MiSec : LongInt );}
 function zero2str(s,o : word) : string;
-{procedure cwriteln(c1,c2 : byte; s1,s2 : string);
-procedure cwrite(c1,c2 : byte; s1,s2 : string);}
 function strcomp(s1,s2 : string; b : byte) : boolean;
 procedure ClrKbBuf; {v1.27}
 function _ReadKey:Char; {v1.23}
@@ -105,23 +101,6 @@ End;
 
 Function FIMemB( Addr : LongInt ) : Byte; Assembler;
 Asm
- CMP    Banked,1                       {v1.28}
- JNE    @Finish
- DB     66h
- MOV    BX,WORD PTR Addr               {MOV EBX,Addr}
- DB     66h
- CMP    BX,0FFFFh                      {CMP EBX,0FFFFh}
- DW     0000h
- JBE    @Bank2
- DB     66h,81h,0FBh,00h,00h,0FFh,0FFh {CMP EBX,0FFFF0000h}
- JB     @Finish
- JMP    @BankFinish
-@Bank2:
- DB     66h,81h,0C3h,00h,00h,0FFh,0FFh {ADD EBX,0FFFF0000h}
-@BankFinish:
- DB     66h
- MOV    WORD PTR Addr,BX               {MOV Addr,EBX}
-@Finish:
  XOR    AX,AX
  MOV    ES,AX
  DB     66H
@@ -140,25 +119,6 @@ End;
 
 Procedure FOMemB( Addr : LongInt; Data : Byte ); Assembler;
 Asm
- CMP    Banked,1                       {v1.28}
- JNE    @Finish
- DB     66h
- MOV    BX,WORD PTR Addr               {MOV EBX,Addr}
- DB     66h
- CMP    BX,0FFFFh                      {CMP EBX,0FFFFh}
- DW     0000h
- JBE    @Bank2
- DB     66h,81h,0FBh,00h,00h,0FFh,0FFh {CMP EBX,0FFFF0000h}
- JB     @Finish
- JMP    @BankFinish
-@Bank2:
- DB     66h,81h,0C3h,00h,00h,0Fh,00h   {ADD EBX,0F0000h}
-@BankFinish:
- DB     66h
- AND    BX,0FFFFh                      {AND EBX,0FFFFFh}
- DB     0Fh,00h,66h
- MOV    WORD PTR Addr,BX               {MOV Addr,EBX}
-@Finish:
  XOR    AX,AX
  MOV    ES,AX
  DB     66H
@@ -562,25 +522,6 @@ End;
 
 Procedure MoveLinBlockB( Src, Dest, Size : LongInt ); Assembler;
 Asm
- CMP    Banked,1                       {v1.28}
- JNE    @Finish
- DB     66h
- MOV    BX,WORD PTR Dest               {MOV EBX,Dest}
- DB     66h
- CMP    BX,0FFFFh                      {CMP EBX,0FFFFh}
- DW     0000h
- JBE    @Bank2
- DB     66h,81h,0FBh,00h,00h,0FFh,0FFh {CMP EBX,0FFFF0000h}
- JB     @Finish
- JMP    @BankFinish
-@Bank2:
- DB     66h,81h,0C3h,00h,00h,0Fh,00h   {ADD EBX,0F0000h}
-@BankFinish:
- DB     66h
- AND    BX,0FFFFh                      {AND EBX,0FFFFFh}
- DB     0Fh,00h,66h
- MOV    WORD PTR Dest,BX               {MOV Dest,EBX}
-@Finish:
  XOR    AX,AX
  MOV    ES,AX
  DB     66H
@@ -923,6 +864,12 @@ End;
 {High precision (usec) delay}
 Procedure OldWait( MiSec : LongInt ); Assembler;
 Asm
+(*  DB  66H
+  MOV CX,WORD PTR MiSec
+  MOV DX,0EDh
+  XOR AL,AL
+@1:OUT DX,AL
+  LOOP @1*)
         DB      66H
         XOR     BX,BX
         DB      66H
@@ -957,22 +904,6 @@ while (mem[s:o+i]<>0) and (i<255) do
 outstr[0]:=#0;
 zero2str:=outstr;
 end;
-
-{procedure cwriteln(c1,c2 : byte; s1,s2 : string);
-begin
-textcolor(c1);
-write(s1);
-textcolor(c2);
-writeln(s2);
-end;
-
-procedure cwrite(c1,c2 : byte; s1,s2 : string);
-begin
-textcolor(c1);
-write(s1);
-textcolor(c2);
-write(s2);
-end;}
 
 function Time:String; {v1.23}
 var Hour,Min,Sec,Sec100:Word;

@@ -1,6 +1,4 @@
 Unit Catalyst; { Unit to communicate with Catalyst chips }
-{v1.21 CAT28F150: !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
-{v1.21 CAT29F002: !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
 
 {NOTE: Catalyst is an officially licensed 2nd source for Intel     }
 {      flash chips. Most of the chips in this unit are essentially }
@@ -19,7 +17,7 @@ Begin
  With CInfo do
   Begin
    Case DevId of
-    $04 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
+    $84 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProg;
@@ -35,7 +33,7 @@ Begin
            Size := 192;
            Name := ConstPtr( 'CAT28F150T/12V' );
           End;
-    $85 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!} {05}
+    $85 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProg;
@@ -79,8 +77,7 @@ Begin
            Size := 128;
            Name := ConstPtr( 'CAT28F001B/12V' );
           End;
-    $B0 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!} {30}
-           {similar to AMD}
+    $B0 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -94,10 +91,9 @@ Begin
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
            Size := 256;
-           Name := ConstPtr( 'CAT29F002T/5V' );
+           Name := ConstPtr( 'CAT29F(N)002T/5V' );
           End;
-    $34 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
-           {similar to AMD}
+    $34 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -111,7 +107,7 @@ Begin
            Sectors[ 3, 0 ] := 3;  {3 x 64k}
            Sectors[ 3, 1 ] := 512;
            Size := 256;
-           Name := ConstPtr( 'CAT29F002B/5V' );
+           Name := ConstPtr( 'CAT29F(N)002B/5V' );
           End;
     $7C : Begin
            Flags  := 0;   {sector mode}
@@ -153,6 +149,22 @@ Begin
            Size := 128;
            Name := ConstPtr( 'CAT28F010/12V' );
           End;
+    $B1 : Begin {v1.29} {!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALIGN}
+           Flags  := 6;   {bulk erase, need blanking}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDFlashWrite;
+           Erase := AMDFlashErase;
+           Size := 192;
+           Name := ConstPtr( 'CAT28F015T/12V' );
+          End;
+    $B2 : Begin {v1.29} {!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALIGN}
+           Flags  := 6;   {bulk erase, need blanking}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDFlashWrite;
+           Erase := AMDFlashErase;
+           Size := 192;
+           Name := ConstPtr( 'CAT28F015B/12V' );
+          End;
     $BD : Begin {v1.21}
            Flags  := 6;   {bulk erase, need blanking}
            PgSize := 128; {'page' size, program 128 bytes at a time}
@@ -161,14 +173,6 @@ Begin
            Size := 256;
            Name := ConstPtr( 'CAT28F020/12V' );
           End;
-(*    $51 : Begin {v1.21} {v1.24 16-bit removed}
-           Flags  := 6;   {bulk erase, need blanking}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDFlashWriteW;
-           Erase := AMDFlashEraseW;
-           Size := 128;
-           Name := ConstPtr( 'CAT28F102/12V' );
-          End;*)
     $B8 : Begin {v1.21}
            Flags  := 6;   {bulk erase, need blanking}
            PgSize := 128; {'page' size, program 128 bytes at a time}

@@ -1,6 +1,7 @@
 Unit Flash;
 
 Interface
+uses Tools; {v1.29}
 
 Type
 Fl_Erase   = Procedure( SAddr : LongInt );
@@ -26,6 +27,27 @@ Fl_Manuf   = Record
               Manuf  : Byte;
              End;
 
+Var
+Man1, Dev1,
+Man2, Dev2 : Byte;
+CurCInfo   : ChipInfo;
+ROMBase    : LongInt;
+
+function  FIMemB_Flash(Addr:LongInt):Byte; {v1.29}
+function  FIMemB_Flash_FinALi(Addr:LongInt):Byte; {v1.29}
+procedure FOMemB_Flash(Addr:LongInt;Data:Byte); {v1.29}
+procedure FOMemB_Flash_FinALi(Addr:LongInt;Data:Byte); {v1.29}
+procedure MoveLinBlock_From_Flash_D(Src,Dest,Size:LongInt); {v1.29}
+procedure MoveLinBlock_From_Flash_D_FinALi(Src,Dest,Size:LongInt); {v1.29}
+procedure MoveLinBlock_To_Flash_B(Src,Dest,Size:LongInt); {v1.29}
+procedure MoveLinBlock_To_Flash_B_FinALi(Src,Dest,Size:LongInt); {v1.29}
+function  CompLinBlocks_Flash(Block1,Block2,Size:LongInt):Boolean; {v1.29}
+function  CompLinBlocks_Flash_FinALi(Block1,Block2,Size:LongInt):Boolean; {v1.29}
+Procedure FlashCmd( Cmd : Byte );
+Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
+Function  FlashDetect : PChipInfo;
+Procedure FlashProgram( Pos, Data : LongInt );
+Procedure FlashErase( Pos : LongInt );
 
 Const
 On         = True;
@@ -34,29 +56,118 @@ FlashError : Word = 0;
 ManuRoot   : PFl_Manuf = Nil;
 ManuTail   : PFl_Manuf = Nil;
 CurManuf   : PFl_Manuf = Nil;
-
-
-Var
-Man1, Dev1,
-Man2, Dev2 : Byte;
-CurCInfo   : ChipInfo;
-ROMBase    : LongInt;
-
-Procedure FlashCmd( Cmd : Byte );
-Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
-Function FlashDetect : PChipInfo;
-Procedure FlashProgram( Pos, Data : LongInt );
-Procedure FlashErase( Pos : LongInt );
+Flash_Read : function(Address:LongInt):Byte=FIMemB_Flash; {v1.29}
+Flash_Write: procedure(Address:LongInt;Data:Byte)=FOMemB_Flash; {v1.29}
+Flash_ReadBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_From_Flash_D; {v1.29}
+Flash_WriteBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_To_Flash_B; {v1.29}
+Flash_Compare: function(MemAddr,FlashAddr,Size:LongInt):Boolean=CompLinBlocks_Flash; {v1.29}
 
 Implementation
 
-Uses Crt, Tools;
+Uses Crt, PCI;
+
+function FIMemB_Flash(Addr:LongInt):Byte; {v1.29}
+begin
+ FIMemB_Flash:=FIMemB(ROMBase+Addr);
+end;
+
+function FIMemB_Flash_FinALi(Addr:LongInt):Byte; {v1.29}
+begin
+  if Addr<$10000 then SetBank(1) else SetBank(2);
+  FIMemB_Flash_FinALi:=FIMemB(ROMBase+Addr-Byte(Addr>=$10000)*$10000);
+end;
+
+procedure FOMemB_Flash(Addr:LongInt;Data:Byte); {v1.29}
+begin
+ FOMemB(ROMBase+Addr,Data);
+end;
+
+procedure FOMemB_Flash_FinALi(Addr:LongInt;Data:Byte); {v1.29}
+begin
+  if Addr<$10000 then SetBank(1) else SetBank(2);
+  FOMemB($F0000+Addr-Byte(Addr>=$10000)*$10000,Data);
+end;
+
+procedure MoveLinBlock_From_Flash_D(Src,Dest,Size:LongInt); {v1.29}
+begin
+ MoveLinBlockD(ROMBase+Src,Dest,Size);
+end;
+
+procedure MoveLinBlock_From_Flash_D_FinALi(Src,Dest,Size:LongInt); {v1.29}
+var FirstBlock:LongInt;
+begin
+ FirstBlock:=0;
+ if Src<$10000 then
+  begin
+    SetBank(1);
+    if Size+Src>=$10000 then FirstBlock:=$10000-Src else FirstBlock:=Size;
+    MoveLinBlockD(ROMBase+Src,Dest,FirstBlock);
+  end;
+ if Src+Size>=$10000 then
+  begin
+    SetBank(2);
+    if Src<$10000 then MoveLinBlockD(ROMBase,Dest+FirstBlock,Size-FirstBlock)
+     else MoveLinBlockD(ROMBase+Src-$10000,Dest+FirstBlock,Size);
+  end;
+end;
+
+procedure MoveLinBlock_To_Flash_B(Src,Dest,Size:LongInt); {v1.29}
+begin
+ MoveLinBlockB(Src,ROMBase+Dest,Size);
+end;
+
+procedure MoveLinBlock_To_Flash_B_FinALi(Src,Dest,Size:LongInt); {v1.29}
+var FirstBlock:LongInt;
+begin
+ FirstBlock:=0;
+ if Dest<$10000 then
+  begin
+    SetBank(1);
+    if Size+Dest>=$10000 then FirstBlock:=$10000-Dest else FirstBlock:=Size;
+    MoveLinBlockB(Src,$F0000+Dest,FirstBlock);
+  end;
+ if Dest+Size>=$10000 then
+  begin
+    SetBank(2);
+    if Dest<$10000 then MoveLinBlockB(Src+FirstBlock,$F0000,Size-FirstBlock)
+     else MoveLinBlockD(Src,$F0000+Dest-$10000,Size);
+  end;
+end;
+
+function CompLinBlocks_Flash(Block1,Block2,Size:LongInt):Boolean; {v1.29}
+begin
+ CompLinBlocks_Flash:=CompLinBlocks(ROMBase+Block1,Block2,Size);
+end;
+
+function CompLinBlocks_Flash_FinALi(Block1,Block2,Size:LongInt):Boolean; {v1.29}
+var OK:Boolean;
+    FirstBlock:LongInt;
+begin
+ OK:=True;
+ FirstBlock:=0;
+ if Block1<$10000 then
+  begin
+    SetBank(1);
+    if Size+Block1>=$10000 then FirstBlock:=$10000-Block1 else FirstBlock:=Size;
+    if not CompLinBlocks(ROMBase+Block1,Block2,FirstBlock) then OK:=False;
+  end;
+ if (Block1+Size>=$10000) and OK then
+  begin
+    SetBank(2);
+    if Block1<$10000 then
+     begin
+       if not CompLinBlocks(ROMBase,Block2+FirstBlock,Size-FirstBlock) then OK:=False;
+     end
+     else if not CompLinBlocks(ROMBase+Block1-$10000,Block2+FirstBlock,Size) then OK:=False;
+  end;
+ CompLinBlocks_Flash_FinALi:=OK;
+end;
 
 Procedure FlashCmd( Cmd : Byte );
 Begin
- FOMemB( ROMBase + $5555, $AA );
- FOMemB( ROMBase + $2AAA, $55 );
- FOMemB( ROMBase + $5555, Cmd );
+ Flash_Write($5555,$AA); {v1.29}
+ Flash_Write($2AAA,$55);
+ Flash_Write($5555,Cmd);
 End;
 
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
@@ -122,10 +233,10 @@ ROMFound        : Boolean;
   Begin
     FlashCmd( $F0 ); {v1.28}
     Wait(1000); {v1.28}
-    FOMemB( ROMBase, $FF );
-    FOMemB( ROMBase, $FF );
+    Flash_Write(0,$FF);
+    Flash_Write(0,$FF);
     Wait(1000); {v1.28}
-    FOMemB( ROMBase, $00 );
+    Flash_Write(0,0);
     Wait(1000); {v1.28}
     FlashCmd( $F0 );
     Wait(1000); {v1.28}
@@ -141,22 +252,22 @@ ROMFound        : Boolean;
     Done := False;
 
     repeat
-     M0:=FIMemB(ROMBase);
-     D0:=FIMemB(ROMBase+1);
+     M0:=Flash_Read(0);
+     D0:=Flash_Read(1);
      asm CLI end;
      SendIdCmd;
      {Get mfg. code}
-     M := FIMemB( ROMBase );
-     if M = $7F then M := FIMemB( ROMBase + $100 ); {Mfg. ID for EON}
-     if (M=$7F) and (FIMemB(ROMBase+$3)=$1F) then M:=$7F; {Mfg. ID for IMT}
+     M := Flash_Read(0);
+     if M = $7F then M := Flash_Read($100); {Mfg. ID for EON}
+     if (M=$7F) and (Flash_Read(3)=$1F) then M:=$7F; {Mfg. ID for IMT}
      if M=$C2 then {v1.28 fix Macronix }
       begin
         ResetROM;
         SendIdCmd;
       end;
      {Get dev. code}
-     D := FIMemB( ROMBase + 1 );
-     if D = $7F then D := FIMemB( ROMBase + $101 ); {Dev. ID for EON}
+     D := Flash_Read(1);
+     if D = $7F then D := Flash_Read($101); {Dev. ID for EON}
      ResetROM;
      asm STI end;
 
@@ -234,15 +345,15 @@ Begin
 End;
 
 Procedure FlashProgram( Pos, Data : LongInt );
-Var
-SaveRB : LongInt;
+{Var
+SaveRB : LongInt;}
 
 Begin
  FlashError := 0;
  If CurManuf <> Nil then
   Begin
-   SaveRB := ROMBase;  {Save ROMBase}
-(*   With CurCInfo do
+(*   SaveRB := ROMBase;  {Save ROMBase}
+   With CurCInfo do
    If Count > 1 then
     Begin
      {Make ROMBase point to single chip we need}
@@ -250,43 +361,23 @@ Begin
                 ( LongInt( Size div Count ) shl 10 ) *
                 ( ( Pos - ROMBase ) div ( LongInt( Size div Count ) shl 10 ) );
     End;*)
-   if Banked then {v1.28}
-    begin
-      if (Pos>=0) and (Pos<LongInt(CurCInfo.Size)*512) then
-       begin
-         SetBank(2);
-         Asm CLI End;
-         CurCInfo.Progr( ROMBase+Pos, Data );
-         Asm STI End;
-       end
-      else
-       begin
-         SetBank(1);
-         Asm CLI End;
-         CurCInfo.Progr( Pos, Data );
-         Asm STI End;
-       end;
-    end
-   else
-    begin
-      Asm CLI End;
-      CurCInfo.Progr( Pos, Data );
-      Asm STI End;
-    end;
-   ROMBase := SaveRB; {Restore ROMBase}
+   Asm CLI End;
+   CurCInfo.Progr( Pos, Data );
+   Asm STI End;
+(*   ROMBase := SaveRB; {Restore ROMBase}*)
   End;
 End;
 
 Procedure FlashErase( Pos : LongInt );
-Var
-SaveRB : LongInt;
+{Var
+SaveRB : LongInt;}
 
 Begin
  If ( CurManuf <> Nil ) and ( @CurCInfo.Erase <> Nil ) then
   Begin
    FlashError := 0;
-   SaveRB := ROMBase;  {Save ROMBase}
-(*   With CurCInfo do
+(*   SaveRB := ROMBase;  {Save ROMBase}
+   With CurCInfo do
    If Count > 1 then
     Begin
      {Make ROMBase point to single chip we need}
@@ -294,30 +385,10 @@ Begin
                 ( LongInt( Size div Count ) shl 10 ) *
                 ( ( Pos - ROMBase ) div ( LongInt( Size div Count ) shl 10 ) );
     End;*)
-   if Banked then {v1.28}
-    begin
-      if (Pos>=0) and (Pos<LongInt(CurCInfo.Size)*512) then
-       begin
-         SetBank(2);
-         Asm CLI End;
-         CurCInfo.Erase( ROMBase+Pos );
-         Asm STI End;
-       end
-      else
-       begin
-         SetBank(1);
-         Asm CLI End;
-         CurCInfo.Erase( Pos );
-         Asm STI End;
-       end;
-    end
-   else
-    begin
-      Asm CLI End;
-      CurCInfo.Erase( Pos );
-      Asm STI End;
-    end;
-   ROMBase := SaveRB; {Restore ROMBase}
+   Asm CLI End;
+   CurCInfo.Erase( Pos );
+   Asm STI End;
+(*   ROMBase := SaveRB; {Restore ROMBase}*)
   End;
 End;
 

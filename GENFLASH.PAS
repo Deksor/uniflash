@@ -1,4 +1,5 @@
 Unit GenFlash;
+{v1.29 - Flash_Read, Flash_Write}
 
 Interface
 {v1.24 16-bit removed}
@@ -27,13 +28,13 @@ Begin
  Attempt := 0;
  Repeat
   FlashCmd( $A0 );
-  MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
+  Flash_WriteBlock(Data,Pos,CurCInfo.PgSize);
   Wait( 5000 {300});  {Wait 5ms} {v1.22 300us->5ms}
 
-  Ld := FiMemB( Data + {127}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
+  Ld := FiMemB( Data + CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
   TimeOut := 1000;
   Repeat
-   X := FiMemB( Pos + {127}CurCInfo.PgSize - 1 );    {Read last byte written}
+   X:=Flash_Read(Pos+CurCInfo.PgSize-1); {Read last byte written}
    Wait( 50 );
    Dec( TimeOut );
   Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 ) or ( TimeOut<1 );
@@ -42,7 +43,7 @@ Begin
      FlashError := 2;
      Exit;
    End;
-  X := FiMemB( Pos + {127}CurCInfo.PgSize - 1 );    {Read last byte written}
+  X:=Flash_Read(Pos+CurCInfo.PgSize-1); {Read last byte written}
   Inc( Attempt );
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
@@ -50,9 +51,8 @@ End;
 
 Procedure IntelResetB;
 Begin
- {Reset}
- FOMemB( ROMBase, $FF );
- FOMemB( ROMBase, $FF );
+ Flash_Write(0,$FF);
+ Flash_Write(0,$FF);
 End;
 
 Procedure IntelSecProg( Pos, Data : LongInt );
@@ -71,15 +71,15 @@ Begin
    If Ld <> $FF then
     Begin
      Repeat
-      FOMemB( Pos + Y, $40 );  {Write setup}
-      FOMemB( Pos + Y, Ld );   {Write data}
+      Flash_Write(Pos+Y,$40);    {Write setup}
+      Flash_Write(Pos+Y,Ld);     {Write data}
       {Wait for programming to finish}
       Repeat
-       X := FiMemB( Pos + Y );
+       X:=Flash_Read(Pos+Y);
       Until ( ( X and $80 ) <> 0 );
       Inc( Attempt );
-      X := FiMemB( Pos + Y );
-      FOMemB( Pos + Y, $50 );  {Clear status}
+      X := Flash_Read(Pos+Y);
+      Flash_Write(Pos+Y,$50);    {Clear status}
      Until ( Attempt > 3 ) or  ( ( X and $98 ) = $80 );
      If ( ( X and $98 ) <> $80 ) then
       Begin
@@ -100,15 +100,15 @@ X        : Byte;
 Begin
  Attempt := 0;
  Repeat
-  FOMemB( SAddr, $20 ); {Erase setup}
-  FOMemB( SAddr, $D0 ); {Erase confirm}
+  Flash_Write(SAddr,$20); {Erase setup}
+  Flash_Write(SAddr,$D0); {Erase confirm}
   {Wait for erase to finish}
   Repeat
-   X := FiMemB( SAddr );
+   X := Flash_Read(SAddr);
   Until ( ( X and $80 ) <> 0 );
   Inc( Attempt );
-  X := FiMemB( SAddr );
-  FOMemB( SAddr, $50 ); {Clear status}
+  X := Flash_Read(Saddr);
+  Flash_Write(SAddr,$50); {Clear status}
  Until ( Attempt > 3 ) or ( ( X and $B8 ) = $80 );
  If ( X and $B8 ) <> $80 then FlashError := 3; {erasing error}
  IntelResetB;
@@ -128,17 +128,17 @@ Begin
    If Ld <> $FF then
     Begin
      Repeat
-      FlashCmd( $A0 );
-      FOMemB( Pos + Y, Ld );
+      FlashCmd($A0);
+      Flash_Write(Pos+Y,Ld);
 
       TimeOut := 30;   {should take no more than 200usec, we wait 300 max}
-      X := FiMemB( Pos + Y );
+      X := Flash_Read(Pos+Y);
       While ( ( X and $80 ) <> ( Ld and $80 ) ) and
             ( ( X and $20 ) = 0 ) and ( TimeOut > 0 ) do
        Begin
         Dec( TimeOut );
         Wait( 10 );
-        X := FiMemB( Pos + Y );
+        X := Flash_Read(Pos+Y);
        End;
 (*      TimeOut:=30;
       X:=FIMemB(Pos+Y); {v1.24 Toggle bit method}
@@ -149,7 +149,7 @@ Begin
          Dec(TimeOut);
        end;*)
 
-      X := FiMemB( Pos + Y );    {Read last byte written}
+      X := Flash_Read(Pos+Y);    {Read last byte written}
       Inc( Attempt );
 
      Until ( Attempt > 3 ) or  ( ( X and $80 ) = ( Ld and $80 ) );
@@ -169,15 +169,14 @@ Var
 Attempt,
 X        : Byte;
 TimeOut  : Word;
-a:byte;
 
 Begin
  Attempt := 0;
  Repeat
   FlashCmd( $80 );      {Erase setup}
-  FOMemB( ROMBase + $5555, $AA );
-  FOMemB( ROMBase + $2AAA, $55 );
-  FOMemB( SAddr, $30 ); {Erase sector containing address SAddr}
+  Flash_Write($5555,$AA);
+  Flash_Write($2AAA,$55);
+  Flash_Write(SAddr,$30); {Erase sector containing address SAddr}
 
 (*  TimeOut := 15;    {80 usec max normally, but waits 150usec to be sure}
   {Wait for erase to start}
@@ -197,10 +196,10 @@ Begin
     X:=FiMemB(SAddr);
    End;*)
   TimeOut:=25000;
-  X:=FIMemB(SAddr); {v1.24 Toggle bit method}
-  while ((X and $40) <> (FIMemB(SAddr) and $40)) and (TimeOut>0) do
+  X:=Flash_Read(SAddr); {v1.24 Toggle bit method}
+  while ((X and $40) <> (Flash_Read(SAddr) and $40)) and (TimeOut>0) do
    begin
-     X:=FIMemB(SAddr);
+     X:=Flash_Read(SAddr);
      Wait(1000);
      Dec(TimeOut);
    end;
@@ -226,7 +225,7 @@ Begin
 
   TimeOut := 15;    {80 usec max normally, but waits 150usec to be sure}
   {Wait for erase to start}
-  While ( ( FiMemB( SAddr ) and $08 ) = 0 ) and ( TimeOut > 0 ) do
+  While ( (Flash_Read(SAddr) and $08 ) = 0 ) and ( TimeOut > 0 ) do
    Begin
     Dec( TimeOut );
     Wait( 10 );
@@ -234,13 +233,13 @@ Begin
 
   {Wait for erase to finish}
   TimeOut := 40000; {35 sec max normally, but waits 40 sec to be sure}
-  While ( ( FiMemB( SAddr ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
+  While ( (Flash_Read(SAddr) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
    Begin
     Dec( TimeOut );
     Wait( 1000 );
    End;
 
-  X := FiMemB( SAddr );
+  X:=Flash_Read(SAddr);
   Inc( Attempt );
   FlashCmd( $F0 ); {Reset}
  Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
@@ -249,9 +248,9 @@ End;
 
 Procedure AMDEmbdErase( SAddr : LongInt );
 Begin
- FOMemB( ROMBase, $30 );
- FOMemB( ROMBase, $30 );
- Repeat Until ( FIMemB( ROMBase ) and $80 ) <> 0;
+ Flash_Write(0,$30);
+ Flash_Write(0,$30);
+ Repeat Until (Flash_Read(0) and $80 ) <> 0;
 End;
 
 Procedure AMDEmbdWrite( Pos, Data : LongInt );
@@ -267,13 +266,13 @@ Begin
    If Ld <> $FF then
     Begin
      Repeat
-      FOMemB( Pos + Y, $10 );
-      FOMemB( Pos + Y, Ld );
+      Flash_Write(Pos+Y,$10);
+      Flash_Write(Pos+Y,Ld);
       Ld := Ld and $80; {Last data byte, bit 7}
       Repeat
-       X := FiMemB( Pos + Y );    {Read last byte written}
+       X:=Flash_Read(Pos+Y);    {Read last byte written}
       Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-      X := FiMemB( Pos + Y );    {Read last byte written}
+      X:=Flash_Read(Pos+Y);    {Read last byte written}
       Inc( Attempt );
      Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
      If ( ( X and $A0 ) <> Ld ) then
@@ -301,12 +300,12 @@ Begin
    If D <> $FF then
     Begin
      Repeat
-      FOMemB( Pos + Y, $40 );
-      FOMemB( Pos + Y, D );
+      Flash_Write(Pos+Y,$40);
+      Flash_Write(Pos+Y,D);
       Wait( 10 );
-      FOMemB( Pos + Y, $C0 );
+      Flash_Write(Pos+Y,$C0);
       Wait( 6 );
-      X := FIMemB( Pos + Y );
+      X:=Flash_Read(Pos+Y);
       Inc( Attempt );
      Until ( X = D ) or ( Attempt >= 25 );
      If Attempt >= 25 then
@@ -329,14 +328,14 @@ D       : Byte;
 Begin
  Attempt := 0;
  Repeat
-  FOMemB( ROMBase, $20 );
-  FOMemB( ROMBase, $20 );
+  Flash_Write(0,$20);
+  Flash_Write(0,$20);
   Wait( 10000 );
   For Addr := 0 to ( LongInt( CurCInfo.Size ) shl 10 ) - 1 do
    Begin
-    FOMemB( ROMBase + Addr, $A0 );
+    Flash_Write(Addr,$A0);
     Wait( 6 );
-    D := FIMemB( ROMBase + Addr );
+    D:=Flash_Read(Addr);
     If D <> $FF then Break;
    End;
   Inc( Attempt );

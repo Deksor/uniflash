@@ -44,18 +44,18 @@ Begin
  AddMsg( Lid, 31, '-E fname        Flashes bios image from file fname to Flash' );
  AddMsg( Lid, 32, '                ROM without any user intervention' );
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
- AddMsg( Lid, 34, '-PCIOR          Flash PCI option ROM instead of system ROM' );
+ AddMsg( Lid, 34, '-PCIROM         Flash ROM on a PCI card instead of system ROM' ); {v1.29}
  AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Use AMI Flash Interface' ); {v1.24}
  AddMsg( Lid, 37, 'Unable to access memory beyond 1Mb - try using HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Sorry, but either you don''t have a 486+ or CPU is in V86 mode.' );
- AddMsg( Lid, 39, 'Select PCI option ROM from list below:' );
+ AddMsg( Lid, 39, 'Select PCI card from list below:' ); {v1.29}
  AddMsg( Lid, 40, 'Bus ' );
  AddMsg( Lid, 41, ' device ' );
  AddMsg( Lid, 42, ' function ' );
  AddMsg( Lid, 43, '0. Quit' );
  AddMsg( Lid, 44, 'Select: 0' );
- AddMsg( Lid, 45, 'No PCI option ROMs found.' );
+ AddMsg( Lid, 45, 'No PCI card with ROM found.' ); {v1.29}
  AddMsg( Lid, 46, 'Do you want to save this BIOS to a file? ' );
  AddMsg( Lid, 47, 'Name of the file: ' );
  AddMsg( Lid, 48, '            Done.' );
@@ -76,12 +76,13 @@ Begin
  AddMsg( Lid, 63, 'not available' );
  AddMsg( Lid, 64, 'Unable to read file!'#7 ); {v1.28}
  AddMsg( Lid, 65, 'Unable to write file!'#7 ); {v1.28}
+ AddMsg( Lid, 66, '           Selected PCI card: ' ); {v1.29}
 (* AddMsg( Lid, 66, ', Device=' );
  AddMsg( Lid, 67, ' at ' ); *)
  AddMsg( Lid, 68, 'Memory: ' );
  AddMsg( Lid, 69, 'ROM base: ' );
  AddMsg( Lid, 70, ', memory dump at ' );
- AddMsg( Lid, 71, '              Option ROM for: ' );
+{ AddMsg( Lid, 71, '              Option ROM for: ' );}
  AddMsg( Lid, 72, 'device at ' );
  AddMsg( Lid, 73, 'Write ESCD (PnP data) to file' );
  AddMsg( Lid, 74, 'Flash ESCD (PnP data) image to Flash ROM' );
@@ -148,7 +149,7 @@ Begin
  AddMsg( Lid, 132, '-BASE xxxxx     Set ROM Base to address xxxxx (at least 5 hex digits)' ); {v1.28}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
- AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
+ AddMsg( Lid, 135, '-PCIROM must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
  AddMsg( Lid, 136, '-REPAIR         Repair erased chip ID (Winbond and SST chips)'); {v1.28}
  AddMsg( Lid, 137, '-REPAIR must be preceded by -FORCE parameter with correct ID'); {v1.28}
  AddMsg( Lid, 138, 'Only Winbond and SST chips can be repaired'); {v1.28}

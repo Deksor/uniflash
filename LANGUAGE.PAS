@@ -12,7 +12,7 @@ Function GetLangName( LangId : Byte ) : String;
 Implementation
 
 Type
-LangDef = ARRAY[ 1 .. 130 ] of ^String;
+LangDef = ARRAY[ 1 .. 150 ] of ^String; {v1.25 130->150}
 
 Var
 MsgPtrs   : ARRAY[ 1 .. 4 ] of ^LangDef;

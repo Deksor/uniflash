@@ -1,4 +1,4 @@
-Unit English;
+unit English;
 
 Interface
 
@@ -33,13 +33,13 @@ Begin
  AddMsg( Lid, 20, 'FLASH THE BACKUP BIOS IMAGE BACK INTO THE FLASH ROM [Y,N]?' );
  AddMsg( Lid, 21, '         WARNING: YOU WILL LOSE ALL BIOS SETTINGS. PROCEED [Y,N]?' );
  AddMsg( Lid, 22, 'CLEARED ' );
- AddMsg( Lid, 23, ' BYTES OF CMOS RAM.'#7 );
+ AddMsg( Lid, 23, ' BYTES OF CMOS RAM.' );
  AddMsg( Lid, 24, 'ERROR CLEARING CMOS RAM - MAY BE (PARTIALLY) WRITE PROTECTED.'#7 );
  {25 obsolete}
  AddMsg( Lid, 26, 'ERROR WRITING TO CMOS RAM - MAY BE (PARTIALLY) WRITE PROTECTED.'#7 );
  AddMsg( Lid, 27, 'RESTORE BACKUP CMOS DATA [Y,N]?' );
  AddMsg( Lid, 28, ' BYTES OF CMOS RAM WRITTEN.'#7 );
- AddMsg( Lid, 29, 'Missing file name with option -E' );
+ AddMsg( Lid, 29, 'Missing file name with option -' );
  AddMsg( Lid, 30, '-H or -?        Shows this help screen' );
  AddMsg( Lid, 31, '-E fname        Flashes bios image from file fname to Flash' );
  AddMsg( Lid, 32, '                ROM without any user intervention.' );
@@ -144,4 +144,7 @@ Begin
  AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
  AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}
+ AddMsg( Lid, 131, '-CMOSS fname    Save current CMOS settings to file fname' ); {v1.25}
+ AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
+ AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
 End.

@@ -33,13 +33,13 @@ Begin
  AddMsg( Lid, 20, 'RIPRISTINA IL BACKUP DEL BIOS NELLA ROM [S,N]?' );
  AddMsg( Lid, 21, '         ATTENZIONE: TUTTI I SETTAGGI DEL BIOS SARANNO PERSI. CONTINAURE [S,N]?' );
  AddMsg( Lid, 22, 'CANCELLATI ' );
- AddMsg( Lid, 23, ' BYTES DALLA RAM CMOS.'#7 );
+ AddMsg( Lid, 23, ' BYTES DALLA RAM CMOS.' );
  AddMsg( Lid, 24, 'ERRORE CANCELLANDO LA RAM CMOS - POTREBBE ESSERE (IN PARTE) PROTETTA.'#7 );
  {25 obsolete}
  AddMsg( Lid, 26, 'ERRORE DI SCRITTURA NELLA RAM CMOS - POTREBBE ESSERE(IN PARTE) PROTETTA.'#7 );
  AddMsg( Lid, 27, 'RIPRISTINA I DATI CMOS DI BACKUP [S,N]?' );
  AddMsg( Lid, 28, ' BYTES DI RAM CMOS SCRITTI.'#7 );
- AddMsg( Lid, 29, 'Manca il nome del file con l''opzione -E' );
+ AddMsg( Lid, 29, 'Manca il nome del file con l''opzione -' );
  AddMsg( Lid, 30, '-H or -?        Mostra questa schermata' );
  AddMsg( Lid, 31, '-E nomef        Programma il bios con il file nomef nella FLASH' );
  AddMsg( Lid, 32, '                ROM senza intervento dell utente.' );
@@ -144,4 +144,7 @@ Begin
  AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
  AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}
+ AddMsg( Lid, 131, '-CMOSS fname    Save current CMOS settings to file fname' ); {v1.25}
+ AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
+ AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
 End.

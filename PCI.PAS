@@ -82,7 +82,7 @@ End;
 
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $3E ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $42 ] of String[ 24 ] = {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -144,9 +144,13 @@ NbName    : ARRAY[ 1 .. $3E ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
 {3B}          'SiS 540', {v1.21}
 {3C}          'SiS 600', {v1.21}
 {3D}          'SiS 620', {v1.21}
-{3E}          'SiS 630' ); {v1.21}
+{3E}          'SiS 630', {v1.21}
+{3F}          'Reliance NB6635', {v1.25}
+{40}          'Reliance NB6536', {v1.25}
+{41}          'Vesuvius V1-LS', {v1.25}
+{42}          'Geode GX1' ); {v1.25}
 
-SbName    : ARRAY[ 1 .. $1A ] of String[ 21 ] =
+SbName    : ARRAY[ 1 .. $1C ] of String[ 21 ] =
 {1}         ( 'i82378IB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -172,7 +176,9 @@ SbName    : ARRAY[ 1 .. $1A ] of String[ 21 ] =
 {17}          'Winbond W83C553F', {v1.21}
 {18}          'ITE IT8871F/2F', {v1.21}
 {19}          'ITE IT8888F', {v1.21}
-{1A}          'Reliance OSB4'); {v1.24}
+{1A}          'Reliance OSB4', {v1.24}
+{1B}          'Vesuvius V3-LS', {v1.25}
+{1C}          'Geode CS5530(A)'); {v1.25}
 
 Var
 SbId,
@@ -357,7 +363,28 @@ Begin
     $1641: NbId := $2E; {M1641} {v1.24}
     $1647: NbId := $2F; {M1647} {v1.24}
    End;
+  End else
+ If NorthMan = $1166 {Reliance/ServerWorks} then {v1.25}
+  Begin
+   case NorthId of
+    $0007: NbId := $3F; {NB6635}
+    $0008: NbId := $40; {NB6536}
+   End;
+  End else
+ If NorthMan = $1066 {PicoPower} then {v1.25}
+  Begin
+   case NorthId of
+    $0001: NbId := $41; {Vesuvius V1-LS}
+   End;
+  End else
+ If NorthMan = $1078 {Cyrix} then {v1.25}
+  Begin
+   case NorthId of
+    $0001: NbId := $42; {Geode GX1/Cyrix MediaGX}
+   End;
   End;
+
+
 
  {Id southbridge}
  SbId := 0;  {not recognised yet}
@@ -455,6 +482,20 @@ Begin
    case SouthId of
     $0200 : SbId := $1A; {OSB4}
    End;
+  End else
+ If SouthMan = $1066 {PicoPower} then {v1.25}
+  Begin
+   SouthFunc:=$1000;
+   case SouthId of
+    $0002,$8002 : SbId := $1B; {Vesuvius V3-LS}
+   End;
+  End else
+ If SouthMan = $1078 {PicoPower} then {v1.25}
+  Begin
+   SouthFunc:=$1100;
+   case SouthId of
+    $0100 : SbId := $1C; {Geode CS5530(A)}
+   End;
   End;
 
  {Id chipset as a whole}
@@ -533,6 +574,10 @@ Begin
   $3C : If SbId = $14 then CurrentChipset := 'SiS 600'; {v1.21}
   $3D : If SbId = $14 then CurrentChipset := 'SiS 620'; {v1.21}
   $3E : If (SbId = $14) or (SbId = $15) then CurrentChipset := 'SiS 630'; {v1.21}
+  $3F : If SbId = $1A then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
+  $40 : If SbId = $1A then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
+  $41 : If SbId = $1B then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
+  $42 : If SbId = $1C then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -878,6 +923,39 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 );
            LogWrite('Reliance method: restoring internal reg $C6F from '+_Str(Port[$C6F]));
            Port[$C6F]:=Port[$C6F] and $BF; {Flash write disable}
+          End;
+        End;
+  $10 : Begin {PicoPower method} {v1.25}
+         If Map then
+          Begin
+           Port[$24]:=$03;
+           PIIXReg:=Port[$26];
+           LogWrite('PicoPower method: internal reg $03 = '+_Str(PIIXReg));
+           Port[$24]:=$03;
+           Port[$26]:=PIIXReg or $40; {Flash enable}
+           Port[$24]:=$03;
+           LogWrite('PicoPower method: internal reg $03 changed to '+_Str(Port[$26]));
+          End else
+          Begin
+           Port[$24]:=$03;
+           LogWrite('PicoPower method: restoring internal reg $03 from '+_Str(Port[$26]));
+           Port[$24]:=$03;
+           Port[$26]:=PIIXReg;
+          End;
+        End;
+  $11 : Begin {Cyrix method} {v1.25}
+         If Map then
+          Begin
+           Mask := $00060000; {16MB enable, write enable}
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 );
+           LogWrite('Cyrix method: reg $50 = '+_Str(PIIXReg));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg or Mask );
+           LogWrite('Cyrix method: reg $50 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 )));
+          End else
+          Begin
+           LogWrite('Cyrix method: restoring reg $50 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $50 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg );
           End;
         End;
  End;

@@ -16,8 +16,9 @@ Const
 Emergency   : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
-AutoSave    : Boolean = False;
+SaveBIOS    : Boolean = False;
 ForceId     : Boolean = False;
+CMOS        : Boolean = False;
 
 Var
 M, D,
@@ -44,7 +45,7 @@ Redir       : Boolean; {v1.22}
 SelA, A     : Char;
 IFile       : File;
 CMOSImg,
-CMOSBack    : ARRAY[ $10 .. $7F ] of Byte;
+CMOSBack    : ARRAY[ $0E .. $FF ] of Byte;
 Img,
 PCIReg4,
 PCIReg30,
@@ -419,7 +420,7 @@ IFile : File;
 X     : LongInt;
 
 Begin
- If AutoSave then IName := EMFName else
+ If SaveBIOS then IName := EMFName else
   Begin
    GotoXY( 11, 20 );
    Write( Msg( 6 ) );
@@ -827,36 +828,95 @@ Var
 X, S1, S2 : Byte;
 
 Begin
- GetCMOSSize := 128;
- {Test for 128 bytes extended CMOS RAM}
+ GetCMOSSize:=127;
 
  {Backup values $10 and $50}
- Port[ $70 ] := $10;
- S1 := Port[ $71 ];
- Port[ $70 ] := $50;
- S2 := Port[ $71 ];
- {If they are different then it is definately 128 bytes}
- If S1 <> S2 then Exit;
- {Change $50, read back at $10}
- Port[ $70 ] := $50;
- Port[ $71 ] := S1 xor $55;
- Port[ $70 ] := $10;
- X := Port[ $71 ];
- {Write back old values}
- Port[ $70 ] := $10;
- Port[ $71 ] := S1;
- Port[ $70 ] := $50;
- Port[ $71 ] := S2;
+ Port[$70]:=$10;
+ S1:=Port[$71];
+ Port[$70]:=$50;
+ S2:=Port[$71];
+ if S1=S2 then {If they are different then it is definately 128 bytes}
+  begin
+    {Change $50, read back at $10}
+    Port[$70]:=$50;
+    Port[$71]:=S1 xor $55;
+    Port[$70]:=$10;
+    X:=Port[$71];
+    {Write back old values}
+    Port[$70]:=$10;
+    Port[$71]:=S1;
+    Port[$70]:=$50;
+    Port[$71]:=S2;
 
- {If value read back is same as value written then we only have 64 bytes}
- If ( X = ( S1 xor $55 ) ) then GetCMOSSize := 64;
+    {If value read back is same as value written then we only have 64 bytes}
+    if X=(S1 xor $55) then
+     begin
+       GetCMOSSize:=63;
+       Exit;
+     end;
+  end;
+
+ Port[$70]:=$10;
+ S1:=Port[$71];
+ Port[$72]:=$10;
+ S2:=Port[$73];
+ if S1<>S2 then GetCMOSSize:=255
+ else
+  begin
+    Port[$72]:=$10;
+    Port[$73]:=S1 xor $55;
+    Port[$70]:=$10;
+    if Port[$71]<>(S1 xor $55) then GetCMOSSize:=255;
+    Port[$70]:=$10;
+    Port[$71]:=S1;
+    Port[$72]:=$10;
+    Port[$73]:=S2;
+  end;
 End;
+
+function CMOSClr:Boolean;
+var X,Z:Byte;
+    OK:Boolean;
+begin
+ Z:=CMOSSize;
+ if Z>127 then Z:=127;
+ {Clear it}
+ for X:=$0E to Z do
+  begin
+   Port[$70]:=X;
+   Port[$71]:=$00;
+  end;
+ if CMOSSize>Z then
+  begin
+   for X:=$80 to $FF do
+    begin
+     Port[$72]:=X;
+     Port[$73]:=$00;
+    end;
+  end;
+ {Verify}
+ OK:=True;
+ for X:=$0E to Z do
+  begin
+   Port[$70]:=X;
+   if Port[$71]<>$00 then OK:=False;
+  end;
+ if CMOSSize>Z then
+  for X:=$80 to $FF do
+   begin
+    Port[$72]:=X;
+    if Port[$73]<>$00 then OK:=False;
+   end;
+ if not OK then
+  begin
+   Write(Msg(24));
+   Delay(2000);
+  end;
+ CMOSClr:=OK;
+end;
 
 {Clear CMOS ram area}
 Procedure ClearCMOS; Far;
-Var
-X, Y : Byte;
-
 Begin
  TextColor( 12 );
  GotoXY( 2, 22 );
@@ -866,44 +926,46 @@ Begin
  ClrEol;
  If A = AnswYes then
   Begin
-   {Clear it}
-   For X := $10 to CMOSSize - 1 do
-    Begin
-     Port[ $70 ] := X;
-     Port[ $71 ] := $00;
-    End;
-   {Verify}
-   Y := 0;
-   For X := $10 to CMOSSize - 1 do
-    Begin
-     Port[ $70 ] := X;
-     If Port[ $71 ] <> $00 then Y := 1;
-    End;
-   TextColor( 12 );
-   GotoXY( 11, 22 );
-   If Y = 0 then
-    Begin
-     Write( Msg( 22 ), CMOSSize, Msg( 23 ) );
-     Delay( 1000 );
-    End else
-    Begin
-     Write( Msg( 24 ) );
-     Delay( 2000 );
-    End;
-   GotoXY( 11, 22 );
+   CMOSClr;
+   TextColor(12);
+   GotoXY(11,22);
+   if CMOSClr then
+    begin
+     Write(Msg(22),CMOSSize+1,Msg(23));
+     Delay(1000);
+     LogWrite('CMOS settings cleared');
+    end
+   else LogWrite('Error clearing CMOS settings - may be write protected');
+   GotoXY(11,22);
    ClrEol;
    SetMenuItemStatus( MainMenu, 4, True );
   End;
- LogWrite('CMOS settings cleared'); {v1.23}
 End;
 
+procedure CMOSWrite(var IFile:file); {v1.25}
+var X,Z:Byte;
+begin
+ Z:=CMOSSize;
+ if Z>127 then Z:=127;
+ for X:=$0E to Z do
+  begin
+   Port[$70]:=X;
+   CMOSImg[X]:=Port[$71];
+  end;
+ if CMOSSize>Z then
+  for X:=$80 to $FF do
+   begin
+    Port[$72]:=X;
+    CMOSImg[X]:=Port[$73];
+   end;
+ BlockWrite(IFile,CMOSImg,CMOSSize-$0D);
+end;
 
 {Write CMOS data to disk}
 Procedure SaveCMOS; Far;
 Var
 IName : String;
 IFile : File;
-X     : Byte;
 
 Begin
  GotoXY( 11, 20 );
@@ -920,24 +982,56 @@ Begin
    ClrEol;
    Exit;
   End;
- For X := $10 to CMOSSize - 1 do
-  Begin
-   Port[ $70 ] := X;
-   CMOSImg[ X ] := Port[ $71 ];
-  End;
- BlockWrite( IFile, CMOSImg, CMOSSize - $10 );
+ CMOSWrite(IFile);
  Close( IFile );
  GotoXY( 11, 20 );
  ClrEol;
  LogWrite('CMOS settings saved to '+IName); {v1.23}
 End;
 
+function CMOSRestore(var IFile:File):Boolean; {v1.25}
+var X,Z:Byte;
+    OK:Boolean;
+begin
+ Z:=CMOSSize;
+ if Z>127 then Z:=127;
+ BlockRead(IFile,CMOSImg,CMOSSize-$0D);
+ for X:=$0E to Z do
+  begin
+   Port[$70]:=X;
+   Port[$71]:=CMOSImg[X];
+  end;
+ if CMOSSize>Z then
+  for X:=$80 to $FF do
+   begin
+    Port[$72]:=X;
+    Port[$73]:=CMOSImg[X];
+   end;
+ OK:=True;
+ for X:=$0E to Z do
+  begin
+   Port[$70]:=X;
+   if Port[$71]<>CMOSImg[X] then OK:=False;
+  end;
+ if CMOSSize>Z then
+  for X:=$80 to $FF do
+   begin
+    Port[$72]:=X;
+    if Port[$73]<>CMOSImg[X] then OK:=False;
+   end;
+ if not OK then
+  Begin
+   Write(Msg(26));
+   Delay(2000);
+  End;
+ CMOSRestore:=OK;
+end;
+
 {Read CMOS data from disk}
 Procedure RestoreCMOS; Far;
 Var
 IName : String;
 IFile : File;
-X, Y  : Byte;
 
 Begin
  GotoXY( 11, 20 );
@@ -956,81 +1050,78 @@ Begin
      ClrEol;
      Exit;
     End;
-   If FileSize( IFile ) <> ( CMOSSize - $10 ) then
+   If FileSize( IFile ) <> ( CMOSSize - $0D ) then
     Begin
      GotoXY( 11, 20 );
-     Write( Msg( 98 ), CMOSSize - $10, Msg( 99 ) );
+     Write( Msg( 98 ), CMOSSize - $0D, Msg( 99 ) );
      Delay( 2000 );
      GotoXY( 11, 20 );
      ClrEol;
      Close( IFile );
      Exit;
     End;
-   BlockRead( IFile, CMOSImg, CMOSSize - $10 );
+   if CMOSRestore(IFile) then LogWrite('CMOS settings restored from '+IName)
+    else LogWrite('Error restoring CMOS settings - may be write protected');
    Close( IFile );
-   For X := $10 to CMOSSize - 1 do
-    Begin
-     Port[ $70 ] := X;
-     Port[ $71 ] := CMOSImg[ X ];
-    End;
-   Y := 0;
-   For X := $10 to CMOSSize - 1 do
-    Begin
-     Port[ $70 ] := X;
-     If Port[ $71 ] <> CMOSImg[ X ] then Y := 1;
-    End;
-   If Y <> 0 then
-    Begin
-     Write( Msg( 26 ) );
-     Delay( 2000 );
-    End;
    SetMenuItemStatus( MainMenu, 4, True );
   End;
  GotoXY( 11, 20 );
  ClrEol;
- LogWrite('CMOS settings restored from '+IName); {v1.23}
 End;
 
 
 Procedure WrtOldCMOS; Far;
-Var
-X, Y,
-Size : Byte;
+var X,Z:Byte;
+    OK:Boolean;
 
 Begin
  TextColor( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 27 ) );
- Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
+ repeat A:=UpCase(_ReadKey) until (A=AnswYes) or (A=AnswNo);
  GotoXY( 11, 22 );
  ClrEol;
- If A = AnswYes then
+ if A=AnswYes then
   Begin
-   Size := CMOSSize;
-   For X := $10 to Size - 1 do
-    Begin
-     Port[ $70 ] := X;
-     Port[ $71 ] := CMOSBack[ X ];
-    End;
+   Z:=CMOSSize;
+   if Z>127 then Z:=127;
+   for X:=$0E to Z do
+    begin
+     Port[$70]:=X;
+     Port[$71]:=CMOSBack[X];
+    end;
+   if CMOSSize>Z then
+    for X:=$80 to $FF do
+     begin
+      Port[$72]:=X;
+      Port[$73]:=CMOSBack[X];
+     end;
    {Verify}
-   Y := 0;
-   For X := $10 to Size - 1 do
-    Begin
-     Port[ $70 ] := X;
-     If Port[ $71 ] <> CMOSBack[ X ] then Y := 1;
-    End;
-   TextColor( 12 );
-   GotoXY( 11, 22 );
-   If Y = 0 then
-    Begin
-     Write( Size - $10, Msg( 28 ) );
-     Delay( 1000 );
-    End else
-    Begin
-     Write( Msg( 26 ) );
+   OK:=True;
+   for X:=$0E to Z do
+    begin
+     Port[$70]:=X;
+     if Port[$71]<>CMOSBack[X] then OK:=False;
+    end;
+   if CMOSSize>Z then
+    for X:=$80 to $FF do
+     begin
+      Port[$72]:=X;
+      if Port[$73]<>CMOSBack[X] then OK:=False;
+     end;
+   TextColor(12);
+   GotoXY(11,22);
+   if OK then
+    begin
+     Write(CMOSSize-$0D,Msg(28));
+     Delay(1000);
+    end
+   else
+    begin
+     Write(Msg(26));
      _ReadKey;
-    End;
-   GotoXY( 11, 22 );
+    end;
+   GotoXY(11,22);
    ClrEol;
   End;
  SetMenuItemStatus( MainMenu, 4, False );
@@ -1137,12 +1228,14 @@ Begin
 End;
 
 function WriteLnStd(S:String):Boolean; {v1.22}
+var A:Char;
 begin
   Inc( Count );
   if not Redir and ( Count >= Hi( WindMax ) ) then
    Begin
     Write( '-- More --' );
-    if UpCase(_ReadKey)='Q' then begin WriteLnStd:=False; Exit; end; {v1.24}
+    A:=_ReadKey;
+    if (UpCase(A)='Q') or (A=#27) then begin WriteLnStd:=False; Exit; end; {v1.24}
     WriteLn;
     Count:=0;
    End;
@@ -1462,7 +1555,7 @@ Begin
  TextColor(LightGreen);
  Write('v' + Version );
  TextColor(LightCyan);
- WriteLn(' (c) 2001 Rainbow Software (http://rainbow.ht.st)');
+ WriteLn(' (c) 2002 Rainbow Software (http://rainbow.ht.st)');
  TextColor(LightMagenta);
  GotoXY(11,3);
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
@@ -1501,7 +1594,7 @@ Begin
    If ( PStr = 'E' ) then
     Begin
      Inc( X );
-     If ParamCount < X then Err( Msg( 29 ) );
+     If ParamCount < X then Err( Msg( 29 )+'E' );
      Emergency := True;
      EMFName := ParamStr( X );
     End else
@@ -1511,6 +1604,7 @@ Begin
      WriteLn;
      WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
      WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]' );
+     WrtCenter( '          [-CMOSS fname][-CMOSR fname][-CMOSC]]'); {v1.25}
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
@@ -1520,12 +1614,19 @@ Begin
      WrtCenter( Msg( 107 ) );
      WrtCenter( Msg( 108 ) );
      WrtCenter( Msg( 109 ) );
+     WrtCenter( Msg( 131 ) ); {v1.25}
+     WrtCenter( Msg( 132 ) ); {v1.25}
+     WrtCenter( Msg( 133 ) ); {v1.25}
      WriteLn;
      Halt;
     End else
    If PStr = 'PCIOR' then PCIOR := True else
    If PStr = 'AMI' then WantToUseAmi := True else
-   If PStr = 'LOG' then Logging := True else {v1.23}
+   If PStr = 'LOG' then
+    begin
+     Logging:=True;
+     LogStart;
+    end else {v1.23}
    If PStr = 'CHIPLIST' then
     Begin
      WriteLnStd( '' );
@@ -1567,14 +1668,65 @@ Begin
     Begin
      Inc( X );
      If ParamCount < X then Err( Msg( 29 ) );
-     AutoSave := True;
+     SaveBIOS := True;
      EMFName := ParamStr( X );
-    End;
+    End else
+   if PStr = 'CMOSS' then {v1.25}
+    begin
+     CMOS:=True;
+     Inc(X);
+     if ParamCount<X then Err(Msg(29)+'CMOSS');
+     CMOSSize:=GetCMOSSize;
+     Assign(IFile,ParamStr(X));
+     ReWrite(IFile,1);
+     If IOResult=0 then
+      begin
+        CMOSWrite(IFile);
+        Close(IFile);
+        WriteLn;
+        WriteLn;
+        LogWrite('CMOS settings saved to '+ParamStr(X));
+        WrtCenter('CMOS settings saved to '+ParamStr(X));
+      end else Err(Msg(7)+ParamStr(X)+' !'#7);
+    end else
+   if PStr = 'CMOSR' then {v1.25}
+    begin
+     CMOS:=True;
+     Inc(X);
+     if ParamCount<X then Err(Msg( 29 )+'CMOSR');
+     CMOSSize:=GetCMOSSize;
+     Assign(IFile,ParamStr(X));
+     Reset(IFile,1);
+     if IOResult=0 then
+      begin
+       if FileSize(IFile)=(CMOSSize-$0D) then
+        begin
+          CMOSRestore(IFile);
+          Close(IFile);
+          WriteLn;
+          WriteLn;
+          LogWrite('CMOS settings restored from '+ParamStr(X));
+          WrtCenter('CMOS settings restored from '+ParamStr(X));
+        end else Err(Msg(98)+_Str(CMOSSize-$0A)+Msg(99));
+      end else Err(Msg(8)+ParamStr(X)+' !'#7);
+    end else
+   if PStr = 'CMOSC' then {v1.25}
+    begin
+     CMOS:=True;
+     CMOSSize:=GetCMOSSize;
+     if CMOSClr then
+      begin
+       WriteLn;
+       WriteLn;
+       LogWrite('CMOS settings cleared');
+       WrtCenter('CMOS settings cleared');
+      end
+     else Err(Msg(24));
+    end;
    Inc( X );
   End;
 
- LogStart; {v1.23}
-
+ if CMOS and not Emergency and not SaveBIOS then Exit;
  If Windows then Err( Msg( 110 ) ); {v1.22}
 
  If not LocatePIIX then { Sets address of PIIX } {v1.22 moved here}
@@ -1585,6 +1737,7 @@ Begin
  MemInit; {v1.24}
 
  CMOSSize := GetCMOSSize;
+ LogWrite( 'CMOS size detected: '+_Str(CMOSSize+1)+'b'); {v1.25}
 
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
@@ -1614,7 +1767,7 @@ Begin
 
  ROMType; {v1.24}
 
- If AutoSave then
+ If SaveBIOS then
   Begin
    WriteBIOSImg;
    GotoXY( 1, Hi( WindMax ) );
@@ -1665,11 +1818,21 @@ Begin
  {Backup current BIOS}
  MoveLinBlockD( FlashBase, OldBIOS, FlashSize );
  {Backup CMOS data}
- For X := $10 to CMOSSize do
-  Begin
-   Port[ $70 ] := X;
-   CMOSBack[ X ] := Port[ $71 ];
-  End;
+ Z:=CMOSSize;
+ if Z>127 then Z:=127;
+ for X:=$0E to Z do
+  begin
+   Port[$70]:=X;
+   CMOSBack[X]:=Port[$71];
+  end;
+ if CMOSSize>Z then
+  begin
+   for X:=$80 to $FF do
+    begin
+     Port[$72]:=X;
+     CMOSBack[X]:=Port[$73];
+    end;
+  end;
 
  textcolor(WHITE);
 

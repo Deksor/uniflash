@@ -33,13 +33,13 @@ Begin
  AddMsg( Lid, 20, 'OUDE BIOS TERUG FLASHEN NAAR FLASH ROM CHIP [J,N]?' );
  AddMsg( Lid, 21, ' WAARSCHUWING: U ZAL ALLE BIOS INSTELLINGEN VERLIEZEN. DOORGAAN [J,N]?' );
  AddMsg( Lid, 22, 'HEB ' );
- AddMsg( Lid, 23, ' BYTES CMOS RAM GEWIST.'#7 );
+ AddMsg( Lid, 23, ' BYTES CMOS RAM GEWIST.' );
  AddMsg( Lid, 24, 'FOUT BIJ HET WISSEN VAN CMOS - CMOS (GEDEELTELIJK) SCHRIJFBEVEILIGD.'#7 );
  {25 obsolete}
  AddMsg( Lid, 26, 'FOUT BIJ HET SCHRIJVEN NAAR CMOS - CMOS (GEDEELTELIJK) SCHRIJFBEVEILIGD.'#7 );
  AddMsg( Lid, 27, 'OUDE CMOS GEGEVENS TERUGSCHRIJVEN [J,N]?' );
  AddMsg( Lid, 28, ' BYTES CMOS RAM GESCHREVEN.'#7 );
- AddMsg( Lid, 29, 'Optie -E moet gevolgd worden door bestandsnaam'#7 );
+ AddMsg( Lid, 29, 'Missing file name with option -' );
  AddMsg( Lid, 30, '-H or -?        Toont dit hulp scherm' );
  AddMsg( Lid, 31, '-E bnaam        Flasht bios image vanuit bestand bnaam automatisch' );
  AddMsg( Lid, 32, '                naar de flash ROM chip zonder verdere tussenkomst' );
@@ -144,4 +144,7 @@ Begin
  AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
  AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}
+ AddMsg( Lid, 131, '-CMOSS fname    Save current CMOS settings to file fname' ); {v1.25}
+ AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
+ AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
 End.

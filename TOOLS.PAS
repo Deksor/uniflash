@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.24';
+Version    = '1.25';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -1128,7 +1128,7 @@ end;
 
 
 Begin
- If TSCPresent then {v1.22}
+ If not Windows and TSCPresent then {v1.22}
   Begin
     InitTSC;
     uSec := TSC div 100000;

@@ -1,6 +1,6 @@
-                     UniFlash version 1.24 documentation
+                     UniFlash version 1.25 documentation
                      -----------------------------------
-                   (C) 2001 Rainbow Software (Ondrej Zary)
+                   (C) 2002 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
 
 
@@ -172,9 +172,15 @@ Here's a list of chipsets suported by Uniflash:
  ITE      | IT8871F/2F and       | Don't know where used, untested.
           | IT8888F South Bridges| (No known chipset with these SBs)
 ----------|----------------------|--------------------------------------------
- Reliance/| OSB4 South Bridge    | No north bridges for now, but should work.
- Server   |                      | Untested.
- Works    |                      |
+ Reliance/| ServerSet III LE     | All chipsets with OSB4 South Bridge should
+ Server   | ServerSet III HE     | work. Untested.
+ Works    |                      | I don't have any official info.
+----------|----------------------|--------------------------------------------
+ National/| Vesuvius-LS          | Never seen this one.
+ PicoPower|                      | Untested
+----------|----------------------|--------------------------------------------
+ National/| Geode GX1 (MediaGX)  | Supported with Geode CS5530(A) South Bridge
+ Cyrix    |                      | (Cyrix CX5530(A))
 ------------------------------------------------------------------------------
 
 PC100 BXCel is relabelled ALi Aladdin Pro II on PC Chips M726 motherboard.
@@ -184,6 +190,10 @@ to flash even if you have an unknown chipset (new AMI WinBIOS is necessary to
 use this feature). Starting from version 1.24, you must force using this mode,
 if you want to use it by giving the -AMI parameter. This is neccessary because
 it often doesn't work and hangs, preventing users from making BIOS backup.
+
+2.1            Tested PCI cards
+-------------------------------
+Adaptec 19160 (AIC-7892B chip) - Winbond W29EE512
 
 
 3.0            What flash chips are supported by UniFlash ?
@@ -765,6 +775,29 @@ second short beep: done reading BIOS image, starting to flash
 double short beep: done flashing, reset your system
 long continuous beep: some error occured, press any key to retry operation
 
+5.2            Command-line parameters
+--------------------------------------
+UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]
+          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]
+          [-CMOSS fname][-CMOSR fname][-CMOSC]]
+
+-H or -?        Shows command-line parameters (this list)
+-E fname        Flashes bios image from file fname to Flash ROM without any
+                user intervention
+-PCIOR          Flash PCI option ROM instead of system ROM
+-AMI            Use AMI Flash Interface
+-CHIPLIST       Show list of supported flash chips
+-FORCE xxxx     Force using routines for chip xxxx (4 hex digits)
+-SAVE fname     Write current bios image to file fname
+-CMOSS fname    Save current CMOS settings to file fname
+-CMOSR fname    Restore CMOS settings from file fname
+-CMOSC          Clears CMOS settings
+
+Parameters are executed in the same order as they are entered on the command
+line - so you can use e.g. "uniflash -cmoss cmos.bak -cmosc" to save CMOS
+settings to file called cmos.bak and then clear the CMOS.
+Some parameters can't be used together - e.g. -AMI can't be used with -PCIOR.
+
 
 6.0            How to support UniFlash?
 ---------------------------------------
@@ -811,6 +844,19 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.25       -fixed crash in Windows on some machines - display error message
+            (thanks to Alejando Pelaez)
+           -pressing ESC in -chiplist will quit
+           -CMOS size in log
+           -added -CMOSS (Save CMOS), -CMOSR (Restore CMOS) and -CMOSC (Clear
+            CMOS) options (they work also in Windows)
+           -added support for 256b CMOS
+           -fixed CMOS support to save/restore/clear also bytes 15 and 16
+           -added ServerWorks ServerSet III LE and HE chipsets with Reliance
+            NB6536 & NB6635 North Bridges (without any info from ServerWorks)
+           -added National Semiconductor PicoPower Vesuvius-LS chipset
+           -added National Semiconductor Geode GX1 CPU with North Bridge
+            (Cyrix MediaGX) and CS5530(A) South Bridge (Cyrix CX5530(A))
 1.24       -added support for some ALi chipsets: Aladdin Pro IV and ALiMAGiK 1
            -fixed 256KB and 512KB support for ALi chipsets
            -added VIA Apollo VP3 with VT82C596 South Bridge
@@ -1071,7 +1117,7 @@ When sending reports that something doesn't work, always send the log file!
  - Boot Block on Winbond W29C020 can be flashed even if the Boot Block
    protection is enabled on the chip - AMIFLASH v8.15.02 can do it but
    UniFlash can't (I don't know how to do it)
- - Support for ServerWorks, UMC, new VIA, new AMD and new SiS chipsets because
+ - Support for ServerWorks, UMC, new VIA and new SiS chipsets because
    datasheets are unavailable (these companies are simply ignoring e-mails)
    I can't do much with only "unofficial" info.
  - Support for some exotic Flash ROMs like Intel 82802AA 2mbit Firmware Hub or
@@ -1141,6 +1187,7 @@ in mind when we started this project. Thanx in advance!
                 Dennis Schulz (BIG thanks - provided 5 chips and wanted only
                                one of them back!)
                 Miha Ovcak
+                Alejando Pelaez
 
 
 12.0            Biz support
@@ -1165,10 +1212,14 @@ support.
 I would like NOT to THANK TO following COMPANIES for providing NO SUPPORT
 for independent developers and NOT REPLYING TO E-MAILS:
 
-            VIA Technologies (finally, they replied, but only some shit)
             Silicon Integrated Systems (SiS)
             United Microelectronics Corporation (UMC)
             ServerWorks
 
+I finally got some real e-mail from VIA, but only bad news:
+"At this time, datasheets are only available to manufacturers under non
+disclosure agreement who have a genuine application they are developing. This
+policy is currently under review but at this time I cannot provide the
+datasheets to you."
 
 ============================== END OF DOCUMENT ===============================

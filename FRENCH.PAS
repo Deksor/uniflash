@@ -33,13 +33,13 @@ Begin
  AddMsg( Lid, 20, 'REENREGISTRER LE BIOS DE SAUVEGARDE DANS LA FLASH ROM [O,N]?' );
  AddMsg( Lid, 21, '   ATTENTION: TOUS LES PARAMETRES DU BIOS SERONT PERDUS. CONTINUER [O,N]?' );
  AddMsg( Lid, 22, '' );  {-> 23}
- AddMsg( Lid, 23, ' OCTETS DE LA CMOS RAM EFFACES.'#7 );
+ AddMsg( Lid, 23, ' OCTETS DE LA CMOS RAM EFFACES.' );
  AddMsg( Lid, 24, 'ERREUR D''EFFACEMENT DES DONNEES CMOS - POSSIBILITE DE PROTECTION EN ECRITURE.'#7 );
  {25 obsolete}
  AddMsg( Lid, 26, 'ERREUR D''ECRITURE DES DONNEES CMOS - POSSIBILITE DE PROTECTION EN ECRITURE.'#7 );
  AddMsg( Lid, 27, 'REENGREGISTRER LES DONNEES CMOS PRECEDENTES [O,N]?' );
  AddMsg( Lid, 28, ' OCTETS DE LA CMOS RAM ECRITS.'#7 );
- AddMsg( Lid, 29, 'Nom de fichier manquant avec option -E' );
+ AddMsg( Lid, 29, 'Nom de fichier manquant avec option -' );
  AddMsg( Lid, 30, '-H or -?        Affiche cet ‚cran d''aide' );
  AddMsg( Lid, 31, '-E fname        Ecrit le bios du fichier fname dans la FLASH ROM' );
  AddMsg( Lid, 32, '                sans intervention de la part de l''utilisateur.' );
@@ -144,4 +144,7 @@ Begin
  AddMsg( Lid, 128, 'Enter Advanced submenu...' ); {v1.23}
  AddMsg( Lid, 129, 'Exit UniFlash' ); {v1.23}
  AddMsg( Lid, 130, 'Return back to main menu' ); {v1.23}
+ AddMsg( Lid, 131, '-CMOSS fname    Save current CMOS settings to file fname' ); {v1.25}
+ AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
+ AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
 End.

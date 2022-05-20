@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.30';
+Version    = '1.31';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -1457,9 +1457,10 @@ type FileName=array[1..12] of Char;
       Exit;
     end;
    ReadDir;
-   Window(2,9,17,23);
+   Window(2,9,17,22);
    Text_Background(Black);
    ClrScr;
+   Window(2,9,17,23); {v1.31}
    for A:=PagePos to Min(PagePos+PageSize,Count) do DispFile(GetName(A,False),A=CurPos,True);
    Window(25,22,80,22);
  end;

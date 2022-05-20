@@ -1,4 +1,4 @@
-                     UniFlash version 1.30 documentation
+                     UniFlash version 1.31 documentation
                      -----------------------------------
                    (C) 2003 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -105,17 +105,26 @@ Here's a list of chipsets suported by Uniflash:
           |*i810                 | i810 tested and works OK, others should too
           | i810E                |
           | i810E2               |
-          | i815(G)              |
-          | i815E(P/P)           |
+          | i815(P/G)            |
+          | i815E(P/G)           |
           | i815EM               |
           | i820                 |
           | i820E                |
-          | i830MP               |
+          | i830M(P/G)           |
           | i840                 |
           | i845                 |
-          | i850                 |
+          | i845E                |
+          | i845G(E/L/V)/845PE   |
+          | i845MP/MZ            |
+          | i850(E)              |
+          | i852GM/855GM         |
+          | i855PM               |
           | i860                 |
+          | i875P                |
+          | E7205                |
           | E7500                |
+          | E7501                |
+          | E7505                |
 ----------|----------------------|--------------------------------------------
  VIA      | Appollo Master       |
           | Apollo VP            |
@@ -133,10 +142,12 @@ Here's a list of chipsets suported by Uniflash:
           | Apollo KX133         |
           |*Apollo KT133(A)      |
           | ProSavage KM133(A)   |
-          |*Apollo KT266(A)      |
-          | Apollo Pro 266       | These North Bridges are detected, but
+          |*Apollo KT266(A)/KT333|
+          | Apollo KT400(A)      |
+          | Apollo Pro 266       |
+          | Apollo Pro 266T      | These North Bridges are detected, but
           | ProSavage P4M266     | aren't used in any VIA's chipset (??):
-          | P4X266(A)/P4X333     | VT8653, VT8662, VT8615, VT8361, VT3133
+          | P4X266(A)/P4X333/400 | VT8662, VT8615, VT8361, VT3133
 ----------|----------------------|--------------------------------------------
  AMD      |*AMD 640 (same as VIA | Works just fine
           | Apollo VP2)          |
@@ -162,18 +173,33 @@ Here's a list of chipsets suported by Uniflash:
           | 640                  | Boards with the new chipsets (540 and 630
           | 645                  | and up) have often ITE IT8705F LPC Super IO
           | 645DX                | (also called SiS 950 sometimes) which
-          | 650                  | allows to use regular Flash ROM on LPC bus.
-          | 730                  | It's tested and works.
+          | 648                  | allows to use regular Flash ROM on LPC bus.
+          | 650                  | It's tested and works.
+          | 651                  |
+          | 655                  |
+          | 730                  |
+          | 733                  |
           |*735                  |
           | 740                  |
+          | 745                  |
+          | 746                  |
+          | 748                  |
+          | 755                  |
 ----------|----------------------|--------------------------------------------
  ALi      |*FinALi 486           | FinALi has very weird Flash ROM access but
-          |*Aladdin Pro II       | finally it works correctly.
-          | Aladdin III          | All chipsets with M1533/M1543/M1535 South
-          | Aladdin IV/IV+       | Bridge should work.
-          |*Aladdin V            | Unlisted chipsets are not fully detected,
-          | Aladdin Pro IV       | but should work if they use M1533/43/35 or
-          |*ALiMAGiK 1           | M1523 South Bridge.
+          |*Aladdin              | finally it works correctly.
+          | Aladdin III          | <- The 1st ALi Pentium chipset
+          | Aladdin IV/IV+       | All chipsets with M1533/M1543/M1535 South
+          |*Aladdin V            | Bridge should work.
+          | Aladdin 7            |
+          |*Aladdin Pro/Pro II   |
+          | Aladdin Pro III      | Aladdin TNT2
+          | CyberBLADE Aladdin i1|
+          | Aladdin Pro IV       |
+          |*ALiMAGiK 1           |
+          | Aladdin Pro 5(T/M)   | Unlisted chipsets are not fully detected,
+          | Aladdin-P4           | but should work if they use M1533/43/35 or
+          | CyberAladdin-P4      | M1523 South Bridge.
 ----------|----------------------|--------------------------------------------
  SMSC     | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
           |                      | South Bridge (UDMA-66 support)
@@ -211,8 +237,8 @@ Here's a list of chipsets suported by Uniflash:
  Contaq/  | hyperCache           | CY82C691+CY82C693(U/UB)
  Cypress  | 386/486 with PCI     | CY82C596/597+CY82C599
 ----------|----------------------|--------------------------------------------
- nVidia   | nForce               | Untested.
-          | nForce2              |
+ nVidia   |*nForce               | Tested and works
+          | nForce2              | nForce2 might not work
 ------------------------------------------------------------------------------
 
 If your chipset is marked BXCel, VXPro, TXPro or something like that, it's a
@@ -242,6 +268,21 @@ I need datasheets for the cards (chips) that do not work.
 
 Cards with specific support in UniFlash:
   3Dfx Banshee
+  Sundance Technology ST201
+  STMicroelectronics STE10/100(A)
+  Winbond W89C840AF
+  SMSC LAN83C175 EPIC/C
+  VIA VT6102
+      VT6105M Rhine III
+  Realtek RTL8129/30/39
+          RTL8139 series
+          RTL8169 series
+  ADMtek AL981 Comet
+         AN983(B/BL) Centaur (B)
+         AN985(B/BL) Centaur (B)
+         ADM9511 Centaur II
+         ADM9513 Centaur II
+  Adaptec AIC-6915
 
 
 3.0            What flash chips are supported by UniFlash ?
@@ -585,6 +626,9 @@ UniFlash supports the following flash chips:
   Pm29F002B                       | 256KB
   Pm29F004T or Pm29LV104T         | 512KB
   Pm29F004B or Pm29LV104B         | 512KB
+  Pm49FL002                       | 256KB
+  Pm49FL004                       | 512KB
+  Pm49FL008                       | 1024KB
 ----------------------------------|-------------------------------------------
   SST                             |
   ---                             |
@@ -940,6 +984,31 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.31       -added support for ALi Aladdin, the ALi's first Pentium chipset
+            (uses low E and F segments, disabling shadow during read access)
+           -if the south bridge is not found, the first device with no class
+            code is assumed to be south bridge (for old chipsets)
+           -fixed one line more cleared when changing drives in file browser
+           -modified chipset detection and identifying code to allow easier
+            implementation of support for new chipsets
+           -fixed error when opening files with read-only attribute set
+           -modified i8xx chipset code to support FWHs up to 4MB (32Mbit)
+           -added SiS 648, 651, 655, 733, 745, 746, 748, 755 chipsets
+           -added i845E, i845G(E/L/V)/845PE, i845MP/MZ, i852GM/855GM, i855PM,
+            i875P, E7205, E7501, E7505 chipsets
+           -added VIA Apollo KT333, KT400(A), Apollo Pro 266T, P4X400
+           -added ALi Aladdin 7, Aladdin Pro III (TNT2), CyberBLADE Aladdin i1,
+            Aladdin Pro 5(T/M), Aladdin-P4, CyberAladdin-P4
+           -modified multi-language code to save some memory by initializing
+            only the selected language (also reduced EXE file size)
+           -moved PCI card support into separate unit (PCICARDS.PAS) and added
+            specific support for these PCI network cards:
+             STMicroelectronics STE10/100(A), Winbond W89C840AF,
+             SMSC LAN83C175 EPIC/C, VIA VT6102, VT6105M Rhine III
+             Realtek RTL8129/30/39, RTL8139 series, RTL8169 series
+             ADMtek AL981 Comet, AN983,985(B/BL) Centaur (B),
+             ADM9511,9513 Centaur II, Adaptec AIC-6915
+           -added support for PMC Pm49FL002/004/008 FWHs/LPCs
 1.30       -added timeouts to all program/erase routines so there should never
             be any lockups, even if Flash ROM does not respond
            -fixed incorrect ROM Base when no Flash ROM detected
@@ -1403,6 +1472,8 @@ AOpen         | AP43              | SiS 85C496+497| SST 29EE010/5V
 FIC           | PT-2006 v2.2      | Intel 430VX   | Winbond W29C020(C)/5V
 FIC           | PT-2006 v2.2      | Intel 430VX   | H.T. M38705/12V
 MicroStar MSI | MS-5120 ver 1     | Intel 430FX   | Macronix MX28F1000/12V
+PC Chips      | Unknown Socket 4  | ALi Aladdin   | ASD AE29F1008/5V
+PC Chips      | Unknown Socket 4  | ALi Aladdin   | Macronix MX28F1000/12V
 
 
 11.0            Beta testing stuff

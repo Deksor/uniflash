@@ -1,44 +1,48 @@
-Unit Language;
+unit Language;
 
-Interface
+interface
 const LangCount: Byte = 0;
 var   CurLang  : Byte;
+type  InitProc = procedure;
 
 function Msg(Id:Word):String;
-function RegisterLanguage(const Name:String):Byte; {const v1.29}
-procedure AddMsg(LId:Byte;MId:Word;const Msg:String); {const v1.29}
+procedure RegisterLanguage(const Name:String;Init:InitProc);
+procedure InitLanguage(LId:Byte);
+procedure AddMsg(MId:Word;const Msg:String);
 function GetLangName(LangId:Byte):String;
 
-Implementation
+implementation
 
-type LangDef=array[1..150] of ^String; {v1.25 130->150}
-
-Var
-MsgPtrs   : array[1..5] of ^LangDef;
-LangNames : array[1..5] of ^String;
+var MsgPtrs  : array[1..150] of ^String;
+    LangNames: array[1..5] of ^String;
+    LangInits: array[1..5] of InitProc;
 
 function Msg(Id:Word):String;
 begin
- Msg:=MsgPtrs[CurLang]^[Id]^;
+  Msg:=MsgPtrs[Id]^;
 end;
 
-function RegisterLanguage(const Name:String):Byte;
+procedure RegisterLanguage(const Name:String;Init:InitProc);
 begin
- Inc(LangCount);
- New(MsgPtrs[LangCount]);
- LangNames[LangCount]:=@Name;
- RegisterLanguage:=LangCount;
-End;
+  Inc(LangCount);
+  LangNames[LangCount]:=@Name;
+  LangInits[LangCount]:=Init;
+end;
 
-procedure AddMsg(LId:Byte;MId:Word;const Msg:String);
+procedure InitLanguage(LId:Byte); {v1.31}
+begin
+  LangInits[LId];
+end;
+
+procedure AddMsg(MId:Word;const Msg:String);
 begin {The compiler is not %!$# anymore when we use constant parameter :-)) }
- MsgPtrs[LId]^[MId]:=@Msg;
+  MsgPtrs[MId]:=@Msg;
 end;
 
 function GetLangName(LangId:Byte):String;
 begin
- GetLangName:=LangNames[LangId]^;
+  GetLangName:=LangNames[LangId]^;
 end;
 
-{Begin}
-End.
+{begin}
+end.

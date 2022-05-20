@@ -35,14 +35,17 @@ ROMBase    : LongInt;
 
 function  FIMemB_Flash(Addr:LongInt):Byte; {v1.29}
 function  FIMemB_Flash_FinALi(Addr:LongInt):Byte; {v1.29}
+function  FIMemB_Flash_Low(Addr:LongInt):Byte; {v1.31}
 procedure FOMemB_Flash(Addr:LongInt;Data:Byte); {v1.29}
 procedure FOMemB_Flash_FinALi(Addr:LongInt;Data:Byte); {v1.29}
 procedure MoveLinBlock_From_Flash_D(Src,Dest,Size:LongInt); {v1.29}
 procedure MoveLinBlock_From_Flash_D_FinALi(Src,Dest,Size:LongInt); {v1.29}
+procedure MoveLinBlock_From_Flash_D_Low(Src,Dest,Size:LongInt); {v1.31}
 procedure MoveLinBlock_To_Flash_B(Src,Dest,Size:LongInt); {v1.29}
 procedure MoveLinBlock_To_Flash_B_FinALi(Src,Dest,Size:LongInt); {v1.29}
 function  CompLinBlocks_Flash(Block1,Block2,Size:LongInt):Boolean; {v1.29}
 function  CompLinBlocks_Flash_FinALi(Block1,Block2,Size:LongInt):Boolean; {v1.29}
+function  CompLinBlocks_Flash_Low(Block1,Block2,Size:LongInt):Boolean; {v1.31}
 Procedure FlashCmd( Cmd : Byte );
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
 Function  FlashDetect : PChipInfo;
@@ -61,6 +64,8 @@ Flash_Write: procedure(Address:LongInt;Data:Byte)=FOMemB_Flash; {v1.29}
 Flash_ReadBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_From_Flash_D; {v1.29}
 Flash_WriteBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_To_Flash_B; {v1.29}
 Flash_Compare: function(MemAddr,FlashAddr,Size:LongInt):Boolean=CompLinBlocks_Flash; {v1.29}
+ShadowDisable: procedure=nil; {v1.31}
+ShadowRestore: procedure=nil; {v1.31}
 
 Implementation
 
@@ -75,6 +80,15 @@ function FIMemB_Flash_FinALi(Addr:LongInt):Byte; {v1.29}
 begin
   if Addr<$10000 then SetBank(1) else SetBank(2);
   FIMemB_Flash_FinALi:=FIMemB(ROMBase+Addr-Byte(Addr>=$10000)*$10000);
+end;
+
+function FIMemB_Flash_Low(Addr:LongInt):Byte; {v1.31}
+begin
+ asm pushf;cli end;
+ ShadowDisable;
+ FIMemB_Flash_Low:=FIMemB(ROMBase+Addr);
+ ShadowRestore;
+ asm popf end;
 end;
 
 procedure FOMemB_Flash(Addr:LongInt;Data:Byte); {v1.29}
@@ -109,6 +123,15 @@ begin
     if Src<$10000 then MoveLinBlockD(ROMBase,Dest+FirstBlock,Size-FirstBlock)
      else MoveLinBlockD(ROMBase+Src-$10000,Dest+FirstBlock,Size);
   end;
+end;
+
+procedure MoveLinBlock_From_Flash_D_Low(Src,Dest,Size:LongInt); {v1.31}
+begin
+ asm pushf;cli end;
+ ShadowDisable;
+ MoveLinBlockD(ROMBase+Src,Dest,Size);
+ ShadowRestore;
+ asm popf end;
 end;
 
 procedure MoveLinBlock_To_Flash_B(Src,Dest,Size:LongInt); {v1.29}
@@ -161,6 +184,15 @@ begin
      else if not CompLinBlocks(ROMBase+Block1-$10000,Block2+FirstBlock,Size) then OK:=False;
   end;
  CompLinBlocks_Flash_FinALi:=OK;
+end;
+
+function CompLinBlocks_Flash_Low(Block1,Block2,Size:LongInt):Boolean; {v1.31}
+begin
+ asm pushf;cli end;
+ ShadowDisable;
+ CompLinBlocks_Flash_Low:=CompLinBlocks(ROMBase+Block1,Block2,Size);
+ ShadowRestore;
+ asm popf end;
 end;
 
 Procedure FlashCmd( Cmd : Byte );

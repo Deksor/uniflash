@@ -6,7 +6,7 @@
 Program Uniflash;
 
 Uses Crt, Dos,
-     Flash, Pci, Tools, GenFlash,
+     Flash, PCI, PCICards, Tools, GenFlash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
      Language, English, French, Dutch, Italian, German;
@@ -1675,6 +1675,7 @@ var savefile : file;
     savename : string;
 
 Begin
+ FileMode:=0; {Reset will open files as Read-Only} {v1.31}
  {Hack to be able to write to StdOut - better ideas anyone ?}
  Assign( StdOut, 'CON' );
  Rewrite( StdOut );
@@ -1718,6 +1719,7 @@ Begin
      X := 2;
     End else X := 1;
   End;
+ InitLanguage(CurLang); {v1.31}
  PStr := Msg( 105 );
  AnswYes := PStr[ 1 ];
  AnswNo  := PStr[ 2 ];

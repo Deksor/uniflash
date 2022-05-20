@@ -46,7 +46,7 @@ Begin
 { AddMsg( Lid, 33, '-EXPERT         Geeft toegang tot uitgebreidere menu opties' );}
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Flash naar een optie ROM op een PCI kaart' );
-{ AddMsg( Lid, 35, '-DEBUG          Debugging mode. Toont meer systeem gegevens' );}
+ AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Forceer het gebruik van de AMI FLASH INTERFACE' );
  AddMsg( Lid, 37, 'Kan geheugen boven de 1M niet aanspreken - probeer HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Sorry, maar je hebt geen 486 of beter of de processor is in V86 Mode.' );
@@ -103,7 +103,7 @@ Begin
  AddMsg( Lid, 89, 'Schrijf oude CMOS gegevens terug naar CMOS' );
  AddMsg( Lid, 90, 'ESCD (PnP) submenu' );
  AddMsg( Lid, 91, 'Geavanceerde opties submenu' );
- AddMsg( Lid, 92, 'Additionele BIOS informatie' );
+{ AddMsg( Lid, 92, 'Additionele BIOS informatie' );}
  AddMsg( Lid, 93, 'Verlaat UNIFLASH' );
  AddMsg( Lid, 94, 'LAATSTE SCHRIJFOPERATIE NAAR FLASHROM WAS ONSUCCESVOL. TOCH VERLATEN [J/N]?'#7 );
  AddMsg( Lid, 95, ' niet gelukt !'#7 );  {Last part of msg 7 & 8 !!!!}
@@ -148,4 +148,5 @@ Begin
  AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
+ AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
 End.

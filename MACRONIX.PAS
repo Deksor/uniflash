@@ -4,6 +4,7 @@ Interface
 
 {v1.24 added 4B,D5 to MX28F1000P - another conflict - $D5 has MX29F080/5V}
 {MX29LV008B Device ID CONFLICT WITH MX29F022B}
+{v1.27 Some H.T. chip (45) probably conflict with MX29F004T/5V}
 
 Implementation
 

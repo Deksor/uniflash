@@ -46,7 +46,7 @@ Begin
 { AddMsg( Lid, 33, '-EXPERT         Schaltet einige spezielle Menue-Optionen frei' );}
  AddMsg( Lid, 33, '-LOG            Aktiviert Protokollierung in UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Flasht PCI Options ROM statt des System ROM' );
-{ AddMsg( Lid, 35, '-DEBUG          Debugging mode. Gibt einige low-level Infos' );}
+ AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Verwendet AMI Flash Interface' ); {v1.24}
  AddMsg( Lid, 37, 'Kein Speicherzugriff jenseits 1Mb - Benutzen Sie HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Sie duerfen eine 486+ oder groessere CPU nicht im V86 Modus betreiben.' );
@@ -103,7 +103,7 @@ Begin
  AddMsg( Lid, 89, 'Wiederherstellung  des CMOS von Datentraeger' );
  AddMsg( Lid, 90, 'ESCD (PnP) Submenue ¯' );
  AddMsg( Lid, 91, 'Fortgeschrittenen Submenue ¯' );
- AddMsg( Lid, 92, 'Zusaetzliche BIOS Info' );
+{ AddMsg( Lid, 92, 'Zusaetzliche BIOS Info' );}
  AddMsg( Lid, 93, 'Ende' );
  AddMsg( Lid, 94, 'Letztes Schreiben des Flash war erfolgreich. Beenden [Y/N]?'#7 );
  AddMsg( Lid, 95, ' !'#7 );  {Letzter Teil von msg 7 & 8 !!!!}
@@ -147,4 +147,6 @@ Begin
  AddMsg( Lid, 131, '-CMOSS fname    Sichert CMOS in Datei fname' ); {v1.25}
  AddMsg( Lid, 132, '-CMOSR fname    Restauriert CMOS Einstellungen aus Datei fname' ); {v1.25}
  AddMsg( Lid, 133, '-CMOSC          Loescht CMOS Einstellungen' ); {v1.25}
+ AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
+ AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
 End.

@@ -150,6 +150,7 @@ ROMFound        : Boolean;
      asm CLI end;
      SendIdCmd;
      {Get mfg. code}
+     Delay(10); {v1.27 fix Atmel detection}
      M := FIMemB( ROMBase );
      if M = $7F then M := FIMemB( ROMBase + $100 ); {Mfg. ID for EON}
      if (M=$7F) and (FIMemB(ROMBase+$3)=$1F) then M:=$7F; {Mfg. ID for IMT}

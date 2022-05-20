@@ -16,9 +16,11 @@ Unmap       = False;
 
 Var
 NorthFunc,
-SouthFunc      : Word;
+SouthFunc,
+LPCFunc        : Word;
 NorthPos,
-SouthPos       : Byte;
+SouthPos,
+LPCBase        : Byte;
 CurrentChipset : string;
 WantToUseAMI,
 AMIUsed,
@@ -80,9 +82,34 @@ Begin
  OPortD( PCICfData, Value );
 End;
 
+function LPCRead(Base,Index:Byte):Byte; {v1.27}
+begin
+  Port[Base]:=Index;
+  LPCRead:=Port[Base+1];
+end;
+
+procedure LPCWrite(Base,Index,Data:Byte); {v1.27}
+begin
+  Port[Base]:=Index;
+  Port[Base+1]:=Data;
+end;
+
+procedure ITEUnlock(Base:Byte); {v1.27}
+begin
+  Port[Base]:=$87;
+  Port[Base]:=$87;
+  Port[Base]:=$87;
+  Port[Base]:=$01;
+  Port[Base]:=$55;
+  case Base of
+   $2E: Port[Base]:=$55;
+   $4E: Port[Base]:=$AA;
+  end;
+end;
+
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $48 ] of String[ 24 ] = {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $52 ] of String[ 24 ] = {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -114,47 +141,57 @@ NbName    : ARRAY[ 1 .. $48 ] of String[ 24 ] = {16->24 v1.21}
 {1D}          'VT82C598[AT]',
 {1E}          'VT82C685',
 {1F}          'VT8501', {v1.20}
-{20}          'VT82C691/693(A)/694X', {v1.20}
+{20}          'VT82C691/693(A)/694X/T', {v1.20}
 {21}          'VT82C693(A)', {v1.20}
 {22}          'VT8601', {v1.20}
 {23}          'VT8605', {v1.20}
 {24}          'VT8371', {v1.20}
-{25}          'VT8363(A)', {v1.20}
-{26}          'VT8366', {v1.20}
+{25}          'VT8363(A)/8365', {v1.20} {v1.27 8365}
+{26}          'VT8366(A)', {v1.20}
 {27}          'VT8633', {v1.20}
 {28}          'VT8653', {v1.20} {???}
 {29}          'VT8662', {v1.20} {???}
 {2A}          'VT8615', {v1.20} {???}
 {2B}          'VT8361', {v1.20} {???}
 {2C}          'VT3133', {v1.20} {???}
-{2D}          'M1489 not supported', {v1.26}
-{2E}          'M1521', {v1.26}
-{2F}          'M1531(B)', {v1.26}
-{30}          'M1541/1542', {v1.22}
-{31}          'M1621', {v1.18}
-{32}          'M1641', {v1.24}
-{33}          'M1647', {v1.24}
-{34}          'AMD-751', {v1.20}
-{35}          'AMD-761', {v1.20}
-{36}          'AMD-762', {v1.20}
-{37}          'SiS 85C496+497', {v1.21}
-{38}          'SiS 501/5101/5501', {v1.21}
-{39}          'SiS 5511', {v1.21}
-{3A}          'SiS 5571', {v1.21}
-{3B}          'SiS 5591/5592', {v1.21}
-{3C}          'SiS 5596', {v1.21}
-{3D}          'SiS 5597/5598/5581/5120', {v1.21}
-{3E}          'SiS 530', {v1.21}
-{3F}          'SiS 540', {v1.21}
-{40}          'SiS 600', {v1.21}
-{41}          'SiS 620', {v1.21}
-{42}          'SiS 630', {v1.21}
-{43}          'Reliance NB6635', {v1.25}
-{44}          'Reliance NB6536', {v1.25}
-{45}          'Vesuvius V1-LS', {v1.25}
-{46}          'Geode GX1', {v1.25}
-{47}          'OPTi 82C750', {v1.26}
-{48}          'HiNT VXPro-II North'); {v1.26}
+{2D}          'VT8751', {v1.27}
+{2E}          'VT8753(A)/8754', {v1.27}
+{2F}          'M1489 not supported', {v1.26}
+{30}          'M1521', {v1.26}
+{31}          'M1531(B)', {v1.26}
+{32}          'M1541/1542', {v1.22}
+{33}          'M1621', {v1.18}
+{34}          'M1641', {v1.24}
+{35}          'M1647', {v1.24}
+{36}          'AMD-751', {v1.20}
+{37}          'AMD-761', {v1.20}
+{38}          'AMD-762', {v1.20}
+{39}          'SiS 85C496+497', {v1.21}
+{3A}          'SiS 501/5101/5501', {v1.21}
+{3B}          'SiS 5511', {v1.21}
+{3C}          'SiS 5571', {v1.21}
+{3D}          'SiS 5591/5592', {v1.21}
+{3E}          'SiS 5596', {v1.21}
+{3F}          'SiS 5597/5598/5581/5120', {v1.21}
+{40}          'SiS 530', {v1.21}
+{41}          'SiS 540', {v1.21}
+{42}          'SiS 600', {v1.21}
+{43}          'SiS 620', {v1.21}
+{44}          'SiS 630', {v1.21}
+{45}          'SiS 635', {v1.27}
+{46}          'SiS 640', {v1.27}
+{47}          'SiS 645', {v1.27}
+{48}          'SiS 645DX', {v1.27}
+{49}          'SiS 650', {v1.27}
+{4A}          'SiS 730', {v1.27}
+{4B}          'SiS 735', {v1.27}
+{4C}          'SiS 740', {v1.27}
+{4D}          'Reliance NB6635', {v1.25}
+{4E}          'Reliance NB6536', {v1.25}
+{4F}          'Vesuvius V1-LS', {v1.25}
+{50}          'Geode GX1', {v1.25}
+{51}          'OPTi 82C750', {v1.26}
+{52}          'HiNT VXPro-II North'); {v1.26}
 
 SbName    : ARRAY[ 1 .. $21 ] of String[ 21 ] =
 {1}         ( 'i82378ZB SIO',
@@ -171,9 +208,9 @@ SbName    : ARRAY[ 1 .. $21 ] of String[ 21 ] =
 {C}           'i82801CA ICH3-S', {v1.26}
 {D}           'VT82C586(A|B)/AMD-645',
 {E}           'VT82C596(A|B)',
-{F}           'VT82C686(A)', {v1.20}
+{F}           'VT82C686(A|B)', {v1.20}
 {10}          'VT8231', {v1.20}
-{11}          'VT8233', {v1.20}
+{11}          'VT8233(A|C)', {v1.20}
 {12}          'M1523(B)', {v1.26}
 {13}          'M1533/1543/1535', {v1.18}
 {14}          'AMD-756', {v1.20}
@@ -191,9 +228,14 @@ SbName    : ARRAY[ 1 .. $21 ] of String[ 21 ] =
 {20}          'OPTi 82C750', {v1.26}
 {21}          'HiNT VXPro-II South'); {v1.26}
 
+LPCName   : array[1..$2] of String[21]= {v1.27}
+            ( 'ITE IT8700F/05F',
+              'ITE IT8710');
+
 Var
 SbId,
 NbId,
+LPCId, {v1.27}
 Pos,
 NorthRev,
 SouthRev  : Byte;
@@ -203,6 +245,31 @@ NorthMan,
 NorthId   : Word;
 NorthName,
 SouthName : String;
+
+  function LPCDetect:Word; {v1.27}
+  var ID:Word;
+  begin
+    LPCDetect:=0;
+    LPCId:=0;
+    ITEUnlock($2E);
+    ID:=256*word(LPCRead($2E,$20));
+    ID:=ID+LPCRead($2E,$21);
+    LPCWrite($2E,$02,LPCRead($2E,$02) or 2);
+    case ID of
+     $8705: begin LPCDetect:=$0100; LPCId:=1; end;
+     $8710: begin LPCDetect:=$0100; LPCId:=2; end;
+    end;
+    if LPCId<>0 then begin LPCBase:=$2E; Exit; end;
+    ITEUnlock($4E);
+    ID:=256*word(LPCRead($4E,$20));
+    ID:=ID+LPCRead($4E,$21);
+    LPCWrite($4E,$02,LPCRead($4E,$02) or 2);
+    case ID of
+     $8705: begin LPCDetect:=$0100; LPCId:=1; end;
+     $8710: begin LPCDetect:=$0100; LPCId:=2; end;
+    end;
+    if LPCId<>0 then begin LPCBase:=$4E; Exit; end;
+  end;
 
 Begin
  if Port[$CFB]<>$FF then {Check for PCI configuration mechanism type} {v1.26}
@@ -253,6 +320,8 @@ Begin
 
  NorthFunc := 0; {No special treatment necessary}
  SouthFunc := 0; {Same}
+ LPCFunc   := 0; {v1.27}
+ LPCId     := 0; {v1.27}
 
  {Id northbridge}
  NbId := 0;  {not recognised yet}
@@ -305,12 +374,12 @@ Begin
             NbId := $1E; {82C685}
            End;
      $501: NbId := $1F; {8501}
-     $691: NbId := $20; {82C691/693(A)/694X}
+     $691: NbId := $20; {82C691/693(A)/694X/T}
      $693: NbId := $21; {82C693(A)}
      $601: NbId := $22; {82C601}
      $605: NbId := $23; {8605}
      $391: NbId := $24; {82371}
-     $305: NbId := $25; {8363(A)}
+     $305: NbId := $25; {8363(A)/8365}
     $3099: NbId := $26; {8366}
     $3091: NbId := $27; {8633}
     $3101: NbId := $28; {8653}
@@ -318,14 +387,16 @@ Begin
     $3103: NbId := $2A; {8615}
     $3112: NbId := $2B; {8361}
     $3133: NbId := $2C; {3133}
+    $3148: NbId := $2D; {8751}
+    $3128: NbId := $2E; {8753(A)/8754}
    End;
   End else
  If NorthMan = $1022 {AMD} then {v1.20}
   Begin
    case NorthId of {case v1.21}
-    $7006: NbId := $34; {AMD-751}
-    $700E: NbId := $35; {AMD-761}
-    $700C: NbId := $36; {AMD-762}
+    $7006: NbId := $36; {AMD-751}
+    $700E: NbId := $37; {AMD-761}
+    $700C: NbId := $38; {AMD-762}
    End;
   End else
  If NorthMan = $1039 {SiS} then
@@ -335,77 +406,119 @@ Begin
      $496: Begin {85C496+497} {v1.21}
             NorthFunc := $0200; {SiS reg. D0 scheme}
             SouthFunc := 0;
-            NbId := $37;
+            NbId := $39;
            End;
      $406: Begin {501/5101/5501} {v1.21}
             SouthFunc := $0501; {SiS internal reg. 80h}
-            NbId := $38;
+            NbId := $3A;
            End;
     $5511: Begin {5511} {v1.21}
             SouthFunc := $0502; {SiS internal reg. 50h}
-            NbId := $39;
+            NbId := $3B;
            End;
-    $5571: NbId := $3A; {5571} {v1.21}
-    $5591: NbId := $3B; {5591/5592} {v1.21}
+    $5571: NbId := $3C; {5571} {v1.21}
+    $5591: NbId := $3D; {5591/5592} {v1.21}
     $5596: Begin {5596} {v1.21}
+            NbId := $3E;
             SouthFunc := $0502; {SiS internal reg. 50h}
-            NbId := $3C;
+            LPCFunc:=LPCDetect; {v1.27}
            End;
-    $5597: NbId := $3D; {5597/5598/5581/5120} {v1.21}
-    $0530: NbId := $3E; {530} {v1.21}
+    $5597: NbId := $3F; {5597/5598/5581/5120} {v1.21}
+    $0530: NbId := $40; {530} {v1.21}
     $0540: Begin {540} {v1.21}
             SouthFunc := $0504; {SiS reg. 45 bits 7,6}
-            NbId := $3F;
+            NbId := $41;
            End;
-    $5600: NbId := $40; {600} {v1.21}
-    $0620: NbId := $41; {620} {v1.21}
+    $5600: NbId := $42; {600} {v1.21}
+    $0620: NbId := $43; {620} {v1.21}
     $0630: Begin {630} {v1.21}
+            NbId := $44;
             SouthFunc := $0504; {SiS reg. 45 bits 7,6}
-            NbId := $42;
+            LPCFunc:=LPCDetect; {v1.27}
+           End;
+    $0635: Begin {635} {v1.27}
+            NbId := $45;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0640: Begin {640} {v1.27}
+            NbId := $46;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0645: Begin {645} {v1.27}
+            NbId := $47;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0646: Begin {645DX} {v1.27}
+            NbId := $48;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0650: Begin {650} {v1.27}
+            NbId := $49;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0730: Begin {730} {v1.27}
+            NbId := $4A;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0735: Begin {735} {v1.27}
+            NbId := $4B;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
+           End;
+    $0740: Begin {740} {v1.27}
+            NbId := $4C;
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            LPCFunc:=LPCDetect;
            End;
    End;
   End else
  If NorthMan = $10B9 {ALi} then
   Begin
    case NorthId of
-    $1489: NbId := $2D; {M1489 cannot be supported} {v1.26}
-    $1521: NbId := $2E; {M1521} {v1.26}
-    $1531: NbId := $2F; {M1531} {v1.26}
-    $1541: NbId := $30; {M1541} {v1.22}
-    $1621: NbId := $31; {M1621} {v1.19}
-    $1641: NbId := $32; {M1641} {v1.24}
-    $1647: NbId := $33; {M1647} {v1.24}
+    $1489: NbId := $2F; {M1489 cannot be supported} {v1.26}
+    $1521: NbId := $30; {M1521} {v1.26}
+    $1531: NbId := $31; {M1531} {v1.26}
+    $1541: NbId := $32; {M1541} {v1.22}
+    $1621: NbId := $33; {M1621} {v1.19}
+    $1641: NbId := $34; {M1641} {v1.24}
+    $1647: NbId := $35; {M1647} {v1.24}
    End;
   End else
  If NorthMan = $1166 {Reliance/ServerWorks} then {v1.25}
   Begin
    case NorthId of
-    $0007: NbId := $43; {NB6635}
-    $0008: NbId := $44; {NB6536}
+    $0007: NbId := $4D; {NB6635}
+    $0008: NbId := $4E; {NB6536}
    End;
   End else
  If NorthMan = $1066 {PicoPower} then {v1.25}
   Begin
    case NorthId of
-    $0001: NbId := $45; {Vesuvius V1-LS}
+    $0001: NbId := $4F; {Vesuvius V1-LS}
    End;
   End else
  If NorthMan = $1078 {Cyrix} then {v1.25}
   Begin
    case NorthId of
-    $0001: NbId := $46; {Geode GX1/Cyrix MediaGX}
+    $0001: NbId := $50; {Geode GX1/Cyrix MediaGX}
    End;
   End else
  If NorthMan = $1045 {OPTi} then {v1.26}
   Begin
    case NorthId of
-    $C567: NbId := $47; {OPTi 82C750}
+    $C567: NbId := $51; {OPTi 82C750}
    end;
   End else
  If NorthMan = $3388 {HiNT} then {v1.26}
   Begin
    case NorthId of
-    $8011: NbId := $48; {HiNT VXPro-II}
+    $8011: NbId := $52; {HiNT VXPro-II}
    end;
   End;
 
@@ -447,9 +560,9 @@ Begin
    case SouthId of {case v1.21}
      $586: SbId := $0D;
      $596: Begin SbId := $0E; Inc( SouthFunc ); End; {VT82C596(A|B)}
-     $686: Begin SbId := $0F; Inc( SouthFunc ); End; {VT82C686(A)} {v1.20}
+     $686: Begin SbId := $0F; Inc( SouthFunc ); End; {VT82C686(A|B)} {v1.20}
     $8231: SbId := $10; {VT8231} {v1.20}
-    $3074: SbId := $11; {VT8233} {v1.20}
+    $3074: begin SbId := $11; SouthFunc := $0310; end;{VT8233} {v1.20}
    End;
   End else
  If SouthMan = $1022 {AMD} then {v1.20}
@@ -582,48 +695,61 @@ Begin
   $1D : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
   $1E : CurrentChipset := 'VIA Apollo P6';
   $1F : If SbId = $0F then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
-  $20 : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo Pro (Plus/133/133A)'; {v1.20}
-  $21 : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo Pro Plus/133/133A'; {v1.20}
+  $20 : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo Pro (Plus/133(A|T))'; {v1.20}
+  $21 : If (SbId = $0E) or (SbId = $0F) then CurrentChipset := 'VIA Apollo Pro Plus/133(A)'; {v1.20}
   $22 : If SbId = $0F then CurrentChipset := 'VIA Apollo ProMedia'; {v1.20}
   $23 : CurrentChipset := 'VIA Apollo Pro 133Z/PM133'; {v1.20}
   $24 : If SbId = $0F then CurrentChipset := 'VIA Apollo KX133'; {v1.20}
-  $25 : If SbId = $0F then CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
-  $26 : If SbId = $11 then CurrentChipset := 'VIA Apollo KT266'; {v1.20}
+  $25 : case SbId of
+         $0F : CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
+         $10 : CurrentChipset := 'VIA ProSavage KM133(A)'; {v1.27}
+        end;
+  $26 : If SbId = $11 then CurrentChipset := 'VIA Apollo KT266(A)'; {v1.20}
   $27 : If SbId = $11 then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
-  $2D : CurrentChipset := 'ALi FinALi 486 not supported!'; {v1.26}
-  $2E : If SbId = $12 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
-  $2F : If SbId = $13 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
-  $30 : If SbId = $13 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
-  $31 : If SbId = $13 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
-  $32 : If SbId = $13 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
-  $33 : If SbId = $13 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
-  $34 : If SbId = $14 then CurrentChipset := 'AMD 750'; {v1.20}
-  $35 : case SbId of {v1.20}
+  $2D : If SbId = $11 then CurrentChipset := 'VIA ProSavage P4M266'; {v1.27}
+  $2E : If SbId = $11 then CurrentChipset := 'VIA P4X266(A)/P4X333'; {v1.27}
+  $2F : CurrentChipset := 'ALi FinALi 486 not supported!'; {v1.26}
+  $30 : If SbId = $12 then CurrentChipset := 'ALi Aladdin III'; {v1.26}
+  $31 : If SbId = $13 then CurrentChipset := 'ALi Aladdin IV/IV+'; {v1.26}
+  $32 : If SbId = $13 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
+  $33 : If SbId = $13 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
+  $34 : If SbId = $13 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
+  $35 : If SbId = $13 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
+  $36 : If SbId = $14 then CurrentChipset := 'AMD 750'; {v1.20}
+  $37 : case SbId of {v1.20}
          $0F : CurrentChipset := 'AMD 760 (VIA South)';
          $15 : CurrentChipset := 'AMD 760 (AMD South)';
         end;
-  $36 : case SbId of
+  $38 : case SbId of
          $15 : CurrentChipset := 'AMD 760MP'; {v1.20}
          $16 : CurrentChipset := 'AMD 760MPX'; {v1.26}
         end;
-  $37 : CurrentChipset := 'SiS 85C496+497'; {v1.21}
-  $38 : If SbId = $17 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
-  $39 : If SbId = $17 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
-  $3A : If SbId = $17 then CurrentChipset := 'SiS 5571'; {v1.21}
-  $3B : If SbId = $17 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
-  $3C : If SbId = $17 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
-  $3D : If SbId = $17 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
-  $3E : If SbId = $17 then CurrentChipset := 'SiS 530'; {v1.21}
-  $3F : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 540'; {v1.21}
-  $40 : If SbId = $17 then CurrentChipset := 'SiS 600'; {v1.21}
-  $41 : If SbId = $17 then CurrentChipset := 'SiS 620'; {v1.21}
-  $42 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 630'; {v1.21}
-  $43 : If SbId = $1D then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
-  $44 : If SbId = $1D then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
-  $45 : If SbId = $1E then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
-  $46 : If SbId = $1F then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
-  $47 : If SbId = $20 then CurrentChipset := 'OPTi Vendetta 82C750'; {v1.26}
-  $48 : If SbId = $21 then CurrentChipset := 'HiNT VXPro-II (Utron UT85C50x)'; {v1.26}
+  $39 : CurrentChipset := 'SiS 85C496+497'; {v1.21}
+  $3A : If SbId = $17 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
+  $3B : If SbId = $17 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
+  $3C : If SbId = $17 then CurrentChipset := 'SiS 5571'; {v1.21}
+  $3D : If SbId = $17 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
+  $3E : If SbId = $17 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
+  $3F : If SbId = $17 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
+  $40 : If SbId = $17 then CurrentChipset := 'SiS 530'; {v1.21}
+  $41 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 540'; {v1.21}
+  $42 : If SbId = $17 then CurrentChipset := 'SiS 600'; {v1.21}
+  $43 : If SbId = $17 then CurrentChipset := 'SiS 620'; {v1.21}
+  $44 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 630'; {v1.21}
+  $45 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 635'; {v1.27}
+  $46 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 640'; {v1.27}
+  $47 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 645'; {v1.27}
+  $48 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 645DX'; {v1.27}
+  $49 : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 650'; {v1.27}
+  $4A : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 730'; {v1.27}
+  $4B : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 735'; {v1.27}
+  $4C : If (SbId = $17) or (SbId = $18) then CurrentChipset := 'SiS 740'; {v1.27}
+  $4D : If SbId = $1D then CurrentChipset := 'ServerWorks ServerSet III LE'; {v1.25}
+  $4E : If SbId = $1D then CurrentChipset := 'ServerWorks ServerSet III HE'; {v1.25}
+  $4F : If SbId = $1E then CurrentChipset := 'National PicoPower Vesuvius-LS'; {v1.25}
+  $50 : If SbId = $1F then CurrentChipset := 'National Geode GX1 + CS5530(A)'; {v1.25}
+  $51 : If SbId = $20 then CurrentChipset := 'OPTi Vendetta 82C750'; {v1.26}
+  $52 : If SbId = $21 then CurrentChipset := 'HiNT VXPro-II (Utron UT85C50x)'; {v1.26}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -643,7 +769,7 @@ Begin
                       '(' + Hw( SouthMan ) + ',' + Hw( SouthId ) +
                       ',' + Hb( SouthRev ) + ')';
   End;
-
+ if LPCId<>0 then CurrentChipset:=CurrentChipset+' + '+LPCName[LPCId]; {v1.27}
  If {( ( not ChipsetFound ) or (} WantToUseAMI {) )} and AMICheckFor then {v1.24}
   Begin
    AMIUsed := True;
@@ -743,22 +869,43 @@ Begin
           End;
         End;
   $03 : Begin {VIA method} {AMD method is the same v1.20}
-         If Map then
-          Begin
-           Mask := $C0000001;  {write enable, 512K enable}
-           If ( SouthFunc and 1 ) <> 0 then Mask := Mask or $20000000; {1M enable} {v1.22}
+         If Lo(SouthFunc)=$10 then {VT8233 method v1.27}
+          begin
+            if Map then
+             begin
+               PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
+               LogWrite('VT8233 method: reg $40 = '+_Str(PIIXReg)); {v1.23}
+               {write enable, 4MB enable}
+               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or $7F10 );
+               LogWrite('VT8233 method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                SouthPos and $7, $40 ))); {v1.23}
+             end
+            else
+             begin
+               LogWrite('VT8233 method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+                SouthPos and $7, $40 ))); {v1.23}
+               SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+             end;
+          end
+         else
+          begin
+            If Map then
+             Begin
+              Mask := $C0000001;  {write enable, 512K enable}
+              If ( SouthFunc and 1 ) <> 0 then Mask := Mask or $20000000; {1M enable} {v1.22}
 
-           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
-           LogWrite('VIA/AMD method: reg $40 = '+_Str(PIIXReg)); {v1.23}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
-           LogWrite('VIA/AMD method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
-            SouthPos and $7, $40 ))); {v1.23}
-          End else
-          Begin
-           LogWrite('VIA/AMD method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
-            SouthPos and $7, $40 ))); {v1.23}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
-          End;
+              PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
+              LogWrite('VIA/AMD method: reg $40 = '+_Str(PIIXReg)); {v1.23}
+              SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
+              LogWrite('VIA/AMD method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+               SouthPos and $7, $40 ))); {v1.23}
+             End else
+             Begin
+              LogWrite('VIA/AMD method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+               SouthPos and $7, $40 ))); {v1.23}
+              SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+             End;
+          end;
         End;
   $04 : Begin {ALi method} {v1.18}
          If Map then
@@ -1047,8 +1194,8 @@ Begin
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 );
            LogWrite('Utron method: reg $60 = '+_Str(PIIXReg));
-           {write enable}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg or $2 );
+           {write & 128k enable}
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60, PIIXReg or $802 );
            LogWrite('Utron method: reg $60 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $60 )));
           End else
           Begin
@@ -1058,6 +1205,28 @@ Begin
           End;
         End;
  End;
+
+ case Hi(LPCFunc) of {v1.27}
+   $01: begin
+          if map then
+           begin
+             ITEUnlock(LPCBase);
+             PIIXReg:=LPCRead(LPCBase,$24);
+             LogWrite('ITE LPC method: reg $24 = '+_Str(PIIXReg));
+             {512K enable, write enable}
+             LPCWrite(LPCBase,$24,PIIXReg or $7C);
+             LogWrite('ITE LPC method: reg $24 changed to '+_Str(LPCRead(LPCBase,$24)));
+             LPCWrite(LPCBase,$02,LPCRead($4E,$02) or 2);
+           end else
+           begin
+             ITEUnlock(LPCBase);
+             LogWrite('ITE LPC method: restoring reg $24 from '+_Str(LPCRead(LPCBase,$24)));
+             LPCWrite(LPCBase,$24,PIIXReg);
+             LPCWrite(LPCBase,$02,LPCRead($4E,$02) or 2);
+           end;
+        end;
+ end;
+
  ROMEnabled:=Map; {v1.22}
 End;
 

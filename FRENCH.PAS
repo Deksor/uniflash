@@ -46,7 +46,7 @@ Begin
 { AddMsg( Lid, 33, '-EXPERT         Donne accŠs … des fonctions plus avanc‚es' );}
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Utilise la FLASH ROM d''une carte PCI' );
-{ AddMsg( Lid, 35, '-DEBUG          Mode de d‚boguage. Donne des infos utiles' );}
+ AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Forcer UniFlash … utiliser l''interface FLASH de AMI' );
  AddMsg( Lid, 37, 'Impossible d''acc‚der … la m‚moire au-del… de 1Mo - utilisez HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Le processeur n''est pas un 486+ ou le processeur est en mode virtuel' );
@@ -103,7 +103,7 @@ Begin
  AddMsg( Lid, 89, 'R‚‚crire les pr‚c‚dentes donn‚es CMOS' );
  AddMsg( Lid, 90, 'Menu ESCD (PnP)' );
  AddMsg( Lid, 91, 'Menu avanc‚' );
- AddMsg( Lid, 92, 'Informations BIOS suppl‚mentaires' );
+{ AddMsg( Lid, 92, 'Informations BIOS suppl‚mentaires' );}
  AddMsg( Lid, 93, 'Quitter' );
  AddMsg( Lid, 94, 'LA DERNIERE ECRITURE A ECHOUE. QUITTER QUAND MEME [O/N]?'#7 );
  AddMsg( Lid, 95, ' impossible !'#7 ); {Last part of msg 7 & 8 !!}
@@ -148,4 +148,5 @@ Begin
  AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
+ AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
 End.

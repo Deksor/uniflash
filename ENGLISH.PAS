@@ -46,7 +46,7 @@ Begin
 { AddMsg( Lid, 33, '-EXPERT         Enables some more advanced menu options' );}
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Flash PCI option ROM instead of system ROM' );
-{ AddMsg( Lid, 35, '-DEBUG          Debugging mode. Gives some low-level info' );}
+ AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Use AMI Flash Interface' ); {v1.24}
  AddMsg( Lid, 37, 'Unable to access memory beyond 1Mb - try using HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Sorry, but either you don''t have a 486+ or CPU is in V86 mode.' );
@@ -103,7 +103,7 @@ Begin
  AddMsg( Lid, 89, 'Restore backup CMOS data' );
  AddMsg( Lid, 90, 'ESCD (PnP) submenu ¯' );
  AddMsg( Lid, 91, 'ADVANCED submenu ¯' );
- AddMsg( Lid, 92, 'Additional BIOS info' );
+{ AddMsg( Lid, 92, 'Additional BIOS info' );}
  AddMsg( Lid, 93, 'Quit' );
  AddMsg( Lid, 94, 'LAST FLASH WRITE WAS UNSUCCESFULL. QUIT ANYHOW [Y/N]?'#7 );
  AddMsg( Lid, 95, ' !'#7 );  {Last part of msg 7 & 8 !!!!}
@@ -120,7 +120,7 @@ Begin
  AddMsg( Lid, 104, 'Mfg id string: ' );}
  AddMsg( Lid, 105, 'YN' );   {Yes No}
  AddMsg( Lid, 106, '-FORCE option must be followed by 4 hex digits' );
- AddMsg( Lid, 107, '-CHIPLIST       Show list of supported flash chips' );
+ AddMsg( Lid, 107, '-CHIPLIST       Show list of supported flash chips with their numbers' );
  AddMsg( Lid, 108, '-FORCE xxxx     Force using routines for chip xxxx (4 hex digits)' );
  AddMsg( Lid, 109, '-SAVE fname     Write current bios image to file fname' );
  AddMsg( Lid, 110, 'This program can''t be run under Windows.' ); {v1.22}
@@ -148,4 +148,5 @@ Begin
  AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
+ AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
 End.

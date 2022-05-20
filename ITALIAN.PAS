@@ -46,7 +46,7 @@ Begin
 { AddMsg( Lid, 33, '-EXPERT         Attiva alcune funzioni avanzate' );}
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Opzione per flashare una ROM PCI invece della ROM di sitema' );
-{ AddMsg( Lid, 35, '-DEBUG          Modalità debug. Mostra alcune informazioni di basso livello' );}
+ AddMsg( Lid, 35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg( Lid, 36, '-AMI            Forza l''utilizzo dell'' AMI FLASH INTERFACE' );
  AddMsg( Lid, 37, 'Impossibile accedere alla maemoria estesa - prova con HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Spiacente ma o non hai un 486+ la CPU è in V86 mode.' );
@@ -103,7 +103,7 @@ Begin
  AddMsg( Lid, 89, 'Ripristina il backup dei dati CMOS' );
  AddMsg( Lid, 90, 'sottomenu'' ESCD (PnP) ¯' );
  AddMsg( Lid, 91, 'Sottomenu AVANZATO ¯' );
- AddMsg( Lid, 92, 'Informazioni aggiuntive BIOS' );
+{ AddMsg( Lid, 92, 'Informazioni aggiuntive BIOS' );}
  AddMsg( Lid, 93, 'ESCI' );
  AddMsg( Lid, 94, 'L''ULTIMA PROGRAMMAZIONE NON HA AVUTO SUCCESSO. USCIRE [S/N]?'#7 );
  AddMsg( Lid, 95, ' !'#7 );  {Last part of msg 7 & 8 !!!!}
@@ -148,4 +148,5 @@ Begin
  AddMsg( Lid, 132, '-CMOSR fname    Restore CMOS settings from file fname' ); {v1.25}
  AddMsg( Lid, 133, '-CMOSC          Clears CMOS settings' ); {v1.25}
  AddMsg( Lid, 134, '-QUIT           Quits (e.g. UNIFLASH -SAVE BACKUP.BIN -QUIT)'); {v1.26}
+ AddMsg( Lid, 135, '-PCIOR must have either zero or three parameters (BUS, DEV, FUN)'); {v1.27}
 End.

@@ -24,10 +24,11 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.26';
+Version    = '1.27';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
+Mono       : Boolean = False; {v1.27}
 var Wait:WaitProc;
 
 Function ConstPtr( Const S : String ) : Pointer;
@@ -39,6 +40,7 @@ Function Hb( B : Byte ) : String;
 Function Hw( W : Word ) : String;
 Function Hl( L : Longint ) : String;
 Function Windows : Boolean; {v1.22}
+Function EMM386 : Boolean; {v1.27}
 Function FlatRealOn : Boolean;
 Procedure FlatRealOff;
 Procedure CloseXMS; {v1.24}
@@ -62,11 +64,14 @@ function zero2str(s,o : word) : string;
 {procedure cwriteln(c1,c2 : byte; s1,s2 : string);
 procedure cwrite(c1,c2 : byte; s1,s2 : string);}
 function strcomp(s1,s2 : string; b : byte) : boolean;
+procedure ClrKbBuf; {v1.27}
 function _ReadKey:Char; {v1.23}
 function _Str(I:LongInt):String; {v1.23}
 procedure LogWrite(S:String); {v1.23}
 procedure LogStart; {v1.23}
 procedure LogEnd; {v1.23}
+procedure Text_Color(Color:Byte); {v1.27}
+procedure Text_Background(Color:Byte); {v1.27}
 
 Implementation
 
@@ -78,7 +83,6 @@ XMSHnd  : Word = 0;
 
 Var
 TmpGDT    : ARRAY[ 0 .. 7 ] of Word;
-SaveEProc : Pointer;
 XMMRtn    : LongInt;
 CurMenu   : PMenuItem;
 MicroSec  : Word;
@@ -86,6 +90,7 @@ TSC,uSec  : LongInt; {v1.22}
 Ext       : Char; {v1.23}
 History   : String[2]; {v1.23}
 Shift     : Boolean; {v1.23}
+XMSManager: Boolean; {v1.27}
 
 Function ConstPtr( Const S : String ) : Pointer;
 Begin
@@ -178,6 +183,21 @@ Asm
 @nowin: XOR     AX,AX
 @exit:
 End;
+
+{Detect if EMM386.EXE is loaded}
+function EMM386: Boolean; {v1.27}
+var F:File;
+begin
+  Assign(F,'EMMXXXX0');
+  Reset(F);
+  if IOResult<>0 then
+   begin
+     EMM386:=False;
+     Exit;
+   end;
+  EMM386:=True;
+  Close(F);
+end;
 
 {Set flat real mode, return false on error}
 Function FlatRealOn : Boolean; Assembler;
@@ -288,7 +308,7 @@ End;
 
 Procedure CloseXMS; {v1.24}
 Begin
- if SaveEProc=nil then Exit;
+ if not XMSManager then Exit; {v1.27}
  Asm
   MOV   AH,0DH  {Unlock}
   MOV   DX,XMSHnd
@@ -304,7 +324,7 @@ End;
 Procedure XMSExitProc; Far;
 Begin
  CloseXMS;
- ExitProc := SaveEProc;
+ ExitProc := nil;
 End;
 
 Function A20NotOn : Boolean; Assembler;
@@ -342,7 +362,7 @@ BSize    : Word;
 X        : Byte;
 
 Begin
- SaveEProc:=nil;
+ XMSManager:=False; {v1.27}
  Asm
   MOV   AX,4300H
   INT   2FH
@@ -364,7 +384,7 @@ Begin
   JNZ   NoXMMMem
   MOV   XMSHnd,DX
  End;
- SaveEProc := ExitProc;
+ XMSManager:=True; {v1.27}
  ExitProc := @XMSExitProc;
  Asm
   MOV   AH,0CH  {Lock XMS block}
@@ -651,8 +671,8 @@ Begin
     If CurMenu = Menu then
      Begin
       GotoXY( X, Y + MTop );
-      If Act then TextColor( 15 ) else TextColor( 7 );
-      TextBackGround( 0 );
+      If Act then Text_Color( 15 ) else Text_Color( 7 );
+      Text_Background( 0 );
       Write( Descr );
      End;
    End;
@@ -674,7 +694,7 @@ Begin
   With CurItem^ do
    Begin
     GotoXY( X, Y + MTop );
-    If ( Flags and 1 ) <> 0 then TextColor( 15 ) else TextColor( 7 );
+    If ( Flags and 1 ) <> 0 then Text_Color( 15 ) else Text_Color( 7 );
     Write( Descr );
 
     CurItem := Next;
@@ -689,19 +709,19 @@ Begin
     With CurItem^ do
      Begin
       GotoXY( X, Y + MTop );
-      If ( Flags and 1 ) <> 0 then TextColor( White ) else TextColor( LightGray );
-      TextBackGround( Black );
+      If ( Flags and 1 ) <> 0 then Text_Color( White ) else Text_Color( LightGray );
+      Text_Background( Black );
       Write( Descr );
      End;
     With NewItem^ do
      Begin
       GotoXY( X, Y + MTop );
-      If ( Flags and 1 ) <> 0 then TextColor( White ) else TextColor( LightGray );
-      TextBackGround( LightRed );
+      If ( Flags and 1 ) <> 0 then Text_Color( White ) else Text_Color( LightGray );
+      Text_Background( LightRed );
       Write( Descr );
       GotoXY( 1,25 ); {v1.23}
-      If ( Flags and 1 ) <> 0 then TextColor( LightGreen ) else TextColor( Green );
-      TextBackGround( Black );
+      If ( Flags and 1 ) <> 0 then Text_Color( LightGreen ) else Text_Color( Green );
+      Text_Background( Black );
       ClrEol; {v1.23}
       Write( Help ); {v1.23}
       GotoXY( X, Y + MTop ); {v1.23}
@@ -716,8 +736,8 @@ Begin
           Begin
            If ( CurItem^.Flags and 2 ) = 0 then
             Begin
-             textcolor( 7 );
-             textbackground( 0 );
+             Text_Color( 7 );
+             Text_Background( 0 );
              CursorOn;
              CurItem^.Action.P;
              CursorOff;
@@ -726,14 +746,14 @@ Begin
             End else
             Begin
              Window( 1, MTop, 80, 22 );
-             TextBackGround( 0 );
+             Text_Background( 0 );
              ClrScr;
              Window( 1, 1, 80, 25 );
              SvItem := CurItem;
              RunMenu( CurItem^.Action.M );
              CursorOff;
              Window( 1, MTop, 80, 22 );
-             TextBackGround( 0 );
+             Text_Background( 0 );
              ClrScr;
              Window( 1, 1, 80, 25 );
              CurItem := Menu;
@@ -741,7 +761,7 @@ Begin
               With CurItem^ do
                Begin
                 GotoXY( X, Y + MTop );
-                If ( Flags and 1 ) <> 0 then TextColor( 15 ) else TextColor( 7 );
+                If ( Flags and 1 ) <> 0 then Text_Color( 15 ) else Text_Color( 7 );
                 Write( Descr );
                 CurItem := Next;
                End;
@@ -768,8 +788,8 @@ Begin
          End;
   End;
  Until Done;
- TextBackGround( 0 );
- TextColor( 7 );
+ Text_Background( 0 );
+ Text_Color( 7 );
  CursorOn;
 End;
 
@@ -785,22 +805,22 @@ Begin
  ClearProgressBar;
  GotoXY( 11, 20 );
  ClrEol;
- Textcolor(yellow);
+ Text_Color(yellow);
  GotoXY( 33, 19 );
  write('ษออออออออออออออออออออออออออออออออป');
  GotoXY( 11, 20 );
  Write( Msg );
  GotoXY( 33, 20 );
  Write( 'บ');
- TextColor(4);
+ Text_Color(4);
  Write('ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ');
- TextColor(yellow);
+ Text_Color(yellow);
  Write('บ' );
  GotoXY( 33, 21 );
  write('ศออออออออออออออออออออออออออออออออผ');
- Textcolor(white);
+ Text_Color(white);
  GotoXY( 34, 20 );
- TextColor( 2 );
+ Text_Color( 2 );
 End;
 
 Procedure Beep( Hz, Ms : Word );
@@ -967,10 +987,32 @@ begin
   End;
 end;
 
+procedure Text_Color(Color:Byte); {v1.27}
+begin
+  if not Mono then TextColor(Color);
+end;
+
+procedure Text_Background(Color:Byte); {v1.27}
+begin
+  if not Mono then TextBackground(Color) else
+   if Color=Black then
+    begin
+      TextBackground(Black);
+      TextColor(LightGray);
+    end
+   else
+    begin
+      TextBackground(LightGray);
+      TextColor(Black);
+    end;
+end;
+
 procedure ClrKbBuf; {v1.23}
 begin
   MemW[$40:$1A]:=MemW[$40:$80]; {Next char := Buffer beginning}
   MemW[$40:$1C]:=MemW[$40:$80]; {First free char := Buffer beginning}
+  Mem[$40:$17]:=0; {Clear keyboard flags} {v1.27}
+  Mem[$40:$18]:=0;
 end;
 
 function _ReadKey:Char; {v1.23}
@@ -1128,7 +1170,7 @@ end;
 
 
 Begin
- If not Windows and TSCPresent then {v1.22}
+ If not Windows and not EMM386 and TSCPresent then {v1.22}
   Begin
     InitTSC;
     uSec := TSC div 100000;

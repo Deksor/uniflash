@@ -1,4 +1,4 @@
-                     UniFlash version 1.26 documentation
+                     UniFlash version 1.27 documentation
                      -----------------------------------
                    (C) 2002 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
@@ -120,18 +120,21 @@ Here's a list of chipsets suported by Uniflash:
           |*Apollo VPX           |
           |*Apollo VP2           |
           | Apollo VP3           |
-          | Apollo MVP3          |
+          |*Apollo MVP3          |
           | Apollo P6            |
           | Apollo MVP4          | VIA chipsets are weird - some work, some
           | Apollo Pro           | don't.
           | Apollo Pro Plus/133  |
           |*Apollo Pro 133A      | If you have "Flash Write protect" in BIOS,
           | Apollo ProMedia      | disable it and it should work.
-          | Apollo Pro 133Z/PM133| VT8233: No datasheet available
-          | Apollo KX133         |         (KT266 and Pro 266)
-          |*Apollo KT133(A)      | These North Bridges are detected, but
-          | Apollo KT266         | aren't used in any VIA's chipset (??):
-          | Apollo Pro 266       | VT8653, VT8662, VT8615, VT8361, VT3133
+          | Apollo Pro 133Z/PM133|
+          | Apollo KX133         |
+          |*Apollo KT133(A)      |
+          | ProSavage KM133(A)   |
+          | Apollo KT266(A)      |
+          | Apollo Pro 266       | These North Bridges are detected, but
+          | ProSavage P4M266     | aren't used in any VIA's chipset (??):
+          | P4X266(A)/P4X333     | VT8653, VT8662, VT8615, VT8361, VT3133
 ----------|----------------------|--------------------------------------------
  AMD      |*AMD 640 (same as VIA | Works just fine
           | Apollo VP2)          |
@@ -147,12 +150,20 @@ Here's a list of chipsets suported by Uniflash:
           | 5571                 | support 12 chipsets, I needed to write
           |*5591/5592            | 5 different methods of enabling Flash ROM
           | 5596                 | write access. (The more code, the more
-          | 5597/5598/5581/5120  | bugs :-)
+          |*5597/5598/5581/5120  | bugs :-)
           | 530                  | All SiS South Bridges have the same
           | 540                  | device ID $0008 (SiS 540 and 630 can have
           | 600                  | either $0008 or $0018 - it can be
           |*620                  | configured(!!!) through registers.
-          |#630                  | SiS 5591/5592 works, 501/5101/5501 doesn't
+          |*630                  | SiS 5591/5592 works, 501/5101/5501 doesn't
+          | 635                  |
+          | 640                  | Boards with the new chipsets (540 and 630
+          | 645                  | and up) have often ITE IT8705F LPC Super IO
+          | 645DX                | (also called SiS 950 sometimes) which
+          | 650                  | allows to use regular Flash ROM on LPC bus.
+          | 730                  |
+          |*735                  |
+          | 740                  |
 ----------|----------------------|--------------------------------------------
  ALi      |&FINALi 486 no support| FINALi 486 not supported because it doesn't
           |*Aladdin Pro II       | map Flash ROM to 4GB
@@ -173,6 +184,8 @@ Here's a list of chipsets suported by Uniflash:
 ----------|----------------------|--------------------------------------------
  ITE      | IT8871F/2F and       | Don't know where used, untested.
           | IT8888F South Bridges| (No known chipset with these SBs)
+          |*IT8700F/8705F        | LPC Super I/Os with Flash ROM support
+          | IT8710               | (used with SiS 540, SiS 630 and newer)
 ----------|----------------------|--------------------------------------------
  Reliance/| ServerSet III LE     | All chipsets with OSB4 South Bridge should
  Server   | ServerSet III HE     | work. Untested.
@@ -686,7 +699,7 @@ UniFlash supports the following flash chips:
  *W29C020(C)                      | 256KB
   W29C040                         | 512KB
   W29EE512                        | 64KB
- #W49F002U                        | 256KB
+ *W49F002U                        | 256KB
   W49V002(A)                      | 256KB
   W49V002F(A) (Firmware Hub)      | 256KB
 ------------------------------------------------------------------------------
@@ -790,21 +803,22 @@ Flash ROM chip) - try to put an AGP card in (there are no ISA slots).
 UNIFLASH will give you some audible feedback, though:
 first short beep: UNIFLASH invoked, reading BIOS image
 second short beep: done reading BIOS image, starting to flash
-double short beep: done flashing, reset your system
+chime sound: done flashing, reset your system
 long continuous beep: some error occured, press any key to retry operation
 
 5.2            Command-line parameters
 --------------------------------------
-UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]
-          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]
+UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI]
+          [-SAVE fname|-CHIPLIST|-FORCE xxxx][-LOG][-MONO]
           [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT]
 
 -H or -?        Shows command-line parameters (this list)
 -E fname        Flashes bios image from file fname to Flash ROM without any
                 user intervention
 -PCIOR          Flash PCI option ROM instead of system ROM
+  [BUS DEV FUN] Manually specify PCI device (decimal numbers)
 -AMI            Use AMI Flash Interface
--CHIPLIST       Show list of supported flash chips
+-CHIPLIST       Show list of supported flash chips with their numbers
 -FORCE xxxx     Force using routines for chip xxxx (4 hex digits)
 -SAVE fname     Write current bios image to file fname
 -CMOSS fname    Save current CMOS settings to file fname
@@ -862,6 +876,22 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.27       -added -MONO parameter for monochrome monitors
+           -enhanced -PCIOR functionality, you can now manually specify
+            a device by its BUS, DEVICE and FUNCTION numbers (decimal)
+           -fixed HiNT VXPro-II (Utron UC85C501/502) 128KB Flash ROMs
+           -added some VIA chipsets: ProSavage KM133(A), P4M266, P4X266(A)/333
+           -added real VIA VT8233 support
+           -fixed hang when EMM386.EXE is loaded (display error message now)
+           -success chime sound also in emergency mode
+           -fixed Atmel AT29Cxxx detection
+           -added ITE IT8700F/8705F and IT8710 LPC Super I/O detection with
+            SiS 540 and SiS 630 chipsets and all newer
+           -added some SiS chipsets : SiS 635, SiS 640, SiS 645, SiS 645DX,
+            SiS 650, SiS 730, SiS 735 and SiS 740 - I have no datasheets, but
+            SiS 735 is tested and works
+           -clear keyboard buffer before asking for file names and also on exit
+           -fixed memory de-allocation bug when HIMEM.SYS is loaded
 1.26       -added Intel E7500 chipset with 82801CA (ICH3-S) I/O Controller Hub
            -added some ALi chipsets: Aladdin III (M1521 and M1523(B)) and
             Aladdin IV/IV+ (M1531(B))
@@ -1134,7 +1164,7 @@ When sending reports that something doesn't work, always send the log file!
    seems to be write protected (not responding to commands) and I don't know
    how to disable the protection - please help me if you know!
  - 256KB BIOSes doesn't work on some i430VX/HX boards (AWDFLASH works!)
- - Winbond W49F002U doesn't work - looks like write protected
+ - Winbond W49F002U doesn't work - looks like write protected (sometimes???)
  - Some VIA and AMD chipsets don't work - maybe because non-standard flash
    write protection on some boards.
  - Garbage on screen instead of flashing - on Asus P5A board with Aladdin V
@@ -1197,6 +1227,15 @@ Mercury/Kobian| KOB 694X FSX r1.0 | ApolloPro 133A| SST 39VF020/3V (PLCC32)
 QDI           | LegendX           | Intel 440LX   | Winbond W29C020(C)/5V
 PC Chips      | M741LMRT          | SiS 620+5595  | SST 29EE010/5V
 PC Partner    | VIB8x4DS          | Apollo VPX    | SyncMOS F29C51002T/5V
+Soyo          | 5EMA+ v1.1        | Apollo MVP3   | Macronix MX29F001T/5V
+LuckyStar     | K7VAT+            | Apollo KT133  | Winbond W29EE011/5V
+LuckyStar     | K7VAT+            | Apollo KT133  | Winbond W29C020(C)/5V
+LuckyStar     | K7VAT+            | Apollo KT133  | SST 39SF020(A)/5V
+Chaintech     | 7AIA5             | Apollo KT133A | Winbond W49F002U/5V
+PC Chips      | M571              | SiS 5598      | Winbond W29EE011/5V
+PC Partner    | P5VB3+ Rev. B     | Apollo MVP3   | AMD Am29F010A/5V
+Mercury/Kobian| KOB 630E FSFx r1.1| SiS630+IT8705F| EON EN29F002T/5V
+ECS           | K7S5A             | SiS735+IT8705F| Winbond W49F002U/5V
 
 
 11.0            Beta testing stuff
@@ -1225,6 +1264,9 @@ in mind when we started this project. Thanx in advance!
                                one of them back!)
                 Miha Ovcak
                 Alejando Pelaez
+                RusH
+                David Russell
+                Highlander
 
 
 12.0            Biz support

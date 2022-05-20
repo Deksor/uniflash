@@ -27,6 +27,7 @@ ORBus, OrDev,
 ORFun, Z,
 FlashNo,X,Y,
 Count       : Byte; {v1.22}
+Int         : Integer;
 BIOSBlk     : ARRAY[ 0 .. 32767 ] of Byte;
 FlashName   : ^String;
 OldExitProc : Pointer;
@@ -342,7 +343,7 @@ Begin
    End;
   If VErr then
    Begin
-    TextColor( 12 );
+    Text_Color( 12 );
     GotoXY( 2, 22 );
     If Emergency then Sound( 1000 ) else Write( #7 );
     Write( Msg( 4 ) );
@@ -353,7 +354,7 @@ Begin
    End;
  Until ( not VErr ) or ( A = AnswNo );
  ClearProgressBar;
- if ( not VErr ) and ( not Emergency ) then {v1.22 beep after successful flash}
+ if not VErr then {v1.22}
   Begin
    Beep(  500, 100 );
    Beep( 1000, 100 );
@@ -393,7 +394,7 @@ Begin
    If not Emergency and
       not CompLinBlocks( $FFFFE000, NewBios + FlashSize - 8192, 8192 ) then
     Begin
-     TextColor( 12 );
+     Text_Color( 12 );
      GotoXY( 2, 22 );
      Write( Msg( 5 ) );
      Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -424,6 +425,7 @@ Begin
   Begin
    GotoXY( 11, 20 );
    Write( Msg( 6 ) );
+   ClrKbBuf; {v1.27}
    ReadLn( IName );
   End;
 
@@ -468,6 +470,7 @@ A     : Char;
 Begin
  GotoXY( 11, 20 );
  Write( Msg( 6 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -484,7 +487,7 @@ Begin
     End;
    If FileSize( IFile ) <> FlashSize then
     Begin
-     TextColor( 12 );
+     Text_Color( 12 );
      GotoXY( 11, 22 );
      Write( Msg( 9 ) );
      Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -500,7 +503,7 @@ Begin
     End;
    If BB then
     Begin
-     TextColor( 12 );
+     Text_Color( 12 );
      GotoXY( 11, 22 );
      Write( Msg( 10 ) );
      Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -522,11 +525,11 @@ Begin
    GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( LightRed );
+     Text_Color( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( LightGreen );
+     Text_Color( LightGreen );
      Write( Msg( 12 ) );
     End;
   End else
@@ -556,6 +559,7 @@ A     : Char;
 Begin
  GotoXY( 11, 20 );
  Write( Typ + Msg( 13 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -598,11 +602,11 @@ Begin
    GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( LightRed );
+     Text_Color( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( LightGreen );
+     Text_Color( LightGreen );
      Write( Msg( 12 ) );
     End;
   End else
@@ -626,7 +630,7 @@ End;*)
 
 Procedure ClearPnPDMI( Typ : String; Pos : LongInt );
 Begin
- TextColor( 12 );
+ Text_Color( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 16 ), Typ, Msg( 17 ) );
  Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -644,11 +648,11 @@ Begin
    GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( LightRed );
+     Text_Color( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( LightGreen );
+     Text_Color( LightGreen );
      Write( Msg( 12 ) );
     End;
   End;
@@ -673,6 +677,7 @@ X     : LongInt;
 Begin
  GotoXY( 11, 20 );
  Write( Msg( 97 ) + Typ + Msg( 18 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  Assign( IFile, IName );
  Rewrite( IFile, 1 );
@@ -713,6 +718,7 @@ IFile : File;
 Begin
  GotoXY( 11, 20 );
  Write( Msg( 19 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  Assign( IFile, IName );
  Rewrite( IFile, 1 );
@@ -743,6 +749,7 @@ A     : Char;
 Begin
  GotoXY( 11, 20 );
  Write( Msg( 19 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -767,7 +774,7 @@ Begin
      Close( IFile );
      Exit;
     End;
-   TextColor( 12 );
+   Text_Color( 12 );
    GotoXY( 11, 22 );
    Write( Msg( 10 ) );
    Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -792,11 +799,11 @@ Begin
    GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( LightRed );
+     Text_Color( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( LightGreen );
+     Text_Color( LightGreen );
      Write( Msg( 12 ) );
     End;
   End else
@@ -809,7 +816,7 @@ End;
 {Flash BIOS backup back into flash chip}
 Procedure FlashOldBIOS; Far;
 Begin
- TextColor( 12 );
+ Text_Color( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 20 ) );
  Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -918,7 +925,7 @@ end;
 {Clear CMOS ram area}
 Procedure ClearCMOS; Far;
 Begin
- TextColor( 12 );
+ Text_Color( 12 );
  GotoXY( 2, 22 );
  Write( Msg( 21 ) );
  Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );
@@ -927,7 +934,7 @@ Begin
  If A = AnswYes then
   Begin
    CMOSClr;
-   TextColor(12);
+   Text_Color(12);
    GotoXY(11,22);
    if CMOSClr then
     begin
@@ -970,6 +977,7 @@ IFile : File;
 Begin
  GotoXY( 11, 20 );
  Write( Msg( 97 ) + 'CMOS' + Msg( 18 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  Assign( IFile, IName );
  Rewrite( IFile, 1 );
@@ -1036,6 +1044,7 @@ IFile : File;
 Begin
  GotoXY( 11, 20 );
  Write( Msg( 97 ) + 'CMOS' + Msg( 18 ) );
+ ClrKbBuf; {v1.27}
  ReadLn( IName );
  If IName <> '' then
   Begin
@@ -1075,7 +1084,7 @@ var X,Z:Byte;
     OK:Boolean;
 
 Begin
- TextColor( 12 );
+ Text_Color( 12 );
  GotoXY( 11, 22 );
  Write( Msg( 27 ) );
  repeat A:=UpCase(_ReadKey) until (A=AnswYes) or (A=AnswNo);
@@ -1109,7 +1118,7 @@ Begin
       Port[$72]:=X;
       if Port[$73]<>CMOSBack[X] then OK:=False;
      end;
-   TextColor(12);
+   Text_Color(12);
    GotoXY(11,22);
    if OK then
     begin
@@ -1136,7 +1145,7 @@ Begin
    SetPCIRegD( ORBus, ORDev, ORFun, $04, PCIReg4 );
    SetPCIRegD( ORBus, ORDev, ORFun, $30, PCIReg30 );
   End;
- TextColor( LightGray );
+ Text_Color( LightGray );
  RomEnable( Unmap );
  LogWrite('Turning off logging, shutting down to real mode');
  LogEnd;
@@ -1144,11 +1153,12 @@ Begin
  ExitProc := OldExitProc;
  Y := WhereY;
  Window( 1, WhereY, 80, 25 );
- TextColor( 7 );
- TextBackGround( 0 );
+ Text_Color( 7 );
+ Text_BackGround( 0 );
  ClrScr;
  Window( 1, 1, 80, 25 );
  GotoXY( 1, Y );
+ ClrKbBuf; {v1.27}
 End;
 
 Procedure WrtCenter( Msg : String );
@@ -1160,10 +1170,10 @@ Procedure Err( Msg : String );
 Begin
  WriteLn;
  WriteLn;
- textcolor(lightred);
+ Text_Color(lightred);
  LogWrite( Msg ); {v1.23}
  WrtCenter( #7 + Msg );
- textcolor(lightgray);
+ Text_Color(lightgray);
  If Emergency then Sound( 1000 );
  halt(0);
 End;
@@ -1179,45 +1189,6 @@ Begin
    OpStr := Copy( S, 2, Length( S ) - 1 );
   End else OpStr := '';
 End;
-
-(*procedure BiosInfo; far; {v1.22 DISABLED}
-var s1,s2,s3,s4,s5 : string;
-begin
-gotoxy(6,21);
-s1:=zero2str($f000,$A367);
-s2:=zero2str($f000,$e061);
-s3:=zero2str($f000,$ece0);
-s4:=zero2str($f000,$ec71);
-s5:=zero2str($f000,$e0c1);
-
-{if s1='Award Software,  Inc.' then}
-if not strcomp(s1,'Award',5) then
-   begin
-   s1:='?';
-   s2:='?';
-   s3:='?';
-   s4:='?';
-   s5:='?';
-   end;
-
-cwriteln(14,15, Msg( 100 ),s1);
-cwriteln(14,15, Msg( 101 ),s2);
-cwriteln(14,15, Msg( 102 ),s3);
-cwriteln(14,15, Msg( 103 ),s4);
-cwrite(14,15, Msg( 104 ),s5);
-readkey;
-gotoxy(1,21);
-clreol;
-gotoxy(1,22);
-clreol;
-gotoxy(1,23);
-clreol;
-gotoxy(1,24);
-clreol;
-gotoxy(1,25);
-clreol;
-
-end;*)
 
 procedure CheckRedir; {v1.22}
 var A:Byte;
@@ -1269,60 +1240,91 @@ begin
  If PCIOR then
   Begin
    OPRCnt := 0;
-   {Scan the PCI config space for devices with a PCI option ROM}
-   For OrBus := 0 to $FF do For OrDev :=0 to $1F do
-    Begin
-     If ( GetPCIRegD( OrBus, OrDev, 0, 0 ) and $FFFF ) <> $FFFF then
-      Begin
-       X := 0;
-       If ( GetPCIRegD( OrBus, OrDev, 0, $0C ) and $800000 ) <> 0 then X := 7;
-       For OrFun := 0 to X do
-        If ( GetPCIRegD( OrBus, OrDev, OrFun, 0 ) and $FFFF ) <> $FFFF then
-         Begin
-          (* Found a PCI device, check for PCI option ROM *)
-          Asm CLI End;
-          {Save state; enable memory}
-          PCIReg4 := GetPCIRegD( OrBus, OrDev, OrFun, $04 );     {Save reg 4}
-          SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 or $02 ); {Enable memory}
-          PCIReg30 := GetPCIRegD( OrBus, OrDev, OrFun, $30 );     {Save reg 30}
 
-          {Check for hardwired bits}
-          SetPCIRegD( OrBus, OrDev, OrFun, $30, $FFFFFFFF );  {Check for stuck 0's}
-          Img := GetPCIRegD( OrBus, OrDev, OrFun, $30 );
-          SetPCIRegD( OrBus, OrDev, OrFun, $30, $00000001 );  {Check for stuck 1's}
-          Img := Img xor GetPCIRegD( OrBus, OrDev, OrFun, $30 ); {Now every 0 is a hw bit}
-          {Scan for 1st non-hardwired bit}
-          For Z := 1 to 32 do
-           If ( Img and ( 1 shl LongInt( Z ) ) ) <> 0 then Break;
-          {We don't support option ROM's at (semi-)fixed addresses}
-          If ( Z < 32 ) and ( ( Img xor ( - ( 1 shl LongInt( Z ) ) ) ) = 0 ) then
-           Begin
-            {found PCI option ROM, add to list}
-            Inc( OPRCnt );
-            With OPRom[ OPRCnt ] do
-             Begin
-              MaxSize := 1 shl LongInt( Z );
-              VenID := GetPCIRegD( OrBus, OrDev, OrFun, $00 );
-              DevID := GetPCIRegD( OrBus, OrDev, OrFun, $00 ) shr 16;
-              Bus := OrBus;
-              Pos := ( OrDev shl 3 ) or OrFun;
-             End;
-           End;
-          {Restore PCI device state}
-          SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 );
-          SetPCIRegD( OrBus, OrDev, OrFun, $30, PCIReg30 );
-          Asm STI End;
+   if (OrBus<>0) or (OrDev<>0) or (OrFun<>0) then {v1.27}
+    begin
+      Asm CLI End;
+      PCIReg4 := GetPCIRegD( OrBus, OrDev, OrFun, $04 );     {Save reg 4}
+      SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 or $02 ); {Enable memory}
+      PCIReg30 := GetPCIRegD( OrBus, OrDev, OrFun, $30 );     {Save reg 30}
+      SetPCIRegD( OrBus, OrDev, OrFun, $30, $FFFFFFFF );  {Check for stuck 0's}
+      Img := GetPCIRegD( OrBus, OrDev, OrFun, $30 );
+      SetPCIRegD( OrBus, OrDev, OrFun, $30, $00000001 );  {Check for stuck 1's}
+      Img := Img xor GetPCIRegD( OrBus, OrDev, OrFun, $30 ); {Now every 0 is a hw bit}
+      For Z := 1 to 32 do If ( Img and ( 1 shl LongInt( Z ) ) ) <> 0 then Break;
+      If ( Z < 32 ) and ( ( Img xor ( - ( 1 shl LongInt( Z ) ) ) ) = 0 ) then
+       Begin
+        Inc( OPRCnt );
+        With OPRom[ OPRCnt ] do
+         Begin
+          MaxSize := 1 shl LongInt( Z );
+          VenID := GetPCIRegD( OrBus, OrDev, OrFun, $00 );
+          DevID := GetPCIRegD( OrBus, OrDev, OrFun, $00 ) shr 16;
+          Bus := OrBus;
+          Pos := ( OrDev shl 3 ) or OrFun;
          End;
-      End;
-    End;
+       End;
+      SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 );
+      SetPCIRegD( OrBus, OrDev, OrFun, $30, PCIReg30 );
+      Asm STI End;
+    end
+   else
+    begin
+      {Scan the PCI config space for devices with a PCI option ROM}
+      For OrBus := 0 to $FF do For OrDev :=0 to $1F do
+       Begin
+        If ( GetPCIRegD( OrBus, OrDev, 0, 0 ) and $FFFF ) <> $FFFF then
+         Begin
+          X := 0;
+          If ( GetPCIRegD( OrBus, OrDev, 0, $0C ) and $800000 ) <> 0 then X := 7;
+          For OrFun := 0 to X do
+           If ( GetPCIRegD( OrBus, OrDev, OrFun, 0 ) and $FFFF ) <> $FFFF then
+            Begin
+             (* Found a PCI device, check for PCI option ROM *)
+             Asm CLI End;
+             {Save state; enable memory}
+             PCIReg4 := GetPCIRegD( OrBus, OrDev, OrFun, $04 );     {Save reg 4}
+             SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 or $02 ); {Enable memory}
+             PCIReg30 := GetPCIRegD( OrBus, OrDev, OrFun, $30 );     {Save reg 30}
+
+             {Check for hardwired bits}
+             SetPCIRegD( OrBus, OrDev, OrFun, $30, $FFFFFFFF );  {Check for stuck 0's}
+             Img := GetPCIRegD( OrBus, OrDev, OrFun, $30 );
+             SetPCIRegD( OrBus, OrDev, OrFun, $30, $00000001 );  {Check for stuck 1's}
+             Img := Img xor GetPCIRegD( OrBus, OrDev, OrFun, $30 ); {Now every 0 is a hw bit}
+             {Scan for 1st non-hardwired bit}
+             For Z := 1 to 32 do
+              If ( Img and ( 1 shl LongInt( Z ) ) ) <> 0 then Break;
+             {We don't support option ROM's at (semi-)fixed addresses}
+             If ( Z < 32 ) and ( ( Img xor ( - ( 1 shl LongInt( Z ) ) ) ) = 0 ) then
+              Begin
+               {found PCI option ROM, add to list}
+               Inc( OPRCnt );
+               With OPRom[ OPRCnt ] do
+                Begin
+                 MaxSize := 1 shl LongInt( Z );
+                 VenID := GetPCIRegD( OrBus, OrDev, OrFun, $00 );
+                 DevID := GetPCIRegD( OrBus, OrDev, OrFun, $00 ) shr 16;
+                 Bus := OrBus;
+                 Pos := ( OrDev shl 3 ) or OrFun;
+                End;
+              End;
+             {Restore PCI device state}
+             SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 );
+             SetPCIRegD( OrBus, OrDev, OrFun, $30, PCIReg30 );
+             Asm STI End;
+            End;
+         End;
+       End;
+    end;
 
    If OPRCnt > 0 then
     Begin
      WriteLn;
-     TextColor( yellow );
+     Text_Color( yellow );
      WrtCenter( Msg( 39 ) );
      WriteLn;
-     TextColor( 15 );
+     Text_Color( 15 );
      For X := 1 to OPRCnt do With OpROM[ X ] do
       Begin
        Write( '          ', Char( X + 48 ), '. ' );
@@ -1433,13 +1435,13 @@ begin
    If ( OldBIOS = 0 ) then
     Err( Msg( 50 ) );
   End;
- textcolor(yellow);
+ Text_Color(yellow);
  GotoXY( 2, 5 );
  ClrEol;
  Write( Msg( 51 ) );
  With FlashInfo^ do
   Begin
-   TextColor( 15 );
+   Text_Color( 15 );
    If FlashError <> 0 then Write( Msg( 52 ) )
    else
     Begin
@@ -1459,10 +1461,10 @@ begin
    LogWrite('Flash ROM ID: '+Hb(Man1)+HB(Dev1)+','+Hb(Man2)+Hb(Dev2)); {v1.23}
 
    GotoXY( 2, 6 );
-   TextColor(yellow);
+   Text_Color(yellow);
    ClrEol;
    Write( Msg( 53 ) );
-   TextColor( 15 );
+   Text_Color( 15 );
    If FlashError <> 0 then Write( Msg( 54 ) ) else
     Begin
      Case Flags and 3 of
@@ -1501,7 +1503,7 @@ end;
 
 procedure XMSInfo; {v1.24}
 begin
- TextColor( DarkGray );
+ Text_Color( DarkGray );
  GotoXY( 1, 24 );
  Write( Msg( 68 ) );
  Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
@@ -1550,16 +1552,16 @@ Begin
 
  ClrScr;
  GotoXY(11,2);
- TextColor(Yellow);
+ Text_Color(Yellow);
  Write('UniFlash ');
- TextColor(LightGreen);
+ Text_Color(LightGreen);
  Write('v' + Version );
- TextColor(LightCyan);
+ Text_Color(LightCyan);
  WriteLn(' (c) 2002 Rainbow Software (http://rainbow.ht.st)');
- TextColor(LightMagenta);
+ Text_Color(LightMagenta);
  GotoXY(11,3);
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
- TextColor(LightGray);
+ Text_Color(LightGray);
 
  CurLang := 1; {default = English}
  If ( ParamCount > 0 ) then
@@ -1588,6 +1590,10 @@ Begin
  AnswYes := PStr[ 1 ];
  AnswNo  := PStr[ 2 ];
 
+ OrBus:=0;
+ OrDev:=0;
+ OrFun:=0;
+
  While ParamCount >= X do
   Begin
    PStr := OpStr( ParamStr( X ) );
@@ -1602,14 +1608,15 @@ Begin
     Begin
      WriteLn;
      WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
-     WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]' );
+     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR [BUS DEV FUN]|-AMI]' );
+     WrtCenter( '          [-SAVE fname|-CHIPLIST|-FORCE xxxx][-LOG][-MONO]' );
      WrtCenter( '          [-CMOSS fname][-CMOSR fname][-CMOSC]][-QUIT]'); {v1.26}
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
      WrtCenter( Msg( 32 ) );
      WrtCenter( Msg( 34 ) );
+     WrtCenter( Msg( 35 ) );
      WrtCenter( Msg( 36 ) );
      WrtCenter( Msg( 107 ) );
      WrtCenter( Msg( 108 ) );
@@ -1621,8 +1628,28 @@ Begin
      WriteLn;
      Halt;
     End else
-   If PStr = 'PCIOR' then PCIOR := True else
+   If PStr = 'PCIOR' then
+    begin
+      PCIOR:=True;
+      Inc(X);
+      PStr:=ParamStr(X);
+      if (PStr[1]<>'-') and (PStr[1]<>'/') and (ParamCount>=X) then
+       begin
+         Val(PStr,OrBus,Int);
+         Inc(X);
+         PStr:=ParamStr(X);
+         if (ParamCount<X) or (PStr[1]='-') or (PStr[1]='/') then Err(Msg(135));
+         Val(PStr,OrDev,Int);
+         Inc(X);
+         PStr:=ParamStr(X);
+         if (ParamCount<X) or (PStr[1]='-') or (PStr[1]='/') then Err(Msg(135));
+         Val(PStr,OrFun,Int);
+       end
+      else Dec(X);
+    end
+   else
    If PStr = 'AMI' then WantToUseAmi := True else
+   If PStr = 'MONO' then Mono := True else {v1.27}
    If PStr = 'LOG' then
     begin
      Logging:=True;
@@ -1786,32 +1813,28 @@ Begin
    FlashFile( IFile, True {force boot block write, from personal experience}
                           {I really think that it can't be avoided !!      } );
    Close( IFile );
-   {double beep : flash done}
-   Beep( 1000, 200 );
-   Delay( 50 ); {v1.22 changed 20 -> 50}
-   Beep( 1000, 200 );
    Halt;
   End;
 
  GotoXY( 2, 7 );
- TextColor(yellow);
+ Text_Color(yellow);
  Write( Msg( 61 ) );
- TextColor( 15 );
+ Text_Color( 15 );
  Write( CurrentChipset);
  GotoXY( 2, 8 );
- TextColor(yellow);
+ Text_Color(yellow);
  Write( Msg( 62 ) );
- TextColor( 15 );
+ Text_Color( 15 );
  Write( Msg( 63 ) );
 
  XMSInfo; {v1.24}
 
  If PCIOr then
   Begin
-   TextColor( yellow );
+   Text_Color( yellow );
    GotoXY( 2, 8 );
    Write( Msg( 71 ) );
-   TextColor( 15 );
+   Text_Color( 15 );
    Write( Msg( 72 ), Hb( ORBus ),
           ':', Hb( ORDev ),
           ':', Hb( ORFun ) );
@@ -1836,7 +1859,7 @@ Begin
     end;
   end;
 
- textcolor(WHITE);
+ Text_Color(WHITE);
 
  PnPDMIMenu := AddMenuItem( Msg( 73 ), Msg( 112 ), 0, 1, @WritePnp,
                AddMenuItem( Msg( 74 ), Msg( 113 ), 1, 1, @FlashPnp,
@@ -1864,7 +1887,6 @@ Begin
              AddMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
              AddMenuItem( Msg( 90 ),  Msg( 127 ), 5, 3, PnPDMIMenu,
              AddMenuItem( Msg( 91 ),  Msg( 128 ), 6, 3, AdvMenu,
-{             AddMenuItem( Msg( 92 ), 7, 1, @BIOSInfo,}
              AddMenuItem( Msg( 93 ),  Msg( 129 ), 8, 1, Nil, Nil ) ) ) ) ) ) ) );
 
  If FlashInfo = Nil then
@@ -1891,7 +1913,7 @@ Begin
   RunMenu( MainMenu );
   If VErr then
    Begin
-    TextColor( 12 );
+    Text_Color( 12 );
     GotoXY( 11, 22 );
     Write( Msg( 94 ) );
     Repeat A := UpCase( _ReadKey ) Until ( A = AnswYes ) or ( A = AnswNo );

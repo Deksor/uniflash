@@ -168,8 +168,8 @@ Begin
 
       TimeOut := 30;   {should take no more than 200usec, we wait 300 max}
       X := Flash_Read(Pos+Y);
-      While ( ( X and $80 ) <> ( Ld and $80 ) ) and
-            ( ( X and $20 ) = 0 ) and ( TimeOut > 0 ) do
+      While ( ( X and $80 ) <> ( Ld and $80 ) ) and ( TimeOut > 0 ) do
+{            ( ( X and $20 ) = 0 ) and} {v1.38 - breaks some W49F002U chips}
        Begin
         Dec( TimeOut );
         Wait( 10 );

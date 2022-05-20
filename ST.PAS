@@ -7,14 +7,14 @@ Uses Flash, GenFlash, Tools;
 
 procedure Unprotect(SAddr:LongInt); {v1.29}
 begin
- FOMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10,
-  FIMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10) and $F8); {Disable Write-Lock}
+ FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $F8); {Disable Write-Lock}
 end;
 
 procedure Protect(SAddr:LongInt); {v1.29}
 begin
- FOMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10,
-  FIMemB(SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size) shl 10) or $01); {Enable Write-Lock}
+ FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01); {Enable Write-Lock}
 end;
 
 procedure UnprotectB(SAddr:LongInt); {v1.29}
@@ -25,13 +25,13 @@ begin
      begin
        if SAddr>=LongInt(CurCInfo.Size) shl 10-$4000 then
         begin
-          SAddr:=$FBFC002;
+          SAddr:=$FFBFC002;
         end
-       else SAddr:=$FBFA002;
+       else SAddr:=$FFBFA002;
      end
-    else SAddr:=$FBF8002;
+    else SAddr:=$FFBF8002;
   end
- else SAddr:=SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size);
+ else SAddr:=SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size);
  FOMemB(SAddr,FIMemB(SAddr) and $F8); {Disable Write-Lock}
 end;
 
@@ -43,14 +43,66 @@ begin
      begin
        if SAddr>=LongInt(CurCInfo.Size) shl 10-$4000 then
         begin
-          SAddr:=$FBFC002;
+          SAddr:=$FFBFC002;
         end
-       else SAddr:=$FBFA002;
+       else SAddr:=$FFBFA002;
      end
-    else SAddr:=$FBF8002;
+    else SAddr:=$FFBF8002;
   end
- else SAddr:=SAddr and $FFFF0000+$FC00002-LongInt(CurCInfo.Size);
+ else SAddr:=SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size);
  FOMemB(SAddr,FIMemB(SAddr) or $01); {Enable Write-Lock}
+end;
+
+procedure Unprotect_A(SAddr:LongInt); {v1.38}
+var A:Byte;
+begin
+ FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $F8); {Disable Write-Lock}
+ if (SAddr<$10000) or (SAddr>=(LongInt(CurCInfo.Size) shl 10)-$20000) then
+  begin
+    for A:=1 to 15 do
+     FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000,
+      FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000) and $F8); {Disable Write-Lock}
+  end;
+end;
+
+procedure Protect_A(SAddr:LongInt); {v1.38}
+var A:Byte;
+begin
+ FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01); {Enable Write-Lock}
+ if (SAddr<$10000) or (SAddr>=(LongInt(CurCInfo.Size) shl 10)-$20000) then
+  begin
+    for A:=1 to 15 do
+     FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000,
+      FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000) or $01); {Enable Write-Lock}
+  end;
+end;
+
+procedure Unprotect_B(SAddr:LongInt); {v1.38}
+var A:Byte;
+begin
+ FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) and $F8); {Disable Write-Lock}
+ if (SAddr<$20000) or (SAddr>=(LongInt(CurCInfo.Size) shl 10)-$10000) then
+  begin
+    for A:=1 to 15 do
+     FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000,
+      FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000) and $F8); {Disable Write-Lock}
+  end;
+end;
+
+procedure Protect_B(SAddr:LongInt); {v1.38}
+var A:Byte;
+begin
+ FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10,
+  FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01); {Enable Write-Lock}
+ if (SAddr<$20000) or (SAddr>=(LongInt(CurCInfo.Size) shl 10)-$10000) then
+  begin
+    for A:=1 to 15 do
+     FOMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000,
+      FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10+LongInt(A)*$1000) or $01); {Enable Write-Lock}
+  end;
 end;
 
 procedure STSecErase(SAddr:LongInt);Far; {v1.29}
@@ -79,6 +131,34 @@ begin
  UnprotectB(Pos);
  IntelSecProg(Pos,Data);
  ProtectB(Pos);
+end;
+
+procedure STSecErase_A(SAddr:LongInt);Far; {v1.38}
+begin
+ Unprotect_A(SAddr);
+ IntelSecErase(SAddr);
+ Protect_A(SAddr);
+end;
+
+procedure STSecProg_A(Pos,Data:LongInt);Far; {v1.38}
+begin
+ Unprotect_A(Pos);
+ IntelSecProg(Pos,Data);
+ Protect_A(Pos);
+end;
+
+procedure STSecErase_B(SAddr:LongInt);Far; {v1.38}
+begin
+ Unprotect_B(SAddr);
+ IntelSecErase(SAddr);
+ Protect_B(SAddr);
+end;
+
+procedure STSecProg_B(Pos,Data:LongInt);Far; {v1.38}
+begin
+ Unprotect_B(Pos);
+ IntelSecProg(Pos,Data);
+ Protect_B(Pos);
 end;
 
 Function STIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
@@ -430,9 +510,7 @@ Begin
            End;
           End;
     $2D, {v1.29}
-    $2F,
-    $80, {v1.37}
-    $81 : Begin
+    $2F : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := STSecProg;
@@ -443,9 +521,27 @@ Begin
            case DevId of
             $2D : Name := ConstPtr( 'M50FW080/3V (FWH)' );
             $2F : Name := ConstPtr( 'M50LPW080/3V (LPC)' );
-            $80 : Name := ConstPtr( 'M50FLW080A/3V (LPC/FWH)' );
-            $81 : Name := ConstPtr( 'M50FLW080B/3V (LPC/FWH)' );
            End;
+          End;
+    $80 : Begin
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := STSecProg_A;
+           Erase := STSecErase_A;
+           Sectors[ 0, 0 ] := 16; {16 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           Size := 1024;
+           Name := ConstPtr( 'M50FLW080A/3V (LPC/FWH)' );
+          End;
+    $81 : Begin {v1.38}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := STSecProg_B;
+           Erase := STSecErase_B;
+           Sectors[ 0, 0 ] := 16; {16 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           Size := 1024;
+           Name := ConstPtr( 'M50FLW080B/3V (LPC/FWH)' );
           End;
     $2E : Begin {v1.37}
            Flags  := 0;   {sector mode}

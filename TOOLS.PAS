@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.37';
+Version    = '1.38';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -62,6 +62,7 @@ Procedure Beep( Hz, Ms : Word );
 function zero2str(s,o : word) : string;
 function strcomp(s1,s2 : string; b : byte) : boolean;
 procedure ClrKbBuf; {v1.27}
+procedure InitKB; {v1.38}
 function _ReadKey:Char; {v1.23}
 function _Str(I:LongInt):String; {v1.23}
 procedure LogWrite(S:String); {v1.23}
@@ -1031,6 +1032,11 @@ begin
   MemW[$40:$1C]:=MemW[$40:$80]; {First free char := Buffer beginning}
   Mem[$40:$17]:=0; {Clear keyboard flags} {v1.27}
   Mem[$40:$18]:=0;
+end;
+
+procedure InitKB; {v1.38}
+begin
+  Port[$60]:=$EE;
 end;
 
 function _ReadKey:Char; {v1.23}

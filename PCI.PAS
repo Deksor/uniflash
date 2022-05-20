@@ -33,7 +33,7 @@ procedure ShadowRestore_Aladdin; {v1.31}
 
 implementation
 
-Uses Tools,Flash;
+Uses Tools,Flash,Crt;
 
 { PortD[ x ] := y }
 Procedure OPortD( Prt : Word; Val : LongInt ); Assembler;
@@ -996,6 +996,8 @@ Pos: Byte;
    if BIOSID=#0#0#0#0#0#0#0#0 then
     begin
       MoveLinBlockB($FFFFFFE8,LongInt(Seg(BIOSID)) shl 4+LongInt(Ofs(BIOSID)),8); {v1.34}
+      GotoXY(72,24);
+      Write(BIOSID); {v1.38}
       LogWrite('Detected BIOS ID: '+BIOSID);
     end;
  end;
@@ -1170,21 +1172,27 @@ Begin
            PIIXReg4:=0;
            if Lo(SouthFunc)=3 then {v1.29}
             begin
-              PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, 4, $40 ); {v1.29}
-              LogWrite('Intel method: PM Base = '+Hl(PIIXReg2));
-              if PIIXReg2=-1 then
+              GetBIOSID;
+              if (BIOSID='6A69KA19') {Abit BF6, BE6-II v1.0 and v1.1}
+               or (BIOSID='6A69KA1B') {Abit BE6-II v1.2}
+               or (BIOSID='6A69KA1C') then {Abit BE6-II v2.0 and BX133-RAID}
                begin
-                 PIIXReg4:=1;
-                 SetPCIRegD($00,SouthPos shr 3,3,$40,$6101);
-                 SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) or 1);
-                 LogWrite('Intel method: PM Base set to '+Hl(GetPCIRegD($00,SouthPos shr 3,3,$40)));
-                 PIIXReg3:=Port[$6134] or LongInt(Port[$6135]) shl 8
-                                                          or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24;
-                 LogWrite('Intel method: GPO status '+Hl(PIIXReg3));
-                 Port[$6135]:=Port[$6135] and $FD;
-                 Port[$6137]:=Port[$6137] and $FB; {Abit BX133-RAID v1.29}
-                 LogWrite('Intel method: GPO changed to '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
-                   or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
+                 PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, 4, $40 ); {v1.29}
+                 LogWrite('Intel method: PM Base = '+Hl(PIIXReg2));
+                 if PIIXReg2=-1 then
+                  begin
+                    PIIXReg4:=1;
+                    SetPCIRegD($00,SouthPos shr 3,3,$40,$6101);
+                    SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) or 1);
+                    LogWrite('Intel method: PM Base set to '+Hl(GetPCIRegD($00,SouthPos shr 3,3,$40)));
+                    PIIXReg3:=Port[$6134] or LongInt(Port[$6135]) shl 8
+                                                             or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24;
+                    LogWrite('Intel method: GPO status '+Hl(PIIXReg3));
+                    Port[$6135]:=Port[$6135] and $FD;
+                    Port[$6137]:=Port[$6137] and $FB; {Abit BX133-RAID v1.29}
+                    LogWrite('Intel method: GPO changed to '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
+                      or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
+                  end;
                end;
              end;
           End else
@@ -1192,17 +1200,18 @@ Begin
            LogWrite('Intel method: restoring reg $4C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $4C ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
-           if PIIXReg4=1 then {v1.29}
-            begin
-              LogWrite('Intel method: restoring GPO from '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
-               or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
-              Port[$6134]:=PIIXReg3 and $FF;
-              Port[$6135]:=PIIXReg3 and $FF00 shr 8;
-              Port[$6136]:=PIIXReg3 and $FF0000 shr 16;
-              Port[$6137]:=PIIXReg3 and $FF000000 shr 24;
-              SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) and $FFFFFFFE);
-              SetPCIRegD($00,SouthPos shr 3,3,$40,PIIXReg2);
-            end;
+           if BIOSID='6A69KA1C' then
+            if PIIXReg4=1 then {v1.29}
+             begin
+               LogWrite('Intel method: restoring GPO from '+Hl(Port[$6134] or LongInt(Port[$6135]) shl 8
+                or LongInt(Port[$6136]) shl 16 or LongInt(Port[$6137]) shl 24));
+               Port[$6134]:=PIIXReg3 and $FF;
+               Port[$6135]:=PIIXReg3 and $FF00 shr 8;
+               Port[$6136]:=PIIXReg3 and $FF0000 shr 16;
+               Port[$6137]:=PIIXReg3 and $FF000000 shr 24;
+               SetPCIRegD($00,SouthPos shr 3,3,$80,GetPCIRegD($00,SouthPos shr 3,3,$80) and $FFFFFFFE);
+               SetPCIRegD($00,SouthPos shr 3,3,$40,PIIXReg2);
+             end;
           End;
         End;
   $02 : Begin {Intel 8xx method} {v1.19}
@@ -1221,7 +1230,8 @@ Begin
            LogWrite('Intel 8xx method: reg $E0 changed to '+Hl(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $E0 ))); {v1.23}
            GetBIOSID;
-           if BIOSID='6A69RM4E' then {MSI MS-6337 v3.x}
+           if (BIOSID='6A69RM4E') or {MSI MS-6337 v3.x}
+            (BIOSID='6A69RM4L') then {MSI MS-6337 v5.x}
             begin
              if GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $5C ) and $10=$10 then
               begin
@@ -1284,7 +1294,9 @@ Begin
                SouthPos and $7, $40 ))); {v1.23}
 
               GetBIOSID;
-              if BIOSID='6A6S6A1A' then {Abit KG7}
+              if (BIOSID='6A6S6A1A') {Abit KG7}
+               or (BIOSID='6A6LMA19') {Abit KT7}
+               or (BIOSID='6A6LMA1A') then {Abit KT7A v1.3}
                begin
                 if GetPCIRegD( $00, SouthPos shr 3, 4, $40 ) and $8000=$8000 then
                  begin

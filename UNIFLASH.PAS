@@ -1693,7 +1693,7 @@ Begin
  Text_Color(LightGreen);
  Write('v' + Version );
  Text_Color(LightCyan);
- WriteLn(' (c) 2004 Rainbow Software (http://www.uniflash.org)');
+ WriteLn(' (c) 2005 Rainbow Software (http://www.uniflash.org)');
  Text_Color(LightMagenta);
  GotoXY(9,3);
  Write('Original version by Pascal van Leeuwen & Galkowski Adam');
@@ -2019,6 +2019,8 @@ Begin
     end;
    Halt;
   End;
+
+ InitKB; {v1.38}
 
  GotoXY( 2, 8 );
  Text_Color(yellow);

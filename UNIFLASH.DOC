@@ -1,6 +1,6 @@
-                     UniFlash version 1.37 documentation
+                     UniFlash version 1.38 documentation
                      -----------------------------------
-                   (C) 2004 Rainbow Software (Ondrej Zary)
+                   (C) 2005 Rainbow Software (Ondrej Zary)
           Original version by Pascal Van Leeuwen and Galkowski Adam
 
 
@@ -127,7 +127,7 @@ Here's a list of chipsets suported by Uniflash:
           | E7500                |
           | E7501                |
           | E7505                |
-          | i915G/P/925X         |
+          |*i915G/P/925X         |
 ----------|----------------------|--------------------------------------------
  VIA      | 486 with VT82C505    | 486 chipsets with VT82C505 PCI bridge
           | Appollo Master       |
@@ -158,7 +158,7 @@ Here's a list of chipsets suported by Uniflash:
           | AMD 750              | UniFlash supports true AMD chipsets since
           |#AMD 760              | version 1.20. Their registers are very
           | AMD 760MP            | similar to VIA. AMD 760 should work with
-          | AMD 760MPX           | both VIA and AMD (does it really exist?)
+          |*AMD 760MPX           | both VIA and AMD (does it really exist?)
           |                      | south bridges.
           | AMD 8000             |
           | Geode SC1100         | Geode bought from National, these chips
@@ -268,7 +268,13 @@ that the correct BIOS MUST be present in the socket when starting UniFlash or
 the flashing will not work.
 
 6A69RM4E = MicroStar MSI MS-6337 v3.0 (815EP Pro)
+6A69RM4L = MicroStar MSI MS-6337 v5.0 (815EPT Pro, MS-6337LE5)
 6A6S6A1A = Abit KG7(-Lite/-RAID)
+6A69KA19 = Abit BF6, BE6-II v1.0 and v1.1
+6A69KA1B = Abit BE6-II v1.2
+6A69KA1C = Abit BE6-II v2.0 and BX133-RAID
+6A6LMA19 = Abit KT7(-RAID), KT7A(-RAID), KT7E
+6A6LMA1A = Abit KT7A(-RAID) v1.3
 
 2.2            Tested PCI cards
 -------------------------------
@@ -705,11 +711,11 @@ UniFlash supports the following flash chips:
   29VF010                         | 128KB
   29VF020                         | 256KB
   29VF040                         | 512KB
- *49LF020                         | 256KB
-  49LF020A                        | 256KB
-  49LF030(A)                      | 384KB
-  49LF040                         | 512KB
-  49LF080(A)                      | 1024KB
+ *49LF020 (LPC)                   | 256KB
+ *49LF020A (LPC)                  | 256KB
+  49LF030(A) (LPC)                | 384KB
+  49LF040 (LPC)                   | 512KB
+  49LF080(A) (LPC)                | 1024KB
  *49LF002(A) (Firmware Hub)       | 256KB
   49LF003A (Firmware Hub)         | 384KB
   49LF004 (Firmware Hub)          | 512KB
@@ -769,11 +775,11 @@ UniFlash supports the following flash chips:
   M29W008(A)B                     | 1024KB
   M50FW002 (FWH)                  | 256KB
   M50LPW002 (LPC)                 | 256KB
-  M50FW040 (FWH)                  | 512KB
+ *M50FW040 (FWH)                  | 512KB
   M50LPW040 (LPC)                 | 512KB
   M50FLW040A (LPC/FWH)            | 512KB
   M50FLW040B (LPC/FWH)            | 512KB
-  M50FW080 (FWH)                  | 1024KB
+ *M50FW080 (FWH)                  | 1024KB
   M50LPW080 (LPC)                 | 1024KB
   M50FLW080A (LPC/FWH)            | 1024KB
   M50FLW080B (LPC/FWH)            | 1024KB
@@ -1046,6 +1052,16 @@ When sending reports that something doesn't work, always send the log file!
 
 9.0            Revision history
 -------------------------------
+1.38       -fixed quitting on some boards immediately after running
+           -fixed unprotect for ST FWH and LPC chips (one F is missing from
+            the (un)protect register adresses)
+           -fixed unprotect for ST 50FLW080A and B
+           -added BIOS IDs of Abit BF6, all BE6-II variants, all KT7 variants
+            and MSI MS-6337 v5.x
+           -BIOS ID is now shown in lower right corner when detected & needed
+           -updated SST LPC chip names, so they're marked "(LPC)"
+           -fixed problems with some W49F002U chips by removing a piece of
+            unknown code from AMD flashing routine
 1.37       -removed STMicroelectronics M28F102 (is 16-bit)
            -added STMicroelectronics M50FW016 (FWH), M50FLW040A (LPC/FWH),
             M50FLW040B (LPC/FWH), M50FLW080A (LPC/FWH), M50FLW080B (LPC/FWH),
@@ -1626,6 +1642,18 @@ Mercury       | KOB P4X266NFSX v1.0| VIA P4X266     | Winbond W49F002U/5V
 c't Flasher   | 8-bit ISA card     |                | SST 29EE010/5V
 A-Trend       | ATC-1545           | OPTi Viper M   | SST 29EE010/5V
 c't Flasher   | 8-bit ISA card     |                | Macronix MX29F001T/5V
+Abit          | PT5 rev 2.11       | Intel 430FX    | Macronix MX28F1000P/12V
+Asus          | A7V133 rev 1.05    | Apollo KT133A  | EON EN29F002NT/5V
+Asus          | TXP4 rev 1.02      | Intel 430TX    | Intel 28F001BX/BN-T/12V
+Asus          | TXP4 rev 1.02      | Intel 430TX    | Macronix MX28F1000P/12V
+Gigabyte      | GA-586ATV rev 1A   | Intel 430VX    | SST 29EE010/5V
+Gigabyte      | GA-7DPXDW-P        | AMD 760MPX     | SST 49LF020A/3V
+Abit          | BF6                | Intel 440BX    | Winbond W29C020C/5V
+Microstar MSI | MS-6337LE5         | Intel 815EP    | SST 49LF002(A)/3.3V
+ECS           | K7VZA rev 3.0      | Apollo KT133A  | Winbond W49F002U/5V
+Microstar MSI | MS-6153VA v2.1     | Apollo Pro 133 | Winbond W29C020C/5V
+Abit          | KT7-RAID v1.02     | Apollo KT133   | Winbond W49F002U/5V
+Abit          | KT7A v1.0          | Apollo KT133A  | PMC Pm29F002T/5V
 
 UniFlash does NOT work on boards made by Intel. They use custom BIOS write
 protection and have soldered Flash ROM chips (often in TSOP package) - so
@@ -1669,6 +1697,8 @@ in mind when we started this project. Thanx in advance!
                   at LiPPERT Automationstechnik GmbH
                 Marc E.
                 Marek Palka
+                Peter Krauss
+                Richard Guinness
 
 
 12.0            Biz support

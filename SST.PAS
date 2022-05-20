@@ -452,8 +452,8 @@ Begin
            Sectors[ 0, 1 ] := 32;
            Size := 256;
            Case DevId of
-            $61 : Name := ConstPtr( '49LF020/3V' );
-            $52 : Name := ConstPtr( '49LF020A/3V' );
+            $61 : Name := ConstPtr( '49LF020/3V (LPC)' );
+            $52 : Name := ConstPtr( '49LF020A/3V (LPC)' );
            End;
           End;
     $1C : Begin {v1.21}
@@ -464,7 +464,7 @@ Begin
            Sectors[ 0, 0 ] := 96;  {96 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 384;
-           Name := ConstPtr( '49LF030(A)/3V' );
+           Name := ConstPtr( '49LF030(A)/3V (LPC)' );
           End;
     $51 : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -474,7 +474,7 @@ Begin
            Sectors[ 0, 0 ] := 128;  {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 512;
-           Name := ConstPtr( '49LF040/3V' );
+           Name := ConstPtr( '49LF040/3V (LPC)' );
           End;
     $5B : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -484,7 +484,7 @@ Begin
            Sectors[ 0, 0 ] := 256;  {256 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 1024;
-           Name := ConstPtr( '49LF080(A)/3V' );
+           Name := ConstPtr( '49LF080(A)/3V (LPC)' );
           End;
     else Exit;
    End;

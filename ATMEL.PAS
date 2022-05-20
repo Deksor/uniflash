@@ -64,6 +64,14 @@ Begin
            Progr := AtWordProg;
            Erase := AtBulkErase;
           End;
+    $08 : Begin { Rainbow }
+           Name := ConstPtr( 'AT49F002(N)T/5V' ); { N has no RESET pin }
+           Flags := 2; {bulk erase}
+           PgSize := 128; { whatever }
+           Size := 256;
+           Progr := AtByteProg;
+           Erase := AtBulkErase;
+          End;
     $0B : Begin
            Name := ConstPtr( 'AT49x020 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}

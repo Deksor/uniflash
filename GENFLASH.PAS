@@ -142,6 +142,7 @@ Begin
    Ld := FIMemB( Data + Y );
    { Do not program FF, erase will result in all FF's so it's }
    { not necessary. Besides, 2*FF means reset ...             }
+
    If Ld <> $FF then
     Begin
      Repeat

@@ -121,4 +121,5 @@ Begin
  AddMsg( Lid, 106, '-FORCE option must be followed by 4 hex digits' );
  AddMsg( Lid, 107, '-CHIPLIST       Show list of supported flash chips' );
  AddMsg( Lid, 108, '-FORCE xxxx     Force using routines for chip xxxx (4 hex digits)' );
+ AddMsg( Lid, 109, '-SAVE fname     Write current bios image to file fname' );
 End.

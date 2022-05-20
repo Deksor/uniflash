@@ -1,3 +1,4 @@
+{$R-}
 unit pci;  { Unit to communicate with ChipSet }
 
 interface
@@ -80,7 +81,7 @@ End;
 
 Function LocatePIIX : byte;
 Const
-NbName    : ARRAY[ 1 .. $12 ] of String[ 16 ] =
+NbName    : ARRAY[ 1 .. $15 ] of String[ 16 ] = { Rainbow }
             ( 'i82433LX',
               'i82433NX',
               'i82437FX',
@@ -89,7 +90,9 @@ NbName    : ARRAY[ 1 .. $12 ] of String[ 16 ] =
               'i82439HX',
               'i82437VX',
               'i82439TX',
-              'i82443LX',
+              'i82443LX/EX', { EX Rainbow }
+              'i82443BX/ZX', { Rainbow }
+              'i82443GX', { Rainbow }
               'i82454KX',
               'i82454KX/GX',
               'i82454GX',
@@ -98,16 +101,19 @@ NbName    : ARRAY[ 1 .. $12 ] of String[ 16 ] =
               'VT82C595/AMD 640',
               'VT82C597',
               'VT82C598[AT]',
-              'VT82C685' );
-SbName    : ARRAY[ 1 .. 8 ] of String[ 21 ] =
+              'VT82C685',
+              'M1621' ); { Rainbow }
+SbName    : ARRAY[ 1 .. $A ] of String[ 21 ] =
             ( 'i82378IB SIO',
               'i82379AB SIO.A',
               'i82371FB PIIX',
               'i82371MX MPIIX',
               'i82371SB PIIX3',
               'i82371AB PIIX4',
+              'i82372FB ????', { Rainbow }
               'VT82C586[A|B]/AMD 645',
-              'VT82C596' );
+              'VT82C596',
+              'M1543' ); { Rainbow }
 
 
 
@@ -163,7 +169,7 @@ Begin
   Begin
    If NorthId = $4A3 then
     Case NorthRev of
-     $01, $03 : NbId := $01;  {82433LX}
+     $00, $01, $02, $03 : NbId := $01;  {82433LX} { $00,$02 Rainbow }
      $10, $11 : NbId := $02;  {82433NX}
     End else
    If NorthId = $122D then NbId := $03 {82437FX} else
@@ -172,12 +178,14 @@ Begin
    If NorthId = $1250 then NbId := $06 {82439HX} else
    If NorthId = $7030 then NbId := $07 {82437VX} else
    If NorthId = $7100 then NbId := $08 {82439TX} else
-   If NorthId = $7180 then NbId := $09 {82443LX} else
+   If NorthId = $7180 then NbId := $09 {82443LX/EX} else { EX Rainbow }
+   If (NorthId = $7190) or (NorthId = $7192) then NbId := $0A {82443BX/ZX} else { Rainbow }
+   If (NorthId = $71A0) or (NorthId = $71A2) then NbId := $0B {82443GX} else { Rainbow }
    If NorthId = $84C4 then
     Case NorthRev of
-     $02      : NbId := $0A; {82454KX}
-     $04      : NbId := $0B; {82454KX/GX, not sure}
-     $05, $06 : NbId := $0C; {82454GX}
+     $02      : NbId := $0C; {82454KX}
+     $04      : NbId := $0D; {82454KX/GX, not sure}
+     $05, $06 : NbId := $0E; {82454GX}
     End;
   End else
  If NorthMan = $1106 {VIA} then
@@ -185,16 +193,16 @@ Begin
    If NorthId = $576 then
     Begin
      NorthFunc := $0100; {VIA A8/A9 scheme}
-     NbId := $0D {82C576M}
+     NbId := $0F {82C576M}
     End else
-   If NorthId = $585 then NbId := $0E {82C585VP/VPX} else
-   If NorthId = $595 then NbId := $0F {82C595} else
-   If NorthId = $597 then NbId := $10 {82C597} else
-   If NorthId = $598 then NbId := $11 {82C598(AT)} else
+   If NorthId = $585 then NbId := $10 {82C585VP/VPX} else
+   If NorthId = $595 then NbId := $11 {82C595} else
+   If NorthId = $597 then NbId := $12 {82C597} else
+   If NorthId = $598 then NbId := $13 {82C598(AT)} else
    If NorthId = $685 then
     Begin
      NorthFunc := $0100; {VIA A8/A9 scheme}
-     NbId := $12; {82C685}
+     NbId := $14; {82C685}
     End;
   End else
  If NorthMan = $1045 {Opti} then
@@ -205,6 +213,10 @@ Begin
   End else
  If NorthMan = $1039 {SiS} then
   Begin
+  End;
+ If NorthMan = $10B9 {ALi} then
+  Begin
+    NbId := $15; {M1621}
   End;
 
  {Id southbridge}
@@ -224,13 +236,18 @@ Begin
     Begin
      SbId := $06; {82371AB PIIX4}
      Inc( SouthFunc, 3 );
+    End else
+   If SouthID = $7600 then
+    Begin
+     SbId := $07; {82372FB ????}
+     Inc( SouthFunc, 3 );
     End;
   End else
  If SouthMan = $1106 {VIA} then
   Begin
    SouthFunc := $0200; {VIA method}
-   If SouthId = $586 then SbId := $07 else
-   If SouthId = $596 then SbId := $08;
+   If SouthId = $586 then SbId := $08 else
+   If SouthId = $596 then SbId := $09;
   End else
  If SouthMan = $1045 {Opti} then
   Begin
@@ -240,6 +257,11 @@ Begin
   End else
  If SouthMan = $1039 {SiS} then
   Begin
+  End;
+ If SouthMan = $10B9 {ALi} then { Rainbow }
+  Begin
+    SouthFunc := $0300; {ALi method}
+    SbId := $0A;
   End;
 
  {Id chipset as a whole}
@@ -253,16 +275,19 @@ Begin
   $06 : If SbId = $05 then CurrentChipset := 'Intel Triton II 430HX';
   $07 : If SbId = $05 then CurrentChipset := 'Intel Triton II 430VX';
   $08 : If SbId = $06 then CurrentChipset := 'Intel Triton III 430TX';
-  $09 : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440LX';
-  $0A : If SbId = $02 then CurrentChipset := 'Intel 450KX';
-  $0B : If SbId = $02 then CurrentChipset := 'Intel 450KX/GX';
-  $0C : If SbId = $02 then CurrentChipset := 'Intel 450GX';
-  $0D : CurrentChipset := 'VIA Apollo Master';
-  $0E : If SbId = $07 then CurrentChipset := 'VIA Apollo-VP/VPX';
-  $0F : If SbId = $07 then CurrentChipset := 'VIA Apollo-VP2/AMD 640';
-  $10 : If SbId = $07 then CurrentChipset := 'VIA Apollo-VP3';
-  $11 : If SbId = $08 then CurrentChipset := 'VIA Apollo-MVP3';
-  $12 : CurrentChipset := 'VIA Apollo-P6';
+  $09 : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440LX/EX'; { EX Rainbow }
+  $0A : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440BX/ZX'; { Rainbow }
+  $0B : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440GX'; { Rainbow }
+  $0C : If SbId = $02 then CurrentChipset := 'Intel 450KX';
+  $0D : If SbId = $02 then CurrentChipset := 'Intel 450KX/GX';
+  $0E : If SbId = $02 then CurrentChipset := 'Intel 450GX';
+  $0F : CurrentChipset := 'VIA Apollo Master';
+  $10 : If SbId = $08 then CurrentChipset := 'VIA Apollo-VP/VPX';
+  $11 : If SbId = $08 then CurrentChipset := 'VIA Apollo-VP2/AMD 640';
+  $12 : If SbId = $08 then CurrentChipset := 'VIA Apollo-VP3';
+  $13 : If SbId = $09 then CurrentChipset := 'VIA Apollo-MVP3';
+  $14 : CurrentChipset := 'VIA Apollo-P6';
+  $15 : If SbId = $0A then CurrentChipset := 'ALi Alladin Pro II';
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -351,6 +376,22 @@ Begin
           End else
           Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+          End;
+        End;
+  $03 : Begin {ALi method}
+         If Map then
+          Begin
+           Mask := $43000000; {write enable, 256K enable}
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or Mask );
+           {M1543C rev. B1 - supports 512K ROM}
+(*           Mask := $10000000; {512K enable}
+           PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 or Mask );*)
+          End else
+          Begin
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
+(*           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 );*)
           End;
         End;
  End;

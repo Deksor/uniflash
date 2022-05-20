@@ -1,12 +1,12 @@
 {$M 32384, 4096, 4096}
 {$I-}
 {$S-}
+{$R-}
 Program Uniflash;
 
 Uses Crt, Dos,
      Flash,Pci,Tools, GenFlash,
-     Intel, Atmel, SST, Winbond, AMD,
-     Catalyst, Macronix,
+     Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix,
      Language, English, French, Dutch;
 
 
@@ -16,7 +16,8 @@ Emergency   : Boolean = False;
 Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
-Version     = '1.17';
+AutoSave    : Boolean = False;
+Version     = '1.18';
 ForceId     : Boolean = False;
 
 Var
@@ -306,6 +307,7 @@ Begin
     End;
   End;
 
+
  {Restore CR0}
  Asm
   DB    66H
@@ -405,9 +407,13 @@ IFile : File;
 X     : LongInt;
 
 Begin
- GotoXY( 11, 20 );
- Write( Msg( 6 ) );
- ReadLn( IName );
+ If AutoSave then IName := EMFName else
+  Begin
+   GotoXY( 11, 20 );
+   Write( Msg( 6 ) );
+   ReadLn( IName );
+  End;
+
  If IName <> '' then
   Begin
    Assign( IFile, IName );
@@ -1116,9 +1122,12 @@ Begin
  textcolor(yellow);
  Write('UniFlash ');
  textcolor(lightgreen);
- Write('V' + Version );
+ Write('v' + Version );
  textcolor(lightcyan);
- Write(' (C) 1998 Pascal van Leeuwen & Galkowski Adam ',#13,#10);
+ WriteLn(' (c) 1998 Pascal van Leeuwen & Galkowski Adam ');
+ textcolor(lightmagenta);
+ GotoXY(11,3);
+ Write('Development continues...by Rainbow Software (http://rnbw.tsx.org)');
  textcolor(lightgray);
 
  SetLanguage( 1 ); {default = English}
@@ -1162,7 +1171,8 @@ Begin
     Begin
      WriteLn;
      WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|-E fname|-EXPERT|-PCIOR|-DEBUG|-AMI] ' );
+     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-EXPERT][-PCIOR|-AMI]' );
+     WrtCenter( '          [-DEBUG][-SAVE fname]|-CHIPLIST|-FORCE xxxx]' );
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
@@ -1173,6 +1183,7 @@ Begin
      WrtCenter( Msg( 36 ) );
      WrtCenter( Msg( 107 ) );
      WrtCenter( Msg( 108 ) );
+     WrtCenter( Msg( 109 ) );
      WriteLn;
      Halt;
     End else
@@ -1217,6 +1228,13 @@ Begin
        else Err( Msg( 106 ) );
       End;
      ForceId := True;
+    End else
+   If PStr = 'SAVE' then
+    Begin
+     Inc( X );
+     If ParamCount < X then Err( Msg( 29 ) );
+     AutoSave := True;
+     EMFName := ParamStr( X );
     End;
    Inc( X );
   End;
@@ -1239,7 +1257,7 @@ Begin
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
 
- ROMBase :=0 ;  {standard system BIOS}
+ ROMBase :=0 ;  {standard system BIOS flag for detectloop}
 
  {If PCI option ROM mode then scan for & select option ROM    }
  {NOTE: This is all experimental and uses a technique that    }
@@ -1385,12 +1403,12 @@ Begin
           IdChip( Lo( ForceIdVal ), CurCInfo ) then FlashError := 0;
     CurManuf := CurManuf^.Next;
    Until ( FlashError = 0 ) or ( CurManuf = Nil );
+   If ROMBase = 0 then
+    ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
   End else FlashInfo := FlashDetect;
 
- {Abort if option ROM is not a recognised flash ROM. This to avoid  }
- {the corruption of memory local to the PCI card as much as possible}
+(*
 if pcior then begin
-
 if askfor2(2,Msg( 46 ) ) then begin
                       write( Msg( 47 ) );
                       readln(savename);
@@ -1408,14 +1426,17 @@ if askfor2(2,Msg( 46 ) ) then begin
                       close(savefile);
                       writeln( Msg( 48 ) );
                       end;
-end;
+end; *)
+
+ {Abort if option ROM is not a recognised flash ROM. This to avoid  }
+ {the corruption of memory local to the PCI card as much as possible}
  If PCIOR and ( FlashError <> 0 ) then
   Err( Msg( 49 ) );
 
  If FlashError = 0 then
   Begin
    FlashSize := LongInt( FlashInfo^.Size ) shl 10;
-   FlashBase := - ( FlashSize * FlashInfo^.Count );
+   FlashBase := ROMBase { - ( FlashSize * FlashInfo^.Count ) };
 
    With FlashInfo^ do
     Case Flags and 3 of
@@ -1512,6 +1533,12 @@ end;
   End;
  GotoXY( 11, 7 );
 
+ If AutoSave then
+  Begin
+   WriteBIOSImg;
+   GotoXY( 1, Hi( WindMax ) );
+  End;
+
  If Emergency then
   Begin
    If FlashError <> 0 then Err( Msg( 60 ) );
@@ -1528,6 +1555,7 @@ end;
    Beep( 1000, 200 );
    Halt;
   End;
+
  GotoXY( 2, 6 );
  TextColor(yellow);
  Write( Msg( 61 ) );

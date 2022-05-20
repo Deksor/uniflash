@@ -121,4 +121,5 @@ Begin
  AddMsg( Lid, 106, 'Na -FORCE optie moeten 4 hex. karakters volgen' );
  AddMsg( Lid, 107, '-CHIPLIST       Toon lijst met ondersteunde flash chips' );
  AddMsg( Lid, 108, '-FORCE xxxx     Doe net alsof chip xxxx (4 hex cijfers) is gevonden' );
+ AddMsg( Lid, 109, '-SAVE bnaam     Schrijf huidige bios image naar bestand bnaam' );
 End.

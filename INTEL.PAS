@@ -6,6 +6,34 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
+Procedure Unprotect( SAddr : LongInt ); { Rainbow }
+Begin
+ FOMemB((SAddr and $FFFF0000)-$3FFFFE,0); {Disable Write-Lock}
+End;
+
+Procedure Protect( SAddr : LongInt ); { Rainbow }
+Begin
+ FOMemB((SAddr and $FFFF0000)-$3FFFFE,1); {Enable Write-Lock}
+End;
+
+Procedure IntelSecEraseU( SAddr : LongInt ); Far; { Rainbow }
+Begin
+ {Unprotect}
+ Unprotect( SAddr );
+ IntelSecErase( SAddr );
+ {Protect}
+ Protect( SAddr );
+End;
+
+Procedure IntelSecProgU( Pos, Data : LongInt ); Far; { Rainbow }
+Begin
+ {Unprotect}
+ Unprotect( Pos );
+ IntelSecProg( Pos, Data );
+ {Protect}
+ Protect( Pos );
+End;
+
 Function IntelIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  IntelIdChip := False;
@@ -190,6 +218,28 @@ Begin
            Sectors[ 3, 1 ] := 63;
            Size := 256;
            Name := ConstPtr( '28F002-B series (12V/5V)' );
+          End;
+    $2D : Begin { Rainbow }
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := IntelSecProgU;
+           Erase := IntelSecEraseU;
+           Sectors[ 0, 0 ] := 8;  {8 x 64k}
+           Sectors[ 0, 1 ] := 31;
+           Sectors[ 1, 0 ] := 0;  {end of list}
+           Size := 512; {4Mb}
+           Name := ConstPtr( '82802AB/3.3V (Firmware Hub)' );
+          End;
+    $2C : Begin { Rainbow }
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := IntelSecProgU;
+           Erase := IntelSecEraseU;
+           Sectors[ 0, 0 ] := 16;  {16 x 64k}
+           Sectors[ 0, 1 ] := 31;
+           Sectors[ 1, 0 ] := 0;  {end of list}
+           Size := 1024; {8Mb}
+           Name := ConstPtr( '82802AC/3.3V (Firmware Hub)' );
           End;
     else Exit;
    End;

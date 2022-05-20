@@ -1,6 +1,7 @@
-                    UniFlash's version 1.17 documentation.
+                    UniFlash's version 1.18 documentation.
                     --------------------------------------
                (C) 1998 Pascal Van Leeuwen and Galkowski Adam
+               Now developed by Ondrej Zary (Rainbow Software)
 
 "Your program just saved the day for me!
  I tried to use AWDFLASH.exe to flash my new Shuttle HOT-603 v2.0(AMD640)
@@ -65,16 +66,18 @@ Here's the minimum configuration you need to run UniFlash:
        -At least a 386 (The whole thing works in flat real mode)
        -MS DOS 4.0 and higher
        -A well known flash rom chip (SST,WinBond,Atmel,Intel,...)
+       -Supported chipset
 
 Here's a list of chipsets suported or going to be supported by Uniflash:
 
 Mfg         | Model(s)             | Comments
 -----------------------------------------------------------------------------
 Intel       | 430FX,HX,VX,TX,MX    | No comments It works in 99% of cases
-            | 440FX,LX (not tested)| (The 440FX/LX have not been yet tested,
+            | 440FX,LX/EX          | (The 440FX/LX have not been yet tested,
             | 450 KX/GX            | but should work well)
             | 434 LX/NX            | 450 & 434 not tested and may not (yet)
-            |                      | work
+            | 440BX/ZX,GX          | work, 440BX support tested and works,
+            |                      | 440GX untested
 -----------------------------------------------------------------------------
 VIA         | Appollo Master       | Only VP2 has been tested so far
             | Apollo-VP            |
@@ -100,18 +103,22 @@ SiS         | 559X series          | Not supported yet. Uniflash detects it,
             |                      |*If your BIOS is an AMI WinBIOS, try
             |                      |running Uniflash with the -AMI parameter
 -----------------------------------------------------------------------------
-Ali         | Alladin series plus  | Not supported yet. For the datasheets,
-            | the lovely TXPRO     | same situation as for SiS, but it's
-            |                      | even worse.
-            |                      |*If your BIOS is an AMI WinBIOS, try
-            |                      |running Uniflash with the -AMI parameter
+ALi         | Alladin Pro II       | I got M1543C datasheets from ALi, so
+            | (M1621+M1543C)       | this one is supported now. All chipsets
+            |                      | with M1543 south bridge should work,
+            |                      | but they aren't identified for now.
+            |                      | Alladin Pro II was tested and works OK.
 
+PC100 BXCel is relabelled ALi Alladin Pro II on PC Chips M726 motherboard.
 
 NEW!: The version 1.16d+ includes support for AMI's Flash Interface. It
 allows you to flash even if you have an unknown chipset (new AMI WinBIOS is
 necessary to use this feature). Uniflash will automatically try to use
 this feature if there's no chipset detected. You can force using this mode,
 even if your chipset is recognised by giving the -AMI parameter.
+
+WARNING: AMI Flash interface doesn't work on some PC Chips boards. This can
+cause UniFlash to hang at startup, when no known chipset is found.
 
 
 
@@ -180,9 +187,16 @@ fine too))
                 W29C101
                 W29C010
 
+                ASD
+                ---
+               *AE29F1008 - identified as Winbond W29EE011 because it's exact
+                copy of this chip including manufacturer and chip ID
+                found on PC Chips boards, no datasheets available
+
                 Atmel
                 -----
                *AT49BV010
+               ?AT49F002(N)T
                 AT49F1025
                 AT49x020 series
                 AT49F040
@@ -213,6 +227,7 @@ fine too))
                 28F200-B series
                 28F002-T series
                 28F002-B series
+               ?82802AB/AC (Firmware Hub)
 
                 Catalyst
                 --------
@@ -301,11 +316,17 @@ If you want to help us in adding support for new chips, in testing the whole
 thing or bugfixing, mail us BOTH!!, we'll put your name in credits at the end.
 We want your opinions & experiences to make flashing BIOS an easy and safe
 operation, where you doesn't need tons of flashers (if you multiply the
-number of chipsets by the number of flash rom memories available, you'll 
+number of chipsets by the number of flash rom memories available, you'll
 understand better what we're talking about).
 
 7.0            Credits
 ---------------------------------------
+
+Ondrej Zary (Rainbow Software) - Continues to develop this program after the
+authors (below) stopped the development. Added some Intel chipsets, got
+datasheets from ALi and added support for M1543 south brigde. Added Intel
+Firmware Hub (untested) and tested ASD chips (discovered that ASD has no
+home page, no datasheets and ASD AE29F1008 is same as Winbond W29EE011).
 
 Pascal van Leeuwen - Made first design, chipset handling routines, a primitive
 write function for SST, WINBOND and INTEL, added flat real mode, etc...
@@ -322,28 +343,46 @@ advertised, etc...
 
 
 
-8.0            How to contact us
+8.0            How to contact me
 --------------------------------
+You can contact me (Rainbow Software) by:
+web    : http://rnbw.tsx.org (new versions should be here)
+email  : rnbw@geocities.com
 
-If you want to contact us, please write to BOTH of us (send the same letter at
-two different addresses) with the subject UNIFLASH project.
-
-- Pascal van Leeuwen
-web    : http://ourworld.compuserve.com/homepages/pvanleeuwen/index.htm
-email  : pvanleeuwen@csi.com
-
-- Galkowski Adam
-email  : 100665.2705@compuserve.com
-
-BTW: New versions should be on:
-1)   http://ourworld.compuserve.com/homepages/pvanleeuwen/ufhome.htm
-
-2)   http://www.ping.be/bios/   (A page by Wim Bervoets, a very good page
-for maniacs of flashing, I suggest you to have a look there)
-
+This is old info and some of the addresses below are probably dead:
+-------------------------------------------------------------------
+| If you want to contact us, please write to BOTH of us (send the same letter at
+| two different addresses) with the subject UNIFLASH project.
+|
+| - Pascal van Leeuwen
+| web    : http://ourworld.compuserve.com/homepages/pvanleeuwen/index.htm
+| email  : pvanleeuwen@csi.com
+|
+| - Galkowski Adam
+| email  : 100665.2705@compuserve.com
+|
+| BTW: New versions should be on:
+| 1)   http://ourworld.compuserve.com/homepages/pvanleeuwen/ufhome.htm
+|
+| 2)   http://www.ping.be/bios/   (A page by Wim Bervoets, a very good page
+| for maniacs of flashing, I suggest you to have a look there)
+-----------------------------------------------------------------------------
 
 9.0            Revision info
 ----------------------------
+1.18           -I (Rainbow Software) am continuing the development of this
+                program after it was abandoned for two years
+               -added support for i440BX/ZX and i440GX chipsets
+               -added support for ALi M1543 south bridge and ALi M1621 north
+                bridge (ALi Alladin Pro II chipset)
+               -added some info about ASD chips into this DOC
+               -added support for Intel 82802AB(4Mb)/AC(8Mb)Firmware Hubs
+               -added support for Atmel AT49F002(N)T chip
+1.17b          -fixed a bug in the -FORCE option, should work now
+
+               -still having trouble correctly detecting flash chips,
+                we can use all the input we can get on which chips are
+                and aren't correctly identified by UNIFLASH !
 1.17           -pre-1.20 release because of some important fixes,
                 still working on some things we promised for 1.20, though
                -fixed flashing problems with Macronix & AMD chips
@@ -417,6 +456,8 @@ Soyo          | 5TA2 rev ?        | Intel FX     | SST 29EE010/5V
 Shuttle       | Hot569 rev 2      | Intel TX     | Atmel 29C010A/5V
 Shuttle       | Hot565 rev ?      | Intel TX     | Winbond W29EE011
 Shuttle       | Hot603 rev ?      | AMD 640      | Winbond W29EE011
+ASUSTeK       | P2B rev 1.10      | Intel 440BX  | ?
+PC Chips      | M726 v3.4A        | Alladin Pro 2| ASD AE29F1008
 
 
 11.0            Beta testing stuff
@@ -436,6 +477,7 @@ in mind when we started this project. Thanx in advance !
                 Wim Bervoets
                 Michael L. Croswell
                 Polyvios Simopoulos
+                Matthias David Siebler
 
 
 12.0            Biz support
@@ -444,5 +486,6 @@ in mind when we started this project. Thanx in advance !
 We would like to thank the following people at the various flash ROM
 and chipset manufacturers for their support (in random order):
 
-                Scotts Chen at Macronix International Co., Ltd.
-
+            Scotts Chen at Macronix International Co., Ltd.
+            Darlene Browne at Acer Laboratories, Inc., (USA), Administrator
+            Niel Smith, Application Engineering Manager, ALI USA

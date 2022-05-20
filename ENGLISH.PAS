@@ -47,9 +47,9 @@ Begin
  AddMsg( Lid, 33, '-LOG            Enables auto-logging to UNIFLASH.LOG' ); {v1.23}
  AddMsg( Lid, 34, '-PCIOR          Flash PCI option ROM instead of system ROM' );
 { AddMsg( Lid, 35, '-DEBUG          Debugging mode. Gives some low-level info' );}
- AddMsg( Lid, 36, '-AMI            Force using the AMI FLASH INTERFACE' );
+ AddMsg( Lid, 36, '-AMI            Use AMI Flash Interface' ); {v1.24}
  AddMsg( Lid, 37, 'Unable to access memory beyond 1Mb - try using HIMEM.SYS.' );
- AddMsg( Lid, 38, 'Sorry, but either you don''t have a 486+ either CPU is in V86 mode.' );
+ AddMsg( Lid, 38, 'Sorry, but either you don''t have a 486+ or CPU is in V86 mode.' );
  AddMsg( Lid, 39, 'Select PCI option ROM from list below:' );
  AddMsg( Lid, 40, 'Bus ' );
  AddMsg( Lid, 41, ' device ' );

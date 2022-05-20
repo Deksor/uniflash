@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.23';
+Version    = '1.24';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -41,6 +41,7 @@ Function Hl( L : Longint ) : String;
 Function Windows : Boolean; {v1.22}
 Function FlatRealOn : Boolean;
 Procedure FlatRealOff;
+Procedure CloseXMS; {v1.24}
 Procedure InitXMS;
 Procedure AllocHimem;
 Function AllocLinBlock( Size : LongInt ) : LongInt;
@@ -285,8 +286,9 @@ Asm
         STI
 End;
 
-Procedure XMSExitProc; Far;
+Procedure CloseXMS; {v1.24}
 Begin
+ if SaveEProc=nil then Exit;
  Asm
   MOV   AH,0DH  {Unlock}
   MOV   DX,XMSHnd
@@ -297,6 +299,11 @@ Begin
   MOV   AH,04H {Global disable A20}
   CALL  DWORD [XMMRtn]
  End;
+End;
+
+Procedure XMSExitProc; Far;
+Begin
+ CloseXMS;
  ExitProc := SaveEProc;
 End;
 
@@ -335,6 +342,7 @@ BSize    : Word;
 X        : Byte;
 
 Begin
+ SaveEProc:=nil;
  Asm
   MOV   AX,4300H
   INT   2FH

@@ -82,7 +82,7 @@ End;
 
 Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $3C ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $3E ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -128,23 +128,25 @@ NbName    : ARRAY[ 1 .. $3C ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
 {2B}          'VT3133', {v1.20} {???}
 {2C}          'M1621', {v1.18}
 {2D}          'M1541', {v1.22}
-{2E}          'AMD-751', {v1.20}
-{2F}          'AMD-761', {v1.20}
-{30}          'AMD-762', {v1.20}
-{31}          'SiS 85C496+497', {v1.21}
-{32}          'SiS 501/5101/5501', {v1.21}
-{33}          'SiS 5511', {v1.21}
-{34}          'SiS 5571', {v1.21}
-{35}          'SiS 5591/5592', {v1.21}
-{36}          'SiS 5596', {v1.21}
-{37}          'SiS 5597/5598/5581/5120', {v1.21}
-{38}          'SiS 530', {v1.21}
-{39}          'SiS 540', {v1.21}
-{3A}          'SiS 600', {v1.21}
-{3B}          'SiS 620', {v1.21}
-{3C}          'SiS 630' ); {v1.21}
+{2E}          'M1641', {v1.24}
+{2F}          'M1647', {v1.24}
+{30}          'AMD-751', {v1.20}
+{31}          'AMD-761', {v1.20}
+{32}          'AMD-762', {v1.20}
+{33}          'SiS 85C496+497', {v1.21}
+{34}          'SiS 501/5101/5501', {v1.21}
+{35}          'SiS 5511', {v1.21}
+{36}          'SiS 5571', {v1.21}
+{37}          'SiS 5591/5592', {v1.21}
+{38}          'SiS 5596', {v1.21}
+{39}          'SiS 5597/5598/5581/5120', {v1.21}
+{3A}          'SiS 530', {v1.21}
+{3B}          'SiS 540', {v1.21}
+{3C}          'SiS 600', {v1.21}
+{3D}          'SiS 620', {v1.21}
+{3E}          'SiS 630' ); {v1.21}
 
-SbName    : ARRAY[ 1 .. $19 ] of String[ 21 ] =
+SbName    : ARRAY[ 1 .. $1A ] of String[ 21 ] =
 {1}         ( 'i82378IB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -161,7 +163,7 @@ SbName    : ARRAY[ 1 .. $19 ] of String[ 21 ] =
 {E}           'VT82C686(A)', {v1.20}
 {F}           'VT8231', {v1.20}
 {10}          'VT8233', {v1.20}
-{11}          'M1543(C)', {v1.18}
+{11}          'M1533/1543/1535', {v1.18}
 {12}          'AMD-756', {v1.20}
 {13}          'AMD-766', {v1.20}
 {14}          'SiS South Bridge', {v1.21}
@@ -169,7 +171,8 @@ SbName    : ARRAY[ 1 .. $19 ] of String[ 21 ] =
 {16}          'SMSC SLC90E66', {v1.21}
 {17}          'Winbond W83C553F', {v1.21}
 {18}          'ITE IT8871F/2F', {v1.21}
-{19}          'ITE IT8888F'); {v1.21}
+{19}          'ITE IT8888F', {v1.21}
+{1A}          'Reliance OSB4'); {v1.24}
 
 Var
 SbId,
@@ -298,9 +301,9 @@ Begin
  If NorthMan = $1022 {AMD} then {v1.20}
   Begin
    case NorthId of {case v1.21}
-    $7006: NbId := $2E; {AMD-751}
-    $700E: NbId := $2F; {AMD-761}
-    $700C: NbId := $30; {AMD-762}
+    $7006: NbId := $30; {AMD-751}
+    $700E: NbId := $31; {AMD-761}
+    $700C: NbId := $32; {AMD-762}
    End;
   End else
  If NorthMan = $1045 {Opti} then
@@ -316,33 +319,33 @@ Begin
      $496: Begin {85C496+497} {v1.21}
             NorthFunc := $0200; {SiS reg. D0 scheme}
             SouthFunc := 0;
-            NbId := $31;
+            NbId := $33;
            End;
      $406: Begin {501/5101/5501} {v1.21}
             SouthFunc := $0501; {SiS internal reg. 80h}
-            NbId := $32;
+            NbId := $34;
            End;
     $5511: Begin {5511} {v1.21}
             SouthFunc := $0502; {SiS internal reg. 50h}
-            NbId := $33;
+            NbId := $35;
            End;
-    $5571: NbId := $34; {5571} {v1.21}
-    $5591: NbId := $35; {5591/5592} {v1.21}
+    $5571: NbId := $36; {5571} {v1.21}
+    $5591: NbId := $37; {5591/5592} {v1.21}
     $5596: Begin {5596} {v1.21}
             SouthFunc := $0502; {SiS internal reg. 50h}
-            NbId := $36;
+            NbId := $38;
            End;
-    $5597: NbId := $37; {5597/5598/5581/5120} {v1.21}
-    $0530: NbId := $38; {530} {v1.21}
+    $5597: NbId := $39; {5597/5598/5581/5120} {v1.21}
+    $0530: NbId := $3A; {530} {v1.21}
     $0540: Begin {540} {v1.21}
             SouthFunc := $0504; {SiS reg. 45 bits 7,6}
-            NbId := $39;
+            NbId := $3B;
            End;
-    $5600: NbId := $3A; {600} {v1.21}
-    $0620: NbId := $3B; {620} {v1.21}
+    $5600: NbId := $3C; {600} {v1.21}
+    $0620: NbId := $3D; {620} {v1.21}
     $0630: Begin {630} {v1.21}
             SouthFunc := $0504; {SiS reg. 45 bits 7,6}
-            NbId := $3C;
+            NbId := $3E;
            End;
    End;
   End else
@@ -351,6 +354,8 @@ Begin
    case NorthId of
     $1621: NbId := $2C; {M1621} {v1.19}
     $1541: NbId := $2D; {M1541} {v1.22}
+    $1641: NbId := $2E; {M1641} {v1.24}
+    $1647: NbId := $2F; {M1647} {v1.24}
    End;
   End;
 
@@ -415,7 +420,7 @@ Begin
   End else
  If SouthMan = $10B9 {ALi} then {v1.18}
   Begin
-   If SouthId = $1533 then {M1543} {v1.19}
+   If SouthId = $1533 then {M1533/1543/1535} {v1.19}
     Begin
      SouthFunc := $0400; {ALi method}
      SbId := $11;
@@ -442,6 +447,13 @@ Begin
    case SouthId of
     $8872 : Begin SouthFunc := $0801; SbId := $18; End; {IT8871F/8872F}
     $8888 : Begin SouthFunc := $0802; SbId := $19; End; {IT8888F}
+   End;
+  End else
+ If SouthMan = $1166 {Reliance/ServerWorks} then {v1.24}
+  Begin
+   SouthFunc:=$0900;
+   case SouthId of
+    $0200 : SbId := $1A; {OSB4}
    End;
   End;
 
@@ -487,7 +499,7 @@ Begin
   $18 : CurrentChipset := 'VIA Apollo Master';
   $19 : If SbId = $0C then CurrentChipset := 'VIA Apollo VP/VPX';
   $1A : If SbId = $0C then CurrentChipset := 'VIA Apollo VP2/AMD 640';
-  $1B : If SbId = $0C then CurrentChipset := 'VIA Apollo VP3';
+  $1B : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo VP3'; {0D v1.24}
   $1C : If (SbId = $0D) or (SbId = $0E) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
   $1D : CurrentChipset := 'VIA Apollo P6';
   $1E : If SbId = $0E then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
@@ -501,24 +513,26 @@ Begin
   $26 : If SbId = $10 then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
   $2C : If SbId = $11 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
   $2D : If SbId = $11 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
-  $2E : If SbId = $12 then CurrentChipset := 'AMD 750'; {v1.20}
-  $2F : case SbId of {v1.20}
+  $2E : If SbId = $11 then CurrentChipset := 'ALi Aladdin Pro IV'; {v1.24}
+  $2F : If SbId = $11 then CurrentChipset := 'ALi ALiMAGiK 1'; {v1.24}
+  $30 : If SbId = $12 then CurrentChipset := 'AMD 750'; {v1.20}
+  $31 : case SbId of {v1.20}
          $0E : CurrentChipset := 'AMD 760 (VIA South)';
          $13 : CurrentChipset := 'AMD 760 (AMD South)';
         end;
-  $30 : If SbId = $13 then CurrentChipset := 'AMD 760MP'; {v1.20}
-  $31 : CurrentChipset := 'SiS 85C496+497'; {v1.21}
-  $32 : If SbId = $14 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
-  $33 : If SbId = $14 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
-  $34 : If SbId = $14 then CurrentChipset := 'SiS 5571'; {v1.21}
-  $35 : If SbId = $14 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
-  $36 : If SbId = $14 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
-  $37 : If SbId = $14 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
-  $38 : If SbId = $14 then CurrentChipset := 'SiS 530'; {v1.21}
-  $39 : If (SbId = $14) or (SbId = $15) then CurrentChipset := 'SiS 540'; {v1.21}
-  $3A : If SbId = $14 then CurrentChipset := 'SiS 600'; {v1.21}
-  $3B : If SbId = $14 then CurrentChipset := 'SiS 620'; {v1.21}
-  $3C : If (SbId = $14) or (SbId = $15) then CurrentChipset := 'SiS 630'; {v1.21}
+  $32 : If SbId = $13 then CurrentChipset := 'AMD 760MP'; {v1.20}
+  $33 : CurrentChipset := 'SiS 85C496+497'; {v1.21}
+  $34 : If SbId = $14 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
+  $35 : If SbId = $14 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
+  $36 : If SbId = $14 then CurrentChipset := 'SiS 5571'; {v1.21}
+  $37 : If SbId = $14 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
+  $38 : If SbId = $14 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
+  $39 : If SbId = $14 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
+  $3A : If SbId = $14 then CurrentChipset := 'SiS 530'; {v1.21}
+  $3B : If (SbId = $14) or (SbId = $15) then CurrentChipset := 'SiS 540'; {v1.21}
+  $3C : If SbId = $14 then CurrentChipset := 'SiS 600'; {v1.21}
+  $3D : If SbId = $14 then CurrentChipset := 'SiS 620'; {v1.21}
+  $3E : If (SbId = $14) or (SbId = $15) then CurrentChipset := 'SiS 630'; {v1.21}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -539,7 +553,7 @@ Begin
                       ',' + Hb( SouthRev ) + ')';
   End;
 
- If ( ( not ChipsetFound ) or ( WantToUseAMI ) ) and AMICheckFor then
+ If {( ( not ChipsetFound ) or (} WantToUseAMI {) )} and AMICheckFor then {v1.24}
   Begin
    AMIUsed := True;
    ChipsetFound := True;
@@ -649,50 +663,33 @@ Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
            LogWrite('VIA/AMD method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $40 ))); {v1.23}
-
-{           Mask := $B1FFFFFF;}
-           PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
-           LogWrite('VIA/AMD method: reg $44 = '+_Str(PIIXReg2)); {v1.23}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, $A0608000{PIIXReg2 and Mask });
-           LogWrite('VIA/AMD method: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
-            SouthPos and $7, $44 ))); {v1.23}
-
-{           Mask := $FFFFFEFF;}
-           PIIXReg3 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48 );
-           LogWrite('VIA/AMD method: reg $48 = '+_Str(PIIXReg3)); {v1.23}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48, $00C40001{PIIXReg3 and Mask} );
-           LogWrite('VIA/AMD method: reg $48 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3,
-            SouthPos and $7, $48 ))); {v1.23}
-
           End else
           Begin
            LogWrite('VIA/AMD method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $40 ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
-
-           LogWrite('VIA/AMD method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
-            SouthPos and $7, $44 ))); {v1.23}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 );
-
-           LogWrite('VIA/AMD method: restoring reg $48 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
-            SouthPos and $7, $48 ))); {v1.23}
-           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $48, PIIXReg3 );
           End;
         End;
   $04 : Begin {ALi method} {v1.18}
          If Map then
           Begin
-           Mask := $43000000; {write enable, 256K enable}
+           Mask := $47000000; {write enable, 256K enable} {43->47 v1.24}
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
            LogWrite('ALi method: reg $44 = '+_Str(PIIXReg)); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or Mask );
            LogWrite('ALi method: reg $44 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 ))); {v1.23}
            {M1543C rev. B1 - supports 512K ROM}
-           Mask := $10000000; {512K enable} {v1.19}
+           Mask := $1000{0000}; {512K enable} {v1.19} {v1.24 fixed}
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 ); {v1.19}
            LogWrite('ALi method: reg $78 = '+_Str(PIIXReg2)); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 or Mask ); {v1.19}
            LogWrite('ALi method: reg $78 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 ))); {v1.23}
+           {M1535 - supports 512K ROM} {v1.24}
+           Mask := $1000000; {512K enable}
+           PIIXReg3 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C );
+           LogWrite('ALi method: reg $7C = '+_Str(PIIXReg3));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg3 or Mask );
+           LogWrite('ALi method: reg $7C changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C )));
           End else
           Begin
            LogWrite('ALi method: restoring reg $44 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
@@ -701,6 +698,9 @@ Begin
            LogWrite('ALi method: restoring reg $78 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
             SouthPos and $7, $78 ))); {v1.23}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 ); {v1.19}
+           LogWrite('ALi method: restoring reg $7C from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $7C ))); {v1.24}
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg3 ); {v1.24}
           End;
         End;
   $05 : Begin {SiS methods} {v1.21}
@@ -848,6 +848,36 @@ Begin
                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg );
                  End;
            End;
+          End;
+        End;
+  $09 : Begin {Reliance method} {v1.24}
+         If Map then
+          Begin
+           Mask := $00000200; {512K enable}
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
+           LogWrite('Reliance method: reg $40 = '+_Str(PIIXReg));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
+           LogWrite('Reliance method: reg $40 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 )));
+
+           Mask := $00000080; {4MB enable}
+           PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 );
+           LogWrite('Reliance method: reg $70 = '+_Str(PIIXReg2));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 or Mask );
+           LogWrite('Reliance method: reg $70 changed to '+_Str(GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70 )));
+
+           LogWrite('Reliance method: internal reg $C6F = '+_Str(Port[$C6F]));
+           Port[$C6F]:=Port[$C6F] or $40; {Flash write enable}
+           LogWrite('Reliance method: internal reg $C6F changed to '+_Str(Port[$C6F]));
+          End else
+          Begin
+           LogWrite('Reliance method: restoring reg $40 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $40 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+           LogWrite('Reliance method: restoring reg $70 from '+_Str(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $70 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $70, PIIXReg2 );
+           LogWrite('Reliance method: restoring internal reg $C6F from '+_Str(Port[$C6F]));
+           Port[$C6F]:=Port[$C6F] and $BF; {Flash write disable}
           End;
         End;
  End;

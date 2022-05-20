@@ -329,7 +329,7 @@ Begin
            Size := 2048;
            Name := ConstPtr( '39xF016 series (3V/2.7V)' );
           End;
-    $89 : Begin {v1.21}
+(*    $89 : Begin {v1.21} {v1.24 16-bit removed}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProgW;
@@ -368,7 +368,7 @@ Begin
            Sectors[ 0, 1 ] := 32;
            Size := 2048;
            Name := ConstPtr( '39xF160 series (3V/2.7V)' );
-          End;
+          End;*)
     $57 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}

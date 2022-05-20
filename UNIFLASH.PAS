@@ -1,5 +1,4 @@
-{.$M 32384, 4096, 4096}
-{$M 8192, 0, 16384}
+{$M 16384, 0, 16384}
 {$I-}
 {$S-}
 {$R-}
@@ -141,7 +140,7 @@ Begin
     Begin
      {Make list with sector ends & sizes (=next sector starts)}
      With FlashInfo^ do
-      For W := 1 to Count do
+      For W := 1 to 1{Count} do
        For Y := 0 to 4 do {v1.21 3->4}
         If Sectors[ Y, 0 ] = 0 then Break else
         For Z := 1 to Sectors[ Y, 0 ] do
@@ -154,9 +153,9 @@ Begin
     End else
     Begin
      {Bulk erase chip}
-     For W := 1 to FlashInfo^.Count do
+     For W := 1 to {FlashInfo^.Count}1 do
       Begin
-       X := X + ( FlashSize div FlashInfo^.Count );
+       X := X + ( FlashSize {div FlashInfo^.Count} );
        SStarts[ SPos ] := X;
        Inc( SPos );
       End;
@@ -1137,165 +1136,22 @@ Begin
   Redir:=WhereX=A;
 End;
 
-procedure WriteLnStd(S:String); {v1.22}
+function WriteLnStd(S:String):Boolean; {v1.22}
 begin
   Inc( Count );
   if not Redir and ( Count >= Hi( WindMax ) ) then
    Begin
     Write( '-- More --' );
-    _ReadKey;
+    if UpCase(_ReadKey)='Q' then begin WriteLnStd:=False; Exit; end; {v1.24}
     WriteLn;
     Count:=0;
    End;
   WriteLn( StdOut, S );
+  WriteLnStd:=True;
 end;
 
-procedure RedetectFlashROM;
+procedure MemInit; {v1.24}
 begin
- {!!!!NOT IMPLEMENTED!!!!}
-end;
-
-{---------------------- MAIN PART OF THE PROGRAM -------------------------}
-{---------------------- MAIN PART OF THE PROGRAM -------------------------}
-{---------------------- MAIN PART OF THE PROGRAM -------------------------}
-{---------------------- MAIN PART OF THE PROGRAM -------------------------}
-var savefile : file;
-    savename : string;
-
-Begin
- {Hack to be able to write to StdOut - better ideas anyone ?}
- Assign( StdOut, 'CON' );
- Rewrite( StdOut );
- StdOutRec.Handle := 1;
- CheckRedir; {v1.22 Check if STDOUT is redirected}
-
- ClrScr;
- GotoXY(11,2);
- TextColor(Yellow);
- Write('UniFlash ');
- TextColor(LightGreen);
- Write('v' + Version );
- TextColor(LightCyan);
- WriteLn(' (c) 2001 Rainbow Software (http://rainbow.ht.st)');
- TextColor(LightMagenta);
- GotoXY(11,3);
- Write('Original version by Pascal van Leeuwen & Galkowski Adam');
- TextColor(LightGray);
-
- CurLang := 1; {default = English}
- If ( ParamCount > 0 ) then
-  Begin
-   PStr := OpStr( ParamStr( 1 ) );
-   If PStr[ 1 ] = '0' then
-    Begin
-     WriteLn;
-     WriteLn;
-     WrtCenter( 'Languages supported in this version:' );
-     WriteLn;
-     For X := 1 to LangCount do
-      WrtCenter( Char( X + Ord( '0' ) ) + '. ' + GetLangName( X ) );
-     WriteLn;
-     WrtCenter( 'Use UNIFLASH /x [other options] where x is the language number.' );
-     WriteLn;
-     Halt;
-    End;
-   If PStr[ 1 ] in [ '1' .. Char( LangCount + Byte( '0' ) ) ] then
-    Begin
-     CurLang := Byte( PStr[ 1 ] ) - Byte( '0' ); {Set language}
-     X := 2;
-    End else X := 1;
-  End;
- PStr := Msg( 105 );
- AnswYes := PStr[ 1 ];
- AnswNo  := PStr[ 2 ];
-
- While ParamCount >= X do
-  Begin
-   PStr := OpStr( ParamStr( X ) );
-   If ( PStr = 'E' ) then
-    Begin
-     Inc( X );
-     If ParamCount < X then Err( Msg( 29 ) );
-     Emergency := True;
-     EMFName := ParamStr( X );
-    End else
-   If ( PStr = 'H' ) or ( PStr = '?' ) then
-    Begin
-     WriteLn;
-     WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
-     WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]' );
-     WrtCenter( '' );
-     WrtCenter( Msg( 30 ) );
-     WrtCenter( Msg( 31 ) );
-     WrtCenter( Msg( 32 ) );
-     WrtCenter( Msg( 34 ) );
-     WrtCenter( Msg( 36 ) );
-     WrtCenter( Msg( 107 ) );
-     WrtCenter( Msg( 108 ) );
-     WrtCenter( Msg( 109 ) );
-     WriteLn;
-     Halt;
-    End else
-   If PStr = 'PCIOR' then PCIOR := True else
-   If PStr = 'AMI' then WantToUseAmi := True else
-   If PStr = 'LOG' then Logging := True else {v1.23}
-   If PStr = 'CHIPLIST' then
-    Begin
-     WriteLnStd( '' );
-     WriteLnStd( '  List of supported flash chips' );
-     WriteLnStd( '  -----------------------------' );
-     CurManuf := ManuRoot;
-     Repeat
-      With CurManuf^ do
-       Begin
-        M := Manuf;
-        For D := 0 to $FF do {v1.21 FF}
-         If IdChip( D, CurCInfo ) then With CurCInfo do
-          WriteLnStd( '  '+ Hb( M )+ Hb( D )+ ' - '+ Manuf^+ ' '+ Name^ );
-       End;
-      CurManuf := CurManuf^.Next;
-     Until ( CurManuf = Nil );
-     Halt;
-    End else
-   If PStr = 'FORCE' then
-    Begin
-     Inc( X );
-     If ParamCount < X then Err( Msg( 106 ) );
-     PStr := ParamStr( X );
-     If Length( PStr ) <> 4 then Err( Msg( 106 ) );
-     ForceIdVal := 0;
-     For M := 1 to 4 do
-      Begin
-       ForceIdVal := ForceIdVal shl 4;
-       If ( PStr[ M ] >= '0' ) and ( PStr[ M ] <= '9' ) then
-        ForceIdVal := ForceIdVal or ( Byte( PStr[ M ] ) - Byte( '0' ) )
-       else
-       If ( UpCase( PStr[ M ] ) >= 'A' ) and ( UpCase( PStr[ M ] ) <= 'F' ) then
-        ForceIdVal := ForceIdVal or ( Byte( UpCase( PStr[ M ] ) ) - Byte( 'A' ) + 10 )
-       else Err( Msg( 106 ) );
-      End;
-     ForceId := True;
-    End else
-   If PStr = 'SAVE' then
-    Begin
-     Inc( X );
-     If ParamCount < X then Err( Msg( 29 ) );
-     AutoSave := True;
-     EMFName := ParamStr( X );
-    End;
-   Inc( X );
-  End;
-
- LogStart; {v1.23}
-
- If Windows then Err( Msg( 110 ) ); {v1.22}
-
- If not LocatePIIX then { Sets address of PIIX } {v1.22 moved here}
-  Err( Msg( 111 ) ); {v1.22}
-
- LogWrite( 'Chipset detected: ' + CurrentChipset ); {v1.23}
-
  InitXMS; {Init memory subsystem. Should be done before FlatRealOn}
  If XMSLeft = -1 then
   Err( Msg( 37 ) );
@@ -1305,12 +1161,10 @@ Begin
 
  {Allocate high memory if XMS not present}
  AllocHimem;
+end;
 
- CMOSSize := GetCMOSSize;
-
- OldExitProc := ExitProc;
- ExitProc := @MyExitProc;
-
+procedure ROMSelect; {v1.24}
+begin
  ROMBase :=0 ;  {standard system BIOS flag for detectloop}
 
  {If PCI option ROM mode then scan for & select option ROM    }
@@ -1436,28 +1290,10 @@ Begin
     RomEnable( Map ); {Program the chipset so it lets you see the BIOS}
     LogWrite( 'System ROM selected' ); {v1.23}
    End;
+end;
 
- If ForceId then
-  Begin
-   FlashError := 1;
-   CurManuf := ManuRoot;
-   FlashInfo := @CurCInfo;
-   CurCInfo.Count := 1;
-   Repeat
-    With CurManuf^ do
-     If ( Manuf = Hi( ForceIdVal ) ) and
-          IdChip( Lo( ForceIdVal ), CurCInfo ) then FlashError := 0;
-    CurManuf := CurManuf^.Next;
-   Until ( FlashError = 0 ) or ( CurManuf = Nil );
-   If ROMBase = 0 then
-    ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
-  End else FlashInfo := FlashDetect;
-
-(* {Abort if option ROM is not a recognised flash ROM. This to avoid  }
- {the corruption of memory local to the PCI card as much as possible}
- If PCIOR and ( FlashError <> 0 ) then
-  Err( Msg( 49 ) );   disabled in v1.22 *)
-
+procedure ROMType; {v1.24}
+begin
  If FlashError = 0 then
   Begin
    FlashSize := LongInt( FlashInfo^.Size ) shl 10;
@@ -1476,7 +1312,7 @@ Begin
             MaxBlock := ( MaxBlock + 1 ) shl{ 11}7; {v1.21}
            End;
      1,3 : MaxBlock := PgSize;
-     2   : MaxBlock := FlashSize div FlashInfo^.Count;
+     2   : MaxBlock := FlashSize {div FlashInfo^.Count};
     End;
    {Allocate 2 buffers for BIOS images}
    OldBIOS := AllocLinBlock( FlashSize );
@@ -1506,6 +1342,7 @@ Begin
   End;
  textcolor(yellow);
  GotoXY( 2, 5 );
+ ClrEol;
  Write( Msg( 51 ) );
  With FlashInfo^ do
   Begin
@@ -1513,7 +1350,7 @@ Begin
    If FlashError <> 0 then Write( Msg( 52 ) )
    else
     Begin
-     If Count > 1 then Write( Count, ' x ' );
+{     If Count > 1 then Write( Count, ' x ' );}
      Write( Manuf^, ' ', Name^ );
     End;
    If ForceId then
@@ -1530,6 +1367,7 @@ Begin
 
    GotoXY( 2, 6 );
    TextColor(yellow);
+   ClrEol;
    Write( Msg( 53 ) );
    TextColor( 15 );
    If FlashError <> 0 then Write( Msg( 54 ) ) else
@@ -1537,7 +1375,7 @@ Begin
      Case Flags and 3 of
       0 : Begin
            Write( Msg( 55 ) );
-           If Count > 1 then Write( Count, ' x (' );
+{           If Count > 1 then Write( Count, ' x (' );}
            For X := 0 to 4 do With FlashInfo^ do {v1.21 3->4}
             Begin
              If Sectors[ X, 0 ] = 0 then Break;
@@ -1546,17 +1384,17 @@ Begin
              if Sectors[ X, 1 ] >= 8 then Write( ( Word( Sectors[ X, 1 ] ){ + 1} ) shr 3{shl 1}, 'k' ) {v1.21}
               else Write( ( Word( Sectors[ X, 1 ] ){ + 1} ) shl 7{shl 1}, 'b' );
             End;
-           If Count > 1 then Write( ')' );
+{           If Count > 1 then Write( ')' );}
           End;
       1 : Begin
-           If Count > 1 then Write( Count, ' x ' );
-           Write( ( ( LongInt( Size ) shl 10 ) div Count ) div PgSize );
+{           If Count > 1 then Write( Count, ' x ' );}
+           Write( ( ( LongInt( Size ) shl 10 ) {div Count} ) div PgSize );
            Write( Msg( 56 ), pgsize, Msg( 57 ) );
           End;
       2 : Write( Msg( 58 ) );
       3 : Begin
-           If Count > 1 then Write( Count, ' x ' );
-           Write( ( ( LongInt( Size ) shl 10 ) div Count ) div PgSize );
+{           If Count > 1 then Write( Count, ' x ' );}
+           Write( ( ( LongInt( Size ) shl 10 ) {div Count} ) div PgSize );
            Write( Msg( 59 ), pgsize, Msg( 57 ) );
           End;
      End;
@@ -1566,7 +1404,215 @@ Begin
       Write( ' (', Size shr 10, 'M)' );
     End;
   End;
-{ GotoXY( 11, 8 );}
+end;
+
+procedure XMSInfo; {v1.24}
+begin
+ TextColor( DarkGray );
+ GotoXY( 1, 24 );
+ Write( Msg( 68 ) );
+ Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
+ GotoXY( 1, 23 );
+ Write( Msg( 69 ) );
+ Write( Hl( ROMBase )+ Msg( 70 ) +hl(rombase)+'-->('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
+end;
+
+procedure RedetectFlashROM;Far; {v1.24}
+begin
+ LogWrite('Restarting UniFlash...');
+ If PCIOrEn then
+  Begin
+   SetPCIRegD( ORBus, ORDev, ORFun, $04, PCIReg4 );
+   SetPCIRegD( ORBus, ORDev, ORFun, $30, PCIReg30 );
+  End;
+ RomEnable( Unmap );
+ LogWrite('Shutting down to real mode');
+ FlatRealOff;
+ LogWrite('Turning off XMS support');
+ CloseXMS;
+ LogWrite('Initializing again');
+ MemInit;
+ ROMSelect;
+ FlashInfo := FlashDetect;
+ ROMType;
+ LogWrite('Welcome back');
+ XMSInfo;
+ {Backup current BIOS}
+ MoveLinBlockD( FlashBase, OldBIOS, FlashSize );
+end;
+
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+{---------------------- MAIN PART OF THE PROGRAM -------------------------}
+var savefile : file;
+    savename : string;
+
+Begin
+ {Hack to be able to write to StdOut - better ideas anyone ?}
+ Assign( StdOut, 'CON' );
+ Rewrite( StdOut );
+ StdOutRec.Handle := 1;
+ CheckRedir; {v1.22 Check if STDOUT is redirected}
+
+ ClrScr;
+ GotoXY(11,2);
+ TextColor(Yellow);
+ Write('UniFlash ');
+ TextColor(LightGreen);
+ Write('v' + Version );
+ TextColor(LightCyan);
+ WriteLn(' (c) 2001 Rainbow Software (http://rainbow.ht.st)');
+ TextColor(LightMagenta);
+ GotoXY(11,3);
+ Write('Original version by Pascal van Leeuwen & Galkowski Adam');
+ TextColor(LightGray);
+
+ CurLang := 1; {default = English}
+ If ( ParamCount > 0 ) then
+  Begin
+   PStr := OpStr( ParamStr( 1 ) );
+   If PStr[ 1 ] = '0' then
+    Begin
+     WriteLn;
+     WriteLn;
+     WrtCenter( 'Languages supported in this version:' );
+     WriteLn;
+     For X := 1 to LangCount do
+      WrtCenter( Char( X + Ord( '0' ) ) + '. ' + GetLangName( X ) );
+     WriteLn;
+     WrtCenter( 'Use UNIFLASH /x [other options] where x is the language number.' );
+     WriteLn;
+     Halt;
+    End;
+   If PStr[ 1 ] in [ '1' .. Char( LangCount + Byte( '0' ) ) ] then
+    Begin
+     CurLang := Byte( PStr[ 1 ] ) - Byte( '0' ); {Set language}
+     X := 2;
+    End else X := 1;
+  End;
+ PStr := Msg( 105 );
+ AnswYes := PStr[ 1 ];
+ AnswNo  := PStr[ 2 ];
+
+ While ParamCount >= X do
+  Begin
+   PStr := OpStr( ParamStr( X ) );
+   If ( PStr = 'E' ) then
+    Begin
+     Inc( X );
+     If ParamCount < X then Err( Msg( 29 ) );
+     Emergency := True;
+     EMFName := ParamStr( X );
+    End else
+   If ( PStr = 'H' ) or ( PStr = '?' ) then
+    Begin
+     WriteLn;
+     WriteLn;
+     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
+     WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx][-LOG]' );
+     WrtCenter( '' );
+     WrtCenter( Msg( 30 ) );
+     WrtCenter( Msg( 31 ) );
+     WrtCenter( Msg( 32 ) );
+     WrtCenter( Msg( 34 ) );
+     WrtCenter( Msg( 36 ) );
+     WrtCenter( Msg( 107 ) );
+     WrtCenter( Msg( 108 ) );
+     WrtCenter( Msg( 109 ) );
+     WriteLn;
+     Halt;
+    End else
+   If PStr = 'PCIOR' then PCIOR := True else
+   If PStr = 'AMI' then WantToUseAmi := True else
+   If PStr = 'LOG' then Logging := True else {v1.23}
+   If PStr = 'CHIPLIST' then
+    Begin
+     WriteLnStd( '' );
+     WriteLnStd( '  List of supported flash chips' );
+     WriteLnStd( '  -----------------------------' );
+     CurManuf := ManuRoot;
+     Repeat
+      With CurManuf^ do
+       Begin
+        M := Manuf;
+        For D := 0 to $FF do {v1.21 FF}
+         If IdChip( D, CurCInfo ) then With CurCInfo do
+          if not WriteLnStd( '  '+ Hb( M )+ Hb( D )+ ' - '+ Manuf^+ ' '+ Name^ ) then Exit;
+       End;
+      CurManuf := CurManuf^.Next;
+     Until ( CurManuf = Nil );
+     Exit;
+    End else
+   If PStr = 'FORCE' then
+    Begin
+     Inc( X );
+     If ParamCount < X then Err( Msg( 106 ) );
+     PStr := ParamStr( X );
+     If Length( PStr ) <> 4 then Err( Msg( 106 ) );
+     ForceIdVal := 0;
+     For M := 1 to 4 do
+      Begin
+       ForceIdVal := ForceIdVal shl 4;
+       If ( PStr[ M ] >= '0' ) and ( PStr[ M ] <= '9' ) then
+        ForceIdVal := ForceIdVal or ( Byte( PStr[ M ] ) - Byte( '0' ) )
+       else
+       If ( UpCase( PStr[ M ] ) >= 'A' ) and ( UpCase( PStr[ M ] ) <= 'F' ) then
+        ForceIdVal := ForceIdVal or ( Byte( UpCase( PStr[ M ] ) ) - Byte( 'A' ) + 10 )
+       else Err( Msg( 106 ) );
+      End;
+     ForceId := True;
+    End else
+   If PStr = 'SAVE' then
+    Begin
+     Inc( X );
+     If ParamCount < X then Err( Msg( 29 ) );
+     AutoSave := True;
+     EMFName := ParamStr( X );
+    End;
+   Inc( X );
+  End;
+
+ LogStart; {v1.23}
+
+ If Windows then Err( Msg( 110 ) ); {v1.22}
+
+ If not LocatePIIX then { Sets address of PIIX } {v1.22 moved here}
+  Err( Msg( 111 ) ); {v1.22}
+
+ LogWrite( 'Chipset detected: ' + CurrentChipset ); {v1.23}
+
+ MemInit; {v1.24}
+
+ CMOSSize := GetCMOSSize;
+
+ OldExitProc := ExitProc;
+ ExitProc := @MyExitProc;
+
+ ROMSelect; {v1.24}
+
+ If ForceId then
+  Begin
+   FlashError := 1;
+   CurManuf := ManuRoot;
+   FlashInfo := @CurCInfo;
+{   CurCInfo.Count` := 1;}
+   Repeat
+    With CurManuf^ do
+     If ( Manuf = Hi( ForceIdVal ) ) and
+          IdChip( Lo( ForceIdVal ), CurCInfo ) then FlashError := 0;
+    CurManuf := CurManuf^.Next;
+   Until ( FlashError = 0 ) or ( CurManuf = Nil );
+   If ROMBase = 0 then
+    ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
+  End else FlashInfo := FlashDetect;
+
+(* {Abort if option ROM is not a recognised flash ROM. This to avoid  }
+ {the corruption of memory local to the PCI card as much as possible}
+ If PCIOR and ( FlashError <> 0 ) then
+  Err( Msg( 49 ) );   disabled in v1.22 *)
+
+ ROMType; {v1.24}
 
  If AutoSave then
   Begin
@@ -1603,19 +1649,7 @@ Begin
  TextColor( 15 );
  Write( Msg( 63 ) );
 
-(* TextColor( yellow );
- GotoXY( 2, 9 );
- Write( Msg( 64 ) );
- TextColor( 15 );
- Write( Msg( 65 ), Hw( PiixMan ), Msg( 66 ), Hw( PIIXId ), Msg( 67 ), Hb( PiixL shr 3 ), ':',
-        Hb( PiixL and 7 ) ); *)
- TextColor( DarkGray );
- GotoXY( 1, 24 );
- Write( Msg( 68 ) );
- Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
- GotoXY( 1, 23 );
- Write( Msg( 69 ) );
- Write( Hl( ROMBase )+ Msg( 70 ) +hl(rombase)+'-->('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
+ XMSInfo; {v1.24}
 
  If PCIOr then
   Begin
@@ -1661,7 +1695,7 @@ Begin
  MainMenu := AddMenuItem( Msg( 85 ),  Msg( 122 ), 0, 1, @WriteBIOSImg,
              AddMenuItem( Msg( 86 ),  Msg( 123 ), 1, 1, @FlashBIOS,
              AddMenuItem( Msg( 87 ),  Msg( 124 ), 2, 0, @FlashOldBIOS,
-             AddMenuItem( Msg( 100 ), Msg( 125 ), 3, 0, @RedetectFlashROM,
+             AddMenuItem( Msg( 100 ), Msg( 125 ), 3, 1, @RedetectFlashROM,
              AddMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
              AddMenuItem( Msg( 90 ),  Msg( 127 ), 5, 3, PnPDMIMenu,
              AddMenuItem( Msg( 91 ),  Msg( 128 ), 6, 3, AdvMenu,
@@ -1682,7 +1716,6 @@ Begin
 
  If PCIOR then
   Begin
-   SetMenuItemStatus( MainMenu, 3, False );
    SetMenuItemStatus( MainMenu, 4, False );
    SetMenuItemStatus( MainMenu, 5, False );
    SetMenuItemStatus( MainMenu, 6, False );

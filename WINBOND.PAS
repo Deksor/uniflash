@@ -75,13 +75,13 @@ Begin
  If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
 End;
 
-Procedure WBMainErase( SAddr : LongInt );Far; {v1.21}
+(*Procedure WBMainErase( SAddr : LongInt );Far; {v1.21} {v1.24 16-bit removed}
 Begin
  { Boot Block Erase is not supported, only Chip Erase can erase Boot Block
    (and it must not be protected) }
  if ( SAddr - ROMBase ) > $3FFF then
   AMDSecErase( $5555 ); { Erases Main Memory Block only, not Boot Block }
-End;
+End;*)
 
 Function WBIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
@@ -112,12 +112,12 @@ Begin
            Name := ConstPtr( 'W29EE512/5V' );
            Size := 64;
           End;
-    $4F : Begin
+(*    $4F : Begin {v1.24 16-bit removed}
            Name := ConstPtr( 'W29C101/102/5V' );
            PgSize := 256; {page size}
            Size := 128;
            Progr  := GenPageProgW; {v1.21}
-          End;
+          End;*)
     $0B : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
@@ -166,7 +166,7 @@ Begin
            Size := 256;
            Name := ConstPtr( 'W49V002F(A)/3.3V (Firmware Hub)' );
           End;
-    $2F : Begin {v1.21}
+(*    $2F : Begin {v1.21} {v1.24 16-bit removed}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProgW;
@@ -177,8 +177,8 @@ Begin
            Sectors[ 1, 1 ] := 896;
            Size := 128;
            Name := ConstPtr( 'W29F102/5V or W49F102/5V' );
-          End;
-    $BF : Begin {v1.21}
+          End;*)
+(*    $BF : Begin {v1.21} {v1.24 16-bit removed}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProgW;
@@ -189,8 +189,8 @@ Begin
            Sectors[ 1, 1 ] := 896;
            Size := 128;
            Name := ConstPtr( 'W49L102/3.3V' );
-          End;
-    $AE : Begin {v1.21}
+          End;*)
+(*    $AE : Begin {v1.21} {v1.24 16-bit removed}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProgW;
@@ -201,8 +201,8 @@ Begin
            Sectors[ 1, 1 ] := 1664;
            Size := 256;
            Name := ConstPtr( 'W49F201/5V' );
-          End;
-    $3E : Begin {v1.21}
+          End;*)
+(*    $3E : Begin {v1.21} {v1.24 16-bit removed}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProgW;
@@ -213,7 +213,7 @@ Begin
            Sectors[ 1, 1 ] := 1664;
            Size := 256;
            Name := ConstPtr( 'W49L201/3.3V' );
-          End;
+          End;*)
     else Exit;
    End;
   End;

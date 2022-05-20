@@ -161,14 +161,14 @@ Begin
            Size := 256;
            Name := ConstPtr( 'CAT28F020/12V' );
           End;
-    $51 : Begin {v1.21}     {FUCKIN' WORD/BYTE MODE - UNCLEAR DATASHEET}
+(*    $51 : Begin {v1.21} {v1.24 16-bit removed}
            Flags  := 6;   {bulk erase, need blanking}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDFlashWriteW;
            Erase := AMDFlashEraseW;
            Size := 128;
            Name := ConstPtr( 'CAT28F102/12V' );
-          End;
+          End;*)
     $B8 : Begin {v1.21}
            Flags  := 6;   {bulk erase, need blanking}
            PgSize := 128; {'page' size, program 128 bytes at a time}

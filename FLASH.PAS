@@ -10,7 +10,7 @@ ChipInfo   = Record
               Name    : ^String;
               Erase   : Fl_Erase;
               Progr   : Fl_Program;
-              Sectors : ARRAY[ 0 .. 3, 0 .. 1 ] of Byte;
+              Sectors : ARRAY[ 0 .. 4, 0 .. 1 ] of Word;
               Size    : Word;
               PgSize  : Word;
               Flags   : Byte;
@@ -43,6 +43,7 @@ CurCInfo   : ChipInfo;
 ROMBase    : LongInt;
 
 Procedure FlashCmd( Cmd : Byte );
+Procedure FlashCmdW( Cmd : Byte ); {v1.21}
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
 Function FlashDetect : PChipInfo;
 Procedure FlashProgram( Pos, Data : LongInt );
@@ -169,7 +170,11 @@ Begin
     {Get man. code}
     SendIdCmd;
     If ( Method and 2 ) = 0 then
-     M := FIMemB( ROMBase )
+     Begin
+      M := FIMemB( ROMBase );
+      if M = $7F then M := FIMemB( ROMBase + $100 ); {Mfg. ID for EON v1.21}
+{      if M = $7F then M := FIMemB( ROMBase + $11 );}  {Mfg. ID for IMT v1.21}
+     End
     else
      M := Lo( FIMemW( ROMBase ) );
 
@@ -180,7 +185,10 @@ Begin
       SendIdCmd;
      End;
     If ( Method and 2 ) = 0 then
-     D := FIMemB( ROMBase + 1 )
+     Begin
+      D := FIMemB( ROMBase + 1 );
+      if D = $7F then D := FIMemB( ROMBase + $101 ); {Alternate Dev. ID}
+     End                                             {For EON chips}
     else
      D := Hi( FIMemW( ROMBase ) );
     ResetROM;
@@ -189,17 +197,17 @@ Begin
 
     If ( ( M <> FIMemB( ROMBase ) ) or
        ( D <> FIMemB( ROMBase + 1 ) ) ) and
-       ParityOdd( D ) and ParityOdd( M ) then
+{       ParityOdd( D ) and }ParityOdd( M ) then {v1.21 - Device ID can have even parity!}
      Begin
 
       If not Found then
        Begin
-        Man := M and $7F;
-        Dev := D and $7F;
+        Man := M {and $7F}; {v1.21}
+        Dev := D {and $7F}; {v1.21}
         CurManuf := ManuRoot;
         Found := False;
         Repeat
-
+         FillChar( CurCInfo.Sectors, SizeOf( CurCInfo.Sectors ), 0); {v1.21 Clear sector table}
          With CurManuf^ do
           Begin
            If ( Manuf = Man ) and
@@ -219,8 +227,8 @@ Begin
          End;
        End else
        Begin
-        If ( ( M and $7F ) = Man ) and
-           ( ( D and $7F ) = Dev ) and
+        If ( ( M {and $7F }) = Man ) and {v1.21}
+           ( ( D {and $7F }) = Dev ) and {v1.21}
            {Catch the partial decode case ...}
            ( not CompLinBlocks( ROMBase + ( CurCInfo.Size shl 10 ) - 16,
                                 ROMBase + ( CurCInfo.Size shl 11 ) - 16,

@@ -81,7 +81,7 @@ End;
 
 Function LocatePIIX : byte;
 Const
-NbName    : ARRAY[ 1 .. $2C ] of String[ 16 ] = { Rainbow }
+NbName    : ARRAY[ 1 .. $38 ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -90,7 +90,7 @@ NbName    : ARRAY[ 1 .. $2C ] of String[ 16 ] = { Rainbow }
 {6}           'i82439HX',
 {7}           'i82437VX',
 {8}           'i82439TX',
-{9}           'i82443LX/EX', { EX v1.18}
+{9}           'i82443LX/EX', {EX v1.18}
 {A}           'i82443BX/ZX', {v1.18}
 {B}           'i82443GX', {v1.18}
 {C}           'i82454KX',
@@ -104,7 +104,7 @@ NbName    : ARRAY[ 1 .. $2C ] of String[ 16 ] = { Rainbow }
 {14}          'i82850', {v1.19}
 {15}          'VT82C576M',
 {16}          'VT82C585VP/VPX',
-{17}          'VT82C595/AMD 640',
+{17}          'VT82C595/AMD-640',
 {18}          'VT82C597',
 {19}          'VT82C598[AT]',
 {1A}          'VT82C685',
@@ -125,9 +125,21 @@ NbName    : ARRAY[ 1 .. $2C ] of String[ 16 ] = { Rainbow }
 {29}          'M1621', {v1.18}
 {2A}          'AMD-751', {v1.20}
 {2B}          'AMD-761', {v1.20}
-{2C}          'AMD-762' ); {v1.20}
+{2C}          'AMD-762', {v1.20}
+{2D}          'SiS 85C496+497', {v1.21}
+{2E}          'SiS 501/5101/5501', {v1.21}
+{2F}          'SiS 5511', {v1.21}
+{30}          'SiS 5571', {v1.21}
+{31}          'SiS 5591/5592', {v1.21}
+{32}          'SiS 5596', {v1.21}
+{33}          'SiS 5597/5598/5581/5120', {v1.21}
+{34}          'SiS 530', {v1.21}
+{35}          'SiS 540', {v1.21}
+{36}          'SiS 600', {v1.21}
+{37}          'SiS 620', {v1.21}
+{38}          'SiS 630' ); {v1.21}
 
-SbName    : ARRAY[ 1 .. $12 ] of String[ 21 ] =
+SbName    : ARRAY[ 1 .. $18 ] of String[ 21 ] =
 {1}         ( 'i82378IB SIO',
 {2}           'i82379AB SIO.A',
 {3}           'i82371FB PIIX',
@@ -138,14 +150,20 @@ SbName    : ARRAY[ 1 .. $12 ] of String[ 21 ] =
 {8}           'i82801AB ICH0', {v1.19}
 {9}           'i82801BA ICH2', {v1.19}
 {A}           'i82801BAM ICH2-M', {v1.19}
-{B}           'VT82C586(A|B)/AMD 645',
+{B}           'VT82C586(A|B)/AMD-645',
 {C}           'VT82C596(A|B)',
 {D}           'VT82C686(A)', {v1.20}
 {E}           'VT8231', {v1.20}
 {F}           'VT8233', {v1.20}
 {10}          'M1543(C)', {v1.18}
 {11}          'AMD-756', {v1.20}
-{12}          'AMD-766' ); {v1.20}
+{12}          'AMD-766', {v1.20}
+{13}          'SiS South Bridge', {v1.21}
+{14}          'SiS 950', {v1.21}
+{15}          'SMSC SLC90E66', {v1.21}
+{16}          'Winbond W83C553F', {v1.21}
+{17}          'ITE IT8871F/2F', {v1.21}
+{18}          'ITE IT8888F'); {v1.21}
 
 Var
 SbId,
@@ -197,69 +215,71 @@ Begin
  NbId := 0;  {not recognised yet}
  If NorthMan = $8086 {Intel} then
   Begin
-   If NorthId = $4A3 then
-    Case NorthRev of
-     $00, $01, $02, $03 : NbId := $01;  {82433LX} { $00,$02 v1.18}
-     $10, $11 : NbId := $02;  {82433NX}
-    End else
-   If NorthId = $122D then NbId := $03 {82437FX} else
-   If NorthId = $1235 then NbId := $04 {82437MX} else
-   If NorthId = $1237 then NbId := $05 {82441FX} else
-   If NorthId = $1250 then NbId := $06 {82439HX} else
-   If NorthId = $7030 then NbId := $07 {82437VX} else
-   If NorthId = $7100 then NbId := $08 {82439TX} else
-   If NorthId = $7180 then NbId := $09 {82443LX/EX} else { EX v1.18}
-   If (NorthId = $7190) or (NorthId = $7192) then NbId := $0A {82443BX/ZX} else {v1.18}
-   If (NorthId = $71A0) or (NorthId = $71A2) then NbId := $0B {82443GX} else {v1.18}
-   If NorthId = $84C4 then
-    Case NorthRev of
-     $02      : NbId := $0C; {82454KX}
-     $04      : NbId := $0D; {82454KX/GX, not sure}
-     $05, $06 : NbId := $0E; {82454GX}
-    End else
-   If (NorthId = $7120) or (NorthId = $7122) then NbId := $0F else {82810} {v1.19}
-   If NorthId = $7124 then NbId := $10 else {82810E} {v1.19}
-   If NorthId = $1130 then NbId := $11 else {82815} {v1.19}
-   If NorthId = $2500 then NbId := $12 else {82820} {v1.19}
-   If NorthId = $1A21 then NbId := $13; {82840} {v1.19}
-   If NorthId = $2530 then NbId := $14 else {82850} {v1.19}
+   case NorthId of {case v1.21}
+     $4A3: Case NorthRev of
+            $00, $01, $02, $03 : NbId := $01;  {82433LX} { $00,$02 v1.18}
+            $10, $11 : NbId := $02;  {82433NX}
+           End;
+    $122D: NbId := $03; {82437FX}
+    $1235: NbId := $04; {82437MX}
+    $1237: NbId := $05; {82441FX}
+    $1250: NbId := $06; {82439HX}
+    $7030: NbId := $07; {82437VX}
+    $7100: NbId := $08; {82439TX}
+    $7180: NbId := $09; {82443LX/EX} {EX v1.18}
+    $7190, $7192: NbId := $0A; {82443BX/ZX} {v1.18}
+    $71A0, $71A2: NbId := $0B; {82443GX} {v1.18}
+    $84C4: Case NorthRev of
+            $02      : NbId := $0C; {82454KX}
+            $04      : NbId := $0D; {82454KX/GX, not sure}
+            $05, $06 : NbId := $0E; {82454GX}
+           End;
+    $7120, $7122: NbId := $0F; {82810} {v1.19}
+    $7124: NbId := $10; {82810E} {v1.19}
+    $1130: NbId := $11; {82815} {v1.19}
+    $2500: NbId := $12; {82820} {v1.19}
+    $1A21: NbId := $13; {82840} {v1.19}
+    $2530: NbId := $14; {82850} {v1.19}
+   End;
   End else
  If NorthMan = $1106 {VIA} then
   Begin
-   If NorthId = $576 then
-    Begin
-     NorthFunc := $0100; {VIA A8/A9 scheme}
-     NbId := $15 {82C576M}
-    End else
-   If NorthId = $585 then NbId := $16 {82C585VP/VPX} else
-   If NorthId = $595 then NbId := $17 {82C595} else
-   If NorthId = $597 then NbId := $18 {82C597} else
-   If NorthId = $598 then NbId := $19 {82C598(AT)} else
-   If NorthId = $685 then
-    Begin
-     NorthFunc := $0100; {VIA A8/A9 scheme}
-     NbId := $1A; {82C685}
-    End else
-   If NorthId = $501 then NbId := $1B {8501} else
-   If NorthId = $691 then NbId := $1C {82C691/693(A)/694X} else
-   If NorthId = $693 then NbId := $1D {82C693(A)} else
-   If NorthId = $601 then NbId := $1E {82C601} else
-   If NorthId = $605 then NbId := $1F {8605} else
-   If NorthId = $391 then NbId := $20 {82371} else
-   If NorthId = $305 then NbId := $21 {8363(A)} else
-   If NorthId = $3099 then NbId := $22 {8366} else
-   If NorthId = $3091 then NbId := $23 {8633} else
-   If NorthId = $3101 then NbId := $24 {8653} else
-   If NorthId = $3102 then NbId := $25 {8662} else
-   If NorthId = $3103 then NbId := $26 {8615} else
-   If NorthId = $3112 then NbId := $27 {8361} else
-   If NorthId = $3133 then NbId := $28 {3133};
+   case NorthId of {case v1.21}
+     $576: Begin
+            NorthFunc := $0100; {VIA A8/A9 scheme}
+            NbId := $15 {82C576M}
+           End;
+     $585: NbId := $16; {82C585VP/VPX}
+     $595: NbId := $17; {82C595}
+     $597: NbId := $18; {82C597}
+     $598: NbId := $19; {82C598(AT)}
+     $685: Begin
+            NorthFunc := $0100; {VIA A8/A9 scheme}
+            NbId := $1A; {82C685}
+           End;
+     $501: NbId := $1B; {8501}
+     $691: NbId := $1C; {82C691/693(A)/694X}
+     $693: NbId := $1D; {82C693(A)}
+     $601: NbId := $1E; {82C601}
+     $605: NbId := $1F; {8605}
+     $391: NbId := $20; {82371}
+     $305: NbId := $21; {8363(A)}
+    $3099: NbId := $22; {8366}
+    $3091: NbId := $23; {8633}
+    $3101: NbId := $24; {8653}
+    $3102: NbId := $25; {8662}
+    $3103: NbId := $26; {8615}
+    $3112: NbId := $27; {8361}
+    $3133: NbId := $28; {3133}
+   End;
   End else
- If NorthMan = $1022 {AMD} then {v.1.20}
+ If NorthMan = $1022 {AMD} then {v1.20}
   Begin
-   If NorthId = $7006 then NbId := $2A {AMD-751} else
-   If NorthId = $700E then NbId := $2B {AMD-761} else
-   If NorthId = $700C then NbId := $2C {AMD-762};
+   case NorthId of {case v1.21}
+    $7006: NbId := $2A; {AMD-751}
+    $700E: NbId := $2B; {AMD-761}
+    $700C: NbId := $2C; {AMD-762}
+   End;
   End else
  If NorthMan = $1045 {Opti} then
   Begin
@@ -269,7 +289,41 @@ Begin
   End else
  If NorthMan = $1039 {SiS} then
   Begin
-  End;
+   SouthFunc:=$0503; {SiS reg. 45 bits 5,2}
+   case NorthId of
+     $496: Begin {85C496+497} {v1.21}
+            NorthFunc := $0200; {SiS reg. D0 scheme}
+            SouthFunc := 0;
+            NbId := $2D;
+           End;
+     $406: Begin {501/5101/5501} {v1.21}
+            SouthFunc := $0501; {SiS internal reg. 80h}
+            NbId := $2E;
+           End;
+    $5511: Begin {5511} {v1.21}
+            SouthFunc := $0502; {SiS internal reg. 50h}
+            NbId := $2F;
+           End;
+    $5571: NbId := $30; {5571} {v1.21}
+    $5591: NbId := $31; {5591/5592} {v1.21}
+    $5596: Begin {5596} {v1.21}
+            SouthFunc := $0502; {SiS internal reg. 50h}
+            NbId := $32;
+           End;
+    $5597: NbId := $33; {5597/5598/5581/5120} {v1.21}
+    $0530: NbId := $34; {530} {v1.21}
+    $0540: Begin {540} {v1.21}
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            NbId := $35;
+           End;
+    $5600: NbId := $36; {600} {v1.21}
+    $0620: NbId := $37; {620} {v1.21}
+    $0630: Begin {630} {v1.21}
+            SouthFunc := $0504; {SiS reg. 45 bits 7,6}
+            NbId := $38;
+           End;
+   End;
+  End else
  If NorthMan = $10B9 {ALi} then
   Begin
    If NorthId = $1621 then NbId := $29; {M1621} {v1.19}
@@ -279,55 +333,43 @@ Begin
  SbId := 0;  {not recognised yet}
  If SouthMan = $8086 {Intel} then
   Begin
-   SouthFunc := $0100; {Intel method}
-   If SouthId = $484 then SbId := $02 {82379AB SIO.A} else
-   If SouthId = $122E then SbId := $03 {82371FB PIIX} else
-   If SouthId = $1234 then SbId := $04 {82371MX MPIIX} else
-   If SouthId = $7000 then
-    Begin
-     SbId := $05 {82371SB PIIX3};
-     Inc( SouthFunc );
-    End else
-   If SouthId = $7110 then
-    Begin
-     SbId := $06; {82371AB PIIX4}
-     Inc( SouthFunc, 3 );
-    End else
-   If SouthID = $2410 then {i82801AA ICH}
-    Begin
-     SbId := $07;
-     SouthFunc := $0200;
-    End else
-   If SouthID = $2420 then {i82801AB ICH0}
-    Begin
-     SbId := $08;
-     SouthFunc := $0200;
-    End else
-   If SouthID = $2440 then {i82801BA ICH2}
-    Begin
-     SbId := $09;
-     SouthFunc := $0200;
-    End else
-   If SouthID = $244C then {i82801BAM ICH2-M}
-    Begin
-     SbId := $0A;
-     SouthFunc := $0200;
-    End;
+   if Hi(SouthId)=$24 then SouthFunc := $0200 else SouthFunc := $0100; {v1.21}
+   case SouthId of {case v1.21}
+     $484: SbId := $02; {82379AB SIO.A}
+    $122E: SbId := $03; {82371FB PIIX}
+    $1234: SbId := $04; {82371MX MPIIX}
+    $7000: Begin
+            SbId := $05 {82371SB PIIX3};
+            Inc( SouthFunc );
+           End;
+    $7110: Begin
+            SbId := $06; {82371AB PIIX4}
+            Inc( SouthFunc, 3 );
+           End;
+    $2410: SbId := $07; {i82801AA ICH}
+    $2420: SbId := $08; {i82801AB ICH0}
+    $2440: SbId := $09; {i82801BA ICH2}
+    $244C: SbId := $0A; {i82801BAM ICH2-M}
+   End;
   End else
  If SouthMan = $1106 {VIA} then
   Begin
    SouthFunc := $0300; {VIA/AMD method}
-   If SouthId = $586 then SbId := $0B else
-   If SouthId = $596 then SbId := $0C else
-   If SouthId = $686 then SbId := $0D else {VT82C686(A)} {v1.20}
-   If SouthId = $8231 then SbId := $0E; {VT8231} {v1.20}
-   If SouthId = $3074 then SbId := $0F else {VT8233} {v1.20}
+   case SouthId of {case v1.21}
+     $586: SbId := $0B;
+     $596: SbId := $0C;
+     $686: SbId := $0D; {VT82C686(A)} {v1.20}
+    $8231: SbId := $0E; {VT8231} {v1.20}
+    $3074: SbId := $0F; {VT8233} {v1.20}
+   End;
   End else
  If SouthMan = $1022 {AMD} then {v1.20}
   Begin
    SouthFunc := $0300; {AMD/VIA method}
-   If SouthId = $7408 then SbId := $11 {AMD-756} else
-   If SouthId = $7410 then SbId := $12 {AMD-766};
+   case SouthId of {case v1.21}
+    $7408: SbId := $11; {AMD-756}
+    $7410: SbId := $12; {AMD-766}
+   end;
   End else
  If SouthMan = $1045 {Opti} then
   Begin
@@ -337,7 +379,11 @@ Begin
   End else
  If SouthMan = $1039 {SiS} then
   Begin
-  End;
+   case SouthId of {v1.21}
+     $8: SbId := $13; {any SiS South Bridge}
+    $18: SbId := $14; {SiS 950 can have $8 or $18}
+   End;
+  End else
  If SouthMan = $10B9 {ALi} then {v1.18}
   Begin
    If SouthId = $1533 then {M1543} {v1.19}
@@ -345,6 +391,29 @@ Begin
      SouthFunc := $0400; {ALi method}
      SbId := $10;
     End;
+  End else
+ If SouthMan = $1055 {SMSC} then {v1.21}
+  Begin
+   If SouthId = $9460 then {SLC90E66} {v1.21}
+    Begin
+     SouthFunc := $0600; {SMSC method}
+     SbId := $15;
+    End;
+  End else
+ If SouthMan = $10AD {Winbond/Symphony Labs} then {v1.21}
+  Begin
+   If SouthId = $0565 then {W83C553F} {v1.21}
+    Begin
+     SouthFunc := $0700; {Winbond method}
+     SbId := $16;
+    End;
+  End else
+ If SouthMan = $1283 {ITE} then {v1.21}
+  Begin
+   case SouthId of
+    $8872 : Begin SouthFunc := $0801; SbId := $17; End; {IT8871F/8872F}
+    $8888 : Begin SouthFunc := $0802; SbId := $18; End; {IT8888F}
+   End;
   End;
 
  {Id chipset as a whole}
@@ -359,7 +428,10 @@ Begin
   $07 : If SbId = $05 then CurrentChipset := 'Intel Triton II 430VX';
   $08 : If SbId = $06 then CurrentChipset := 'Intel Triton III 430TX';
   $09 : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440LX/EX'; {EX v1.18}
-  $0A : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440BX/ZX'; {v1.18}
+  $0A : case SbId of
+         $06 : CurrentChipset := 'Intel AGPSet 440BX/ZX'; {v1.18}
+         $15 : CurrentChipset := 'SMSC VictoryBX-66'; {v1.21}
+        End;
   $0B : If SbId = $06 then CurrentChipset := 'Intel AGPSet 440GX'; {v1.18}
   $0C : If SbId = $02 then CurrentChipset := 'Intel 450KX';
   $0D : If SbId = $02 then CurrentChipset := 'Intel 450KX/GX';
@@ -402,6 +474,18 @@ Begin
          $12 : CurrentChipset := 'AMD 760 (AMD South)';
         end;
   $2C : If SbId = $12 then CurrentChipset := 'AMD 760MP'; {v1.20}
+  $2D : CurrentChipset := 'SiS 85C496+497'; {v1.21}
+  $2E : If SbId = $13 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
+  $2F : If SbId = $13 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
+  $30 : If SbId = $13 then CurrentChipset := 'SiS 5571'; {v1.21}
+  $31 : If SbId = $13 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
+  $32 : If SbId = $13 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
+  $33 : If SbId = $13 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
+  $34 : If SbId = $13 then CurrentChipset := 'SiS 530'; {v1.21}
+  $35 : If (SbId = $13) or (SbId = $14) then CurrentChipset := 'SiS 540'; {v1.21}
+  $36 : If SbId = $13 then CurrentChipset := 'SiS 600'; {v1.21}
+  $37 : If SbId = $13 then CurrentChipset := 'SiS 620'; {v1.21}
+  $38 : If (SbId = $13) or (SbId = $14) then CurrentChipset := 'SiS 630'; {v1.21}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -460,6 +544,18 @@ Begin
           Begin
            Port[ $A8 ] := $11;
            Port[ $A9 ] := PIIXReg;
+          End;
+        End;
+  $02 : Begin {SiS 85C496+497 chipset} {v1.21}
+         If Map then
+          Begin
+           Mask := $F8;  {write enable, 384K enable}
+
+           PIIXReg := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0 );
+           SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0, PIIXReg or Mask );
+          End else
+          Begin
+           SetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $D0, PIIXReg );
           End;
         End;
  End;
@@ -527,6 +623,96 @@ Begin
           Begin
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 ); {v1.19}
+          End;
+        End;
+  $05 : Begin {SiS methods} {v1.21}
+         if Map then
+          Begin
+           Mask := $3; {Lower & extended BIOS enable}
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
+           case Lo(SouthFunc) of
+            $01: Begin {internal reg. 80h}
+                   Port[ $22 ] := $80;
+                   PIIXReg2 := Port[ $23 ];
+                   Port[ $22 ] := $80;
+                   Port[ $23 ] := PIIXReg2 and $DF or $4; {Enable Flash ROM write}
+                 End;
+            $02: Begin {internal reg. 50h}
+                   Port[ $22 ] := $50;
+                   PIIXReg2 := Port[ $23 ];
+                   Port[ $22 ] := $50;
+                   Port[ $23 ] := PIIXReg2 and $DF or $4; {Enable Flash ROM write}
+                 End;
+            $03: Begin {PCI reg. 45h bits 5,2}
+                   PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 and $FFFFDFFF or $400 );
+                 End;
+            $04: Begin {PCI reg. 45h bits 7,6}
+                   PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+                   SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 and $FFFF7FFF or $4000 );
+                 End;
+           End;
+          End else
+          Begin
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg );
+           case Lo(SouthFunc) of
+            $01: Begin {internal reg. 80h}
+                   Port[ $22 ] := $80;
+                   Port[ $23 ] := PIIXReg2;
+                 End;
+            $02: Begin {internal reg. 50h}
+                   Port[ $22 ] := $50;
+                   Port[ $23 ] := PIIXReg2;
+                 End;
+            $03,$04: Begin {PCI reg. 45h}
+                      SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg2 );
+                     End;
+           End;
+          End;
+        End;
+  $06 : Begin {SMSC method} {v1.21}
+         If Map then
+          Begin
+           Mask := $02C40000; {write & 1M enable}
+
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg or Mask );
+          End else
+          Begin
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
+          End;
+        End;
+  $07 : Begin {Winbond method} {v1.21}
+         If Map then
+          Begin
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C );
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg and $DF00 or $D000 );
+          End else
+          Begin
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $4C, PIIXReg );
+          End;
+        End;
+  $08 : Begin {ITE methods} {v1.21}
+         If Map then
+          Begin
+           case Lo(SouthFunc) of
+            $01: Begin
+                  Mask := $FFFF7FFF; {write enable}
+                  PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
+                  SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg and Mask );
+                 End;
+            $02: Begin
+                  PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50 );
+                  SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg or $E0000000 and $FEFFFFFF );
+                 End;
+           End;
+          End else
+          Begin
+           case Lo(SouthFunc) of
+            $01: SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg );
+            $02: SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $50, PIIXReg );
+           End;
           End;
         End;
  End;

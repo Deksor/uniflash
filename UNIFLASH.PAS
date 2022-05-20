@@ -6,7 +6,8 @@ Program Uniflash;
 
 Uses Crt, Dos,
      Flash,Pci,Tools, GenFlash,
-     Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC,
+     Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
+     ISSI, Mosel, EON, PMC, Hyundai, IMT,
      Language, English, French, Dutch;
 
 
@@ -17,7 +18,7 @@ Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
 AutoSave    : Boolean = False;
-Version     = '1.20';
+Version     = '1.21';
 ForceId     : Boolean = False;
 
 Var
@@ -49,7 +50,7 @@ PCIReg30,
 ScanPos,
 MaxBlock,
 TempBuf     : LongInt;
-SStarts     : ARRAY[ 0 .. 38 ] of LongInt;
+SStarts     : ARRAY[ 0 .. 512 ] of LongInt; {38 -> 512 v1.21}
 OPRCnt,
 CMOSSize    : Byte;
 EMFName,
@@ -108,7 +109,8 @@ UpdStat,
 NxtUpd  : Word;
 Sector  : Boolean;
 SPos, Y,
-Z, W    : Byte;
+{Z,} W    : Byte;
+Z       : Word; {v1.21}
 SaveCR0 : LongInt;
 
 Begin
@@ -138,11 +140,12 @@ Begin
      {Make list with sector ends & sizes (=next sector starts)}
      With FlashInfo^ do
       For W := 1 to Count do
-       For Y := 0 to 3 do
+       For Y := 0 to 4 do {v1.21 3->4}
         If Sectors[ Y, 0 ] = 0 then Break else
         For Z := 1 to Sectors[ Y, 0 ] do
          Begin
-          X := X + ( LongInt( Sectors[ Y, 1 ] ) + 1 ) shl 11; {*2K}
+(*          X := X + ( LongInt( Sectors[ Y, 1 ] ) + 1 ) shl 11; {*2K}*)
+          X := X + LongInt( Sectors[ Y, 1 ] ) shl 7; {*128} {v1.21}
           SStarts[ SPos ] := X;
           Inc( SPos );
          End;
@@ -1201,7 +1204,7 @@ Begin
       With CurManuf^ do
        Begin
         M := Manuf;
-        For D := 0 to $7F do
+        For D := 0 to $FF do {v1.21 FF}
          If IdChip( D, CurCInfo ) then With CurCInfo do
           WriteLn( StdOut,
                    '  ', Hb( M ), Hb( D ), ' - ', Manuf^, ' ', Name^ );
@@ -1442,13 +1445,13 @@ end; *)
     Case Flags and 3 of
      0   : Begin
             MaxBlock := 0;
-            For X := 0 to 3 do
+            For X := 0 to 4 do {v1.21 3->4}
              Begin
               If Sectors[ X, 0 ] = 0 then Break;
               If Sectors[ X, 1 ] > MaxBlock then
                MaxBlock := Sectors[ X, 1 ];
              End;
-            MaxBlock := ( MaxBlock + 1 ) shl 11;
+            MaxBlock := ( MaxBlock + 1 ) shl{ 11}7; {v1.21}
            End;
      1,3 : MaxBlock := PgSize;
      2   : MaxBlock := FlashSize div FlashInfo^.Count;
@@ -1492,8 +1495,11 @@ end; *)
    If ForceId then
     Write( ' (forced)' ) else
    If Debug then
-    Write(' (' + Hb( Man1 ) + Hb( Dev1 ) +
-          ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
+    Begin
+     GotoXY( 1, 4 ); {v1.21}
+     Write(' (' + Hb( Man1 ) + Hb( Dev1 ) +
+           ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
+    End;
    GotoXY( 2, 5 );
    TextColor(yellow);
    Write( Msg( 53 ) );
@@ -1504,12 +1510,13 @@ end; *)
       0 : Begin
            Write( Msg( 55 ) );
            If Count > 1 then Write( Count, ' x (' );
-           For X := 0 to 3 do With FlashInfo^ do
+           For X := 0 to 4 do With FlashInfo^ do {v1.21 3->4}
             Begin
              If Sectors[ X, 0 ] = 0 then Break;
              If X > 0 then Write( ',' );
              Write( Sectors[ X, 0 ], 'x' );
-             Write( ( Word( Sectors[ X, 1 ] ) + 1 ) shl 1, 'k' );
+             if Sectors[ X, 1 ] >= 8 then Write( ( Word( Sectors[ X, 1 ] ){ + 1} ) shr 3{shl 1}, 'k' ) {v1.21}
+              else Write( ( Word( Sectors[ X, 1 ] ){ + 1} ) shl 7{shl 1}, 'b' );
             End;
            If Count > 1 then Write( ')' );
           End;
@@ -1575,7 +1582,7 @@ end; *)
    Write( Msg( 65 ), Hw( PiixMan ), Msg( 66 ), Hw( PIIXId ), Msg( 67 ), Hb( PiixL shr 3 ), ':',
           Hb( PiixL and 7 ) ); *)
    TextColor( yellow );
-   GotoXY( 2, 3 );
+   GotoXY( 2, 1{3} ); {v1.21}
    Write( Msg( 68 ) );
    TextColor( 15 );
    Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );

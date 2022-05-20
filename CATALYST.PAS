@@ -1,4 +1,8 @@
 Unit Catalyst; { Unit to communicate with Catalyst chips }
+{v1.21 Device ID codes are now not ANDed $7F !!}
+{v1.21 New Sector table format}
+{v1.21 CAT28F150: !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
+{v1.21 CAT29F002: !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
 
 {NOTE: Catalyst is an officially licensed 2nd source for Intel     }
 {      flash chips. Most of the chips in this unit are essentially }
@@ -17,100 +21,97 @@ Begin
  With CInfo do
   Begin
    Case DevId of
-    $04 : Begin
+    $04 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProg;
            Erase := IntelSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 64k}
-           Sectors[ 0, 1 ] := 31;
+           Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 96k}
-           Sectors[ 1, 1 ] := 47;
+           Sectors[ 1, 1 ] := 768;
            Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 3;
+           Sectors[ 2, 1 ] := 64;
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 7;
+           Sectors[ 3, 1 ] := 128;
            Size := 192;
            Name := ConstPtr( 'CAT28F150T/12V' );
           End;
-    $05 : Begin
+    $85 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!} {05}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProg;
            Erase := IntelSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 7;
+           Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 3;
+           Sectors[ 1, 1 ] := 64;
            Sectors[ 2, 0 ] := 1;  {1 x 96k}
-           Sectors[ 2, 1 ] := 47;
+           Sectors[ 2, 1 ] := 768;
            Sectors[ 3, 0 ] := 1;  {1 x 64k}
-           Sectors[ 3, 1 ] := 31;
+           Sectors[ 3, 1 ] := 512;
            Size := 192;
            Name := ConstPtr( 'CAT28F150B/12V' );
           End;
-
-    $14 : Begin
+    $94 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProg;
            Erase := IntelSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 112k}
-           Sectors[ 0, 1 ] := 55;
+           Sectors[ 0, 1 ] := 896;
            Sectors[ 1, 0 ] := 2;  {2 x 4k}
-           Sectors[ 1, 1 ] := 1;
+           Sectors[ 1, 1 ] := 32;
            Sectors[ 2, 0 ] := 1;  {1 x 8k}
-           Sectors[ 2, 1 ] := 3;
-           Sectors[ 3, 0 ] := 0;  {end of list}
+           Sectors[ 2, 1 ] := 64;
            Size := 128;
            Name := ConstPtr( 'CAT28F001T/12V' );
           End;
-    $15 : Begin
+    $95 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := IntelSecProg;
            Erase := IntelSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 8k}
-           Sectors[ 0, 1 ] := 3;
+           Sectors[ 0, 1 ] := 64;
            Sectors[ 1, 0 ] := 2;  {2 x 4k}
-           Sectors[ 1, 1 ] := 1;
+           Sectors[ 1, 1 ] := 32;
            Sectors[ 2, 0 ] := 1;  {1 x 112k}
-           Sectors[ 2, 1 ] := 55;
-           Sectors[ 3, 0 ] := 0;  {end of list}
+           Sectors[ 2, 1 ] := 896;
            Size := 128;
            Name := ConstPtr( 'CAT28F001B/12V' );
           End;
-    $30 : Begin
+    $B0 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!} {30}
            {similar to AMD}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
            Erase := AMDSecErase;
            Sectors[ 0, 0 ] := 3;  {3 x 64k}
-           Sectors[ 0, 1 ] := 31;
+           Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
-           Sectors[ 1, 1 ] := 15;
+           Sectors[ 1, 1 ] := 256;
            Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 3;
+           Sectors[ 2, 1 ] := 64;
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 7;
+           Sectors[ 3, 1 ] := 128;
            Size := 256;
            Name := ConstPtr( 'CAT29F002T/5V' );
           End;
-    $34 : Begin
+    $34 : Begin {v1.21 !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
            {similar to AMD}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
            Erase := AMDSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 7;
+           Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 3;
+           Sectors[ 1, 1 ] := 64;
            Sectors[ 2, 0 ] := 1;  {1 x 32k}
-           Sectors[ 2, 1 ] := 15;
+           Sectors[ 2, 1 ] := 256;
            Sectors[ 3, 0 ] := 3;  {3 x 64k}
-           Sectors[ 3, 1 ] := 31;
+           Sectors[ 3, 1 ] := 512;
            Size := 256;
            Name := ConstPtr( 'CAT29F002B/5V' );
           End;
@@ -120,13 +121,13 @@ Begin
            Progr  := IntelSecProg;
            Erase := IntelSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 128k}
-           Sectors[ 0, 1 ] := 63;
+           Sectors[ 0, 1 ] := 1024;
            Sectors[ 1, 0 ] := 1;  {1 x 96k}
-           Sectors[ 1, 1 ] := 47;
+           Sectors[ 1, 1 ] := 768;
            Sectors[ 2, 0 ] := 2;  {2 x 8k}
-           Sectors[ 2, 1 ] := 3;
+           Sectors[ 2, 1 ] := 64;
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
-           Sectors[ 3, 1 ] := 7;
+           Sectors[ 3, 1 ] := 128;
            Size := 256;
            Name := ConstPtr( 'CAT28F002T/12V' );
           End;
@@ -136,15 +137,47 @@ Begin
            Progr  := IntelSecProg;
            Erase := IntelSecErase;
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
-           Sectors[ 0, 1 ] := 7;
+           Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
-           Sectors[ 1, 1 ] := 3;
+           Sectors[ 1, 1 ] := 64;
            Sectors[ 2, 0 ] := 1;  {1 x 96k}
-           Sectors[ 2, 1 ] := 47;
+           Sectors[ 2, 1 ] := 768;
            Sectors[ 3, 0 ] := 1;  {1 x 128k}
-           Sectors[ 3, 1 ] := 63;
+           Sectors[ 3, 1 ] := 1024;
            Size := 256;
            Name := ConstPtr( 'CAT28F002B/12V' );
+          End;
+    $B4 : Begin {v1.21}
+           Flags  := 6;   {bulk erase, need blanking}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDFlashWrite;
+           Erase := AMDFlashErase;
+           Size := 128;
+           Name := ConstPtr( 'CAT28F010/12V' );
+          End;
+    $BD : Begin {v1.21}
+           Flags  := 6;   {bulk erase, need blanking}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDFlashWrite;
+           Erase := AMDFlashErase;
+           Size := 256;
+           Name := ConstPtr( 'CAT28F020/12V' );
+          End;
+    $51 : Begin {v1.21}     {FUCKIN' WORD/BYTE MODE - UNCLEAR DATASHEET}
+           Flags  := 6;   {bulk erase, need blanking}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDFlashWriteW;
+           Erase := AMDFlashEraseW;
+           Size := 128;
+           Name := ConstPtr( 'CAT28F102/12V' );
+          End;
+    $B8 : Begin {v1.21}
+           Flags  := 6;   {bulk erase, need blanking}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDFlashWrite;
+           Erase := AMDFlashErase;
+           Size := 64;
+           Name := ConstPtr( 'CAT28F512/12V' );
           End;
     else Exit;
    End;

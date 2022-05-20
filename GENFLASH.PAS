@@ -13,11 +13,15 @@ Procedure IntelSecProgW( Pos, Data : LongInt ); Far;
 Procedure IntelSecErase( SAddr : LongInt ); Far;
 Procedure IntelSecEraseW( SAddr : LongInt ); Far;
 Procedure AMDSecProg( Pos, Data : LongInt ); Far;
+Procedure AMDSecProgW( Pos, Data : LongInt ); Far; {v1.21}
 Procedure AMDSecErase( SAddr : LongInt ); Far;
+Procedure AMDSecEraseW( SAddr : LongInt ); Far; {v1.21}
 Procedure AMDEmbdErase( SAddr : LongInt ); Far;
 Procedure AMDEmbdWrite( Pos, Data : LongInt ); Far;
 Procedure AMDFlashWrite( Pos, Data : LongInt ); Far;
+Procedure AMDFlashWriteW( Pos, Data : LongInt ); Far; {v1.21}
 Procedure AMDFlashErase( SAddr : LongInt ); Far;
+Procedure AMDFlashEraseW( SAddr : LongInt ); Far; {v1.21}
 
 Implementation
 
@@ -35,11 +39,11 @@ Begin
   MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
   Wait( 300 );  {Wait min. 300 usec}
 
-  Ld := FiMemB( Data + 127 ) and $80; {Last data byte, bit 7}
+  Ld := FiMemB( Data + {127}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
   Repeat
-   X := FiMemB( Pos + 127 );    {Read last byte written}
+   X := FiMemB( Pos + {127}CurCInfo.PgSize - 1 );    {Read last byte written}
   Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-  X := FiMemB( Pos + 127 );    {Read last byte written}
+  X := FiMemB( Pos + {127}CurCInfo.PgSize - 1 );    {Read last byte written}
   Inc( Attempt );
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
@@ -58,11 +62,11 @@ Begin
   FlashCmd( $A0 );
   MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
   Wait( 300 ); {Min. 300 usec}
-  Ld := FiMemB( Data + 255 ) and $80; {Last data byte, bit 7}
+  Ld := FiMemB( Data + {255}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
   Repeat
-   X := FiMemB( Pos + 255 );    {Read last byte written}
+   X := FiMemB( Pos + {255}CurCInfo.PgSize - 1 );    {Read last byte written}
   Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-  X := FiMemB( Pos + 255 );    {Read last byte written}
+  X := FiMemB( Pos + {255}CurCInfo.PgSize - 1 );    {Read last byte written}
   Inc( Attempt );
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
@@ -286,6 +290,47 @@ Begin
  FlashCmd( $F0 ); {Reset chip}
 End;
 
+Procedure AMDSecProgW( Pos, Data : LongInt ); {v1.21}
+Var
+Attempt  : Byte;
+X, Y, Ld : Word;
+TimeOut  : Word;
+
+Begin
+ For Y := 0 to CurCInfo.PgSize - 1 do
+  Begin
+   Attempt := 0;
+   Ld := FIMemW( Data + Y + Y );
+   If Ld <> $FFFF then
+    Begin
+     Repeat
+      FlashCmdW( $A0 );
+      FOMemW( Pos + Y + Y, Ld );
+
+      TimeOut := 5;   {should take no more than 14usec, we wait 50 max}
+      While ( ( FIMemW( Pos + Y + Y ) and $80 ) <> ( Ld and $80 ) ) and
+            ( ( FIMemW( Pos + Y + Y ) and $20 ) = 0 ) and ( TimeOut > 0 ) do
+       Begin
+        Dec( TimeOut );
+        Wait( 10 );
+       End;
+
+      X := FiMemW( Pos + Y + Y );    {Read last byte written}
+      Inc( Attempt );
+
+     Until ( Attempt > 3 ) or  ( ( X and $80 ) = ( Ld and $80 ) );
+     If ( ( X and $80 ) <> ( Ld and $80 ) ) then
+      Begin
+       FlashError := 2; {programming error, timeout}
+       FlashCmdW( $F0 ); {Reset chip}
+       Exit;
+      End;
+    End;
+  End;
+ FlashCmdW( $F0 ); {Reset chip}
+End;
+
+
 Procedure AMDSecErase( SAddr : LongInt );
 Var
 Attempt,
@@ -322,6 +367,44 @@ Begin
  Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
  If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
 End;
+
+Procedure AMDSecEraseW( SAddr : LongInt ); {v1.21}
+Var
+Attempt  : Byte;
+X        : Word;
+TimeOut  : Word;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FlashCmdW( $80 );      {Erase setup}
+  FOMemW( ROMBase + $5555, $AA );
+  FOMemW( ROMBase + $2AAA, $55 );
+  FOMemW( SAddr, $30 ); {Erase sector containing address SAddr}
+
+  TimeOut := 15;    {80 usec max normally, but waits 150usec to be sure}
+  {Wait for erase to start}
+  While ( ( FiMemW( SAddr ) and $08 ) = 0 ) and ( TimeOut > 0 ) do
+   Begin
+    Dec( TimeOut );
+    Wait( 10 );
+   End;
+
+  {Wait for erase to finish}
+  TimeOut := 25000; {15 sec max normally, but waits 25 sec to be sure}
+  While ( ( FiMemW( SAddr ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
+   Begin
+    Dec( TimeOut );
+    Wait( 1000 );
+   End;
+
+  X := FiMemW( SAddr );
+  Inc( Attempt );
+  FlashCmdW( $F0 ); {Reset}
+ Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
+ If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
+End;
+
 
 Procedure AMDEmbdErase( SAddr : LongInt );
 Begin
@@ -396,6 +479,39 @@ Begin
  IntelResetB;
 End;
 
+Procedure AMDFlashWriteW( Pos, Data : LongInt ); {v1.21}
+Var
+X, Y, D : Word;
+Attempt : Byte;
+
+
+Begin
+ For Y := 0 to CurCInfo.PgSize - 1 do
+  Begin
+   Attempt := 0;
+   D := FIMemW( Data + Pos );
+   If D <> $FFFF then
+    Begin
+     Repeat
+      FOMemW( Pos + Y + Y, $40 );
+      FOMemW( Pos + Y + Y, D );
+      Wait( 10 );
+      FOMemW( Pos + Y + Y, $C0 );
+      Wait( 6 );
+      X := FIMemW( Pos + Y + Y );
+      Inc( Attempt );
+     Until ( X = D ) or ( Attempt >= 25 );
+     If Attempt >= 25 then
+      Begin
+       IntelResetW;
+       FlashError := 2;
+       Exit;
+      End;
+    End;
+  End;
+ IntelResetW;
+End;
+
 Procedure AMDFlashErase( SAddr : LongInt );
 Var
 Attempt : Word;
@@ -419,6 +535,31 @@ Begin
  Until ( D = $FF ) or ( Attempt >= 1000 );
  If ( D <> $FF ) then FlashError := 3;
  IntelResetB;
+End;
+
+Procedure AMDFlashEraseW( SAddr : LongInt ); {v1.21}
+Var
+Attempt : Word;
+Addr    : LongInt;
+D       : Word;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FOMemW( ROMBase, $20 );
+  FOMemW( ROMBase, $20 );
+  Wait( 10000 );
+  For Addr := 0 to ( LongInt( CurCInfo.Size ) shl 10 ) - 1 do
+   Begin
+    FOMemW( ROMBase + Addr + Addr, $A0 );
+    Wait( 6 );
+    D := FIMemW( ROMBase + Addr + Addr );
+    If D <> $FFFF then Break;
+   End;
+  Inc( Attempt );
+ Until ( D = $FFFF ) or ( Attempt >= 1000 );
+ If ( D <> $FFFF ) then FlashError := 3;
+ IntelResetW;
 End;
 
 End.

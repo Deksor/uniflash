@@ -1,4 +1,4 @@
-                    UniFlash's version 1.20 documentation.
+                    UniFlash's version 1.21 documentation.
                     --------------------------------------
                (C) 1998 Pascal Van Leeuwen and Galkowski Adam
                Now developed by Ondrej Zary (Rainbow Software)
@@ -45,6 +45,9 @@ What's new there? , you may ask, there are already programs like this on
 InterNet made by BIG BRANDS like AMI, AWARD or MR. Well... there is only a
 little difference: COMPLETE, WORKING SOURCE CODE IN PASCAL IS GIVEN FOR FREE!!
 
+UniFlash is made to be universal - this can be useful when you're hot-flashing
+your bios in another motherboard.
+
 Another thing: this flasher is mainly destinated for fearless people and
 experienced users. If it's your first adventure with flashing your BIOS, we
 recommend you strongly using these brand flashers. You'll have to understand
@@ -77,7 +80,11 @@ Intel       | 430FX,HX,VX,TX,MX    | No comments It works in 99% of cases
             | 450 KX/GX            | but should work well)
             | 434 LX/NX            | 450 & 434 not tested and may not (yet)
             | 440BX/ZX,GX          | work, 440BX support tested and works,
-            |                      | 440GX untested
+            | i810,i810E,i810E2    | 440GX untested
+            | i815,i815E(P),i815EM |
+            | i820,i820E           | Hub architecture chipsets (i8xx) are
+            | i840                 | not tested.
+            | i850                 |
 -----------------------------------------------------------------------------
 VIA         | Appollo Master       | Only VP2 has been tested so far
             | Apollo VP            |
@@ -108,21 +115,37 @@ AMD         | AMD 640 (remarked    | Works just fine
             |                      | AMD 760 should work with both VIA and
             |                      | AMD south bridges.
 -----------------------------------------------------------------------------
-OPTi        | Vendetta             | Not tested
+OPTi        | Vendetta             | Not tested (currently disabled)
 -----------------------------------------------------------------------------
-SiS         | 559X series          | Not supported yet. Uniflash detects it,
-            | +the wondreful TXPRO2| but it doesn't handle them. (SiS doesn't
-            |                      | put his datasheets on free access. You
-            |                      | have to register. It's free, but it
-            |                      | doesn't work for me)
-            |                      |*If your BIOS is an AMI WinBIOS, try
-            |                      | running Uniflash with the -AMI parameter
+SiS         | 85C496+497           | I got the datasheets, but not from SiS.
+            | 501/5101/5501        |
+            | 5511                 | These chipsets are really crappy - to
+            | 5571                 | support 12 chipsets, I needed to write
+            | 5591/5592            | 5 different methods of enabling Flash ROM
+            | 5596                 | write access. (The more code, the more
+            | 5597/5598/5581/5120  | bugs :-)
+            | 530                  | All SiS South Bridges have the same
+            | 540                  | device ID $0008 (SiS 540 and 630 can have
+            | 600                  | either $0008 or $0018 - it can be
+            | 620                  | configured(!!!) through registers.
+            | 630                  | Everything untested...
 -----------------------------------------------------------------------------
 ALi         | Alladin Pro II       | I got M1543C datasheets from ALi, so
             | (M1621+M1543C)       | this one is supported now. All chipsets
             |                      | with M1543 south bridge should work,
             |                      | but they aren't identified for now.
             |                      | Alladin Pro II was tested and works OK.
+-----------------------------------------------------------------------------
+SMSC        | VictoryBX-66         | i82443BX North Bridge with SMSC SLC90E66
+            |                      | South Bridge (UDMA-66 support)
+            |                      | Untested.
+-----------------------------------------------------------------------------
+Winbond/    | W83C553F South Bridge| I don't know if this one was ever used.
+Symphony    |                      | (No known chipset with this SB)
+Labs        |                      | Untested, of course.
+-----------------------------------------------------------------------------
+ITE         | IT8871F/2F and       | Don't know where used, untested.
+            | IT8888F South Bridges| (No known chipset with these SBs)
 
 PC100 BXCel is relabelled ALi Alladin Pro II on PC Chips M726 motherboard.
 
@@ -133,7 +156,9 @@ this feature if there's no chipset detected. You can force using this mode,
 even if your chipset is recognised by giving the -AMI parameter.
 
 WARNING: AMI Flash interface doesn't work on some PC Chips boards. This can
-cause UniFlash to hang at startup, when no known chipset is found.
+cause UniFlash to hang at startup, when no known chipset is found (or when you
+use -AMI parameter on PC Chips M726). No data will be corrupted, you just need
+to push RESET button.
 
 
 
@@ -148,137 +173,379 @@ to one another though, so if one of them works then the rest should work
 fine too))
 
 
+                Alliance Semiconductor
+                ----------------------
+                AS29F040
+                AS29F002T
+                AS29F002B
+                AS29F200T
+                AS29F200B
+                AS29LV400T
+                AS29LV400B
+                AS29LV800T
+                AS29LV800B
+                
                 AMD
                 ---
-                Am29F100T
-               *Am29F010
-                Am29F080B
-                Am29F400AT
-                Am29F400BT
-                Am29LV004T
-                Am29LV400T
-                Am29F400AB
-                Am29F400BB
-                Am29LV004B
-                Am29LV400B
-                Am29F002T
-                Am29F002NT
-                Am29F200AT
-                Am29LV200T
-                Am29LV002T
-                Am29F002B
-                Am29F002NB
-                Am29F200AB
-                Am29LV200B
-                Am29LV002B
-                Am29F040B
-                Am29F800BT
-                Am29F800BB
-                Am28F010
-                Am28F010A
-                Am28F020
-                Am28F020A
                 Am28F256
                 Am28F256A
                 Am28F512
                 Am28F512A
+                Am28F010
+                Am28F010A
+                Am28F020
+                Am28F020A
+               *Am29F010(A/B)
+                Am29F040(B)
+                Am29F080(B)
+                Am29F016(B)
+                Am29F017B
+                Am29F032B
+                Am29F100T
+                Am29F100B
+                Am29F200AT/BT
+                Am29F200AB/BB
+                Am29F400AT/BT
+                Am29F400AB/BB
+                Am29F800(B)T
+                Am29F800(B)B
+                Am29F160DT
+                Am29F160DB
+                Am29F002(N)(B)T
+                Am29F002(N)(B)B
+                Am29F004BT
+                Am29F004BB
+                Am29LV010B
+                Am29LV040B
+                Am29LV017B
+                Am29LV033C
+                Am29LV065D
+                Am29LV081B
+                Am29LV001BT
+                Am29LV001BB
+                Am29LV002(B)T
+                Am29LV002(B)B
+                Am29LV004(B)T
+                Am29LV004(B)B
+                Am29LV008(B)T
+                Am29LV008(B)B
+                Am29LV200(B)T
+                Am29LV200(B)B
+                Am29LV400(B)T
+                Am29LV400(B)B
+                Am29LV800BT
+                Am29LV800BB
+                Am29LV160BT/DT
+                Am29LV160BB/DB
+                Am29LV116BT
+                Am29LV116BB
+                Am29LV320DT
+                Am29LV320DB
+                Am29SL800CT
+                Am29SL800CB
+                Am29SL160CT
+                Am29SL160CB
+                Am29PL160CB
 
                 AMIC
                 ----
-               ?A29001(1)T
-               ?A29001(1)B
-               ?A29010
+                A29010
+                A29040
+                A29001(1)T
+                A29001(1)B
                *A29002(1)T
-               ?A29002(1)B
-               ?A29400T
-               ?A29400B
-               ?A29040
-
-                SST
-                ---
-                28x040 series
-               *29EE010
-                29x010 series
-                29EE020
-                29x020 series
-                29x512 series
-                29EE512
-                28EE011
-               *PH29EE010 - I had problems with this chip because the
-                identification does not work. Forcing to SST 29EE010 doesn't
-                work too. Then I forced Winbond W29EE011 and it worked.
-                (use parameter "-force 5a41")
-
-                Winbond
-                -------
-               *W29EE011
-                W29C020
-                W29EE512
-                W29C101
-                W29C010
+                A29002(1)B
+                A29400T
+                A29400B
 
                 ASD
                 ---
-               *AE29F1008 - identified as Winbond W29EE011 because it's exact
-                copy of this chip including manufacturer and chip ID
-                found on PC Chips boards, no datasheets available
+               *AE29F1008 = Winbond W29EE011
 
                 Atmel
                 -----
-               *AT49BV010
-               ?AT49F002(N)T
-                AT49F1025
-                AT49x020 series
-                AT49F040
-                AT49F010
-                AT49F080
-                AT29C040A
-                AT29C1024
-                AT29LV1024
-                AT49F080T
-                AT29xV010A series
-                AT29xV020 series
-                AT29LV256
-                AT29xV040A series
-               *AT29C010A
-                AT29C020
-                AT29C256
-                AT29C257
+                AT29C256 or AT29C257
                 AT29C512
+                AT29C1024
+               *AT29C010(A)
+                AT29C020
+                AT29C040A
+                AT29LV256
+                AT29LV51
+                AT29LV1024
+                AT29xV010(A) series
+                AT29xV020 series
+                AT29xV040A series
+                AT49x512 series
+                AT49x001(N)T series
+                AT49x001(N) series
+                AT49x002(N)T series
+                AT49x002(N) series
+                AT49x008AT series
+                AT49x008(A) series
+                AT49x010 series
+                AT49x020 series
+                AT49x040 series
+                AT49x080 series
+                AT49x080T series
+                AT49x1024/1025 series
+                AT49x2048(A) series
+                AT49x4096(A) series
+                AT49x8192(A)T series
+                AT49x8192(A) series
+                AT49x8011T series
+                AT49x8011 series
+                AT49x160/161(4)T series
+                AT49x160/161(4) series
+                AT49BV320T/321T
+                AT49BV320/321               
 
-                Intel
-                -----
-               ?28F010
-               *28F001BX-T
-               *28F001BN-T
-                28F001BX-B
-                28F001BN-B
-                28F200-T series
-                28F200-B series
-                28F002-T series
-                28F002-B series
-               ?82802AB/AC (Firmware Hub)
+                Bright Microelectronics
+                -----------------------
+                BM29F040  = Hyundai HY29F040
+                BM29F400T = Hyundai HY29F400T
+                BM29F400B = Hyundai HY29F400B
 
                 Catalyst
                 --------
-               ?CAT28F150T
-                CAT28F150B
+                CAT28F512
+                CAT28F010
+                CAT28F020
                *CAT28F001T
                *CAT28F001B
                 CAT28F002T
                 CAT28F002B
+                CAT28F102
+                CAT28F150T
+                CAT28F150B
+                CAT29F002T
+                CAT29F002B
+
+                EON
+                ---
+                EN29F040
+                EN29F080
+                EN29F002T
+                EN29F002B
+                EN29F800T
+                EN29F800B
+
+                Hyundai
+                -------
+                HY29F040
+                HY29F040A
+                HY29F080
+                HY29F002T
+                HY29F002B
+                HY29F400T
+                HY29F400B
+                HY29F800T
+                HY29F800B
+                HY29LV160T
+                HY29LV160B
+
+                IMT (Integrated Memory Technologies)
+                ------------------------------------
+                IM29F001T
+                IM29F001B
+                IM29F002T
+                IM29F002B
+                IM29F004T
+                IM29F004B
+                IM29LV004T
+                IM29LV004B
+
+                Intel
+                -----
+                28F256A
+                28F512
+                28F010
+                28F020
+               *28F001BX/BN-T
+                28F001BX/BN-B
+                28F200-T series
+                28F200-B series
+                28F400-T series
+                28F400-B series
+                28F002-T series
+                28F002-B series
+                28F004-T series
+                28F004-B series
+                28F800-T
+                28F800-B
+                28F008SA
+                28F004Sx series
+                28F008Sx series
+                28F016Sx series
+                28F016S5
+                28F004B3-T
+                28F004B3-B
+                28F008B3-T
+                28F008B3-B
+                28F016B3-T
+                28F016B3-B
+                28F800F3-T
+                28F800F3-B
+                28F320J5
+                28F320J3A                
+                28F640J5
+                28F640J3A
+                28F128J3A
+                82802AB (Firmware Hub)
+                82802AC (Firmware Hub)                
+
+                ISSI (Integrated Silicon Solution)
+                -----------------------------------
+                IS28F010
+                IS28F020
 
                 Macronix
                 --------
-               *MXIC28F1000AP
-                MXIC28F1000P
-                MXIC28F1000PPC
+                MX28F1000
+               *MX28F1000P
+                MX28F2000P
+                MX28F2000T
+                MX28F002T
+                MX28F002B
+                MX29F040
+                MX29F080
+                MX29F016
+                MX29F001T
+                MX29F001B
+                MX29F002(N)T
+                MX29F002(N)B
+                MX29F022T
+                MX29F022B
+                MX29F004T
+                MX29F004B
+                MX29F100T
+                MX29F100B
+                MX29F200T
+                MX29F200B
+                MX29F400T
+                MX29F400B
+                MX29F800T
+                MX29F800B
+                MX29F1610A
+                MX29F1615
+                MX29LV040
+                MX29LV081
+                MX29LV004T
+                MX29LV004B
+                MX29LV008T
+                MX29LV400T
+                MX29LV400B
+                MX29LV800T
+                MX29LV800B
+                MX29LV160T
+                MX29LV160B
+                MX29L1611
+                MX29L1611G
+                MX29L3211
+
+                Mosel Vitelic
+                -------------
+                V29C51000T
+                V29C51000B
+                V29C51001T
+                V29C51001B
+                V29C51002T
+                V29C51002B
+                V29C51004T
+                V29C51004B
+                V29C51400T
+                V29C51400B
+                V29LC51000
+                V29LC51001
+                V29LC51002
+                V29C31004T
+                V29C31004B
+
+                NexFlash Technologies
+                ---------------------
+               *NX29F010  = AMD Am29F010
+                NX29F400B = AMD Am29F400B
+                
+                PMC
+                ---
+                Pm39LV512R
+                Pm39LV010R
+                Pm29F002T
+                Pm29F002B
+                Pm29F004T or Pm29LV104T
+                Pm29F004B or Pm29LV104B
+
+                SST
+                ---
+                28EE011
+                29EE512
+               *29EE010
+                29EE020
+                28x040(A) series
+                29x512 series
+                29x010 series
+                29x020 series
+                29SF512
+                29SF010
+                29SF020
+                29SF040
+                29VF512
+                29VF010
+                29VF020
+                29VF040
+                49LF020
+                49LF030
+                49LF040
+                49LF080
+                49LF002(A) (Firmware Hub)
+                49LF003A (Firmware Hub)
+                49LF004 (Firmware Hub)
+                49LF004A (Firmware Hub)
+                49LF008 (Firmware Hub)
+                49LF008A (Firmware Hub)
+                39xF400A series
+                39xF800A series
+                39xF160 series
+                39xF200A series
+                39SF512
+                39SF010(A)
+                39SF020(A)
+                39SF040
+                39xF512 series
+                39xF010 series
+                39xF020 series
+                39xF040 series
+                39xF080 series
+                39xF016 series
+
+                SyncMOS
+                -------
+                F29C51001T = Mosel V29C51001T
+                F29C51001B = Mosel V29C51001B
+                F29C51002T = Mosel V29C51002T
+                F29C51002B = Mosel V29C51002B
+                F29C51004T = Mosel V29C51004T
+                F29C51004B = Mosel V29C51004B
 
                 Texas Instruments
                 -----------------
-                Texas Instruments chips will be recognised as AMD or INTEL
-chips. It seems unbelieveable, but TI uses the same Mfg&device codes as AMD
-and Intel ! But since the command set is nearly the same, it should work.
+                Will be recognised as AMD or INTEL chips.
+                
+                Winbond
+                -------
+               *W29x010/011/5V series
+                W29C020(C)/5V
+                W29C040/5V
+                W29EE512/5V
+                W29C101/102/5V
+                W49F002U/5V
+                W49V002(A)/3.3V                
+                W49V002F(A)/3.3V (Firmware Hub)                
+                W29F102/5V or W49F102/5V
+                W49L102/3.3V                
+                W49F201/5V
+                W49L201/3.3V                
+
 
 4.0            Help! I don't understand the sources !!!
 -------------------------------------------------------
@@ -329,8 +596,8 @@ supports the floppy drive, you won't be able to access any harddrive !!
 When you boot from this emergency disk the working BIOS image will
 automatically (without any intervention by you) be flashed into the flash ROM
 by UNIFLASH. This is very convenient as the boot block has no support for PCI
-video cards, so you won't be able to SEE anything in the process unless you
-replace your PCI videocard with an old ISA one (hint!).
+or AGP video cards, so you won't be able to SEE anything in the process unless
+you replace your PCI videocard with an old ISA one (hint!).
 UNIFLASH will give you some audible feedback, though:
 
 first short beep: UNIFLASH invoked, reading BIOS image
@@ -353,10 +620,7 @@ understand better what we're talking about).
 ---------------------------------------
 
 Ondrej Zary (Rainbow Software) - Continues to develop this program after the
-authors (below) stopped the development. Added some Intel chipsets, got
-datasheets from ALi and added support for M1543 south brigde. Added Intel
-Firmware Hub (untested) and tested ASD chips (discovered that ASD has no
-home page, no datasheets and ASD AE29F1008 is same as Winbond W29EE011).
+authors (below) stopped the development. Done all that is new after v1.17b.
 
 Pascal van Leeuwen - Made first design, chipset handling routines, a primitive
 write function for SST, WINBOND and INTEL, added flat real mode, etc...
@@ -400,6 +664,74 @@ This is old info and some of the addresses below are probably dead:
 
 9.0            Revision info
 ----------------------------
+1.21           -added support for SiS chipsets: 85C496+497, 85C501/5101/5501,
+                5511, 5571,5591/5592, 5596, 5597/5598/5581/5120, 530, 540,
+                600, 620 and 630 (all untested). It's unbelievable, but they
+                are using 5 (!) different methods to enable Flash ROM write
+                and what's more, all their south bridges have the same device
+                ID - $0008 (SiS 540 and 630 can have either $0008 or $0018).
+               -added support for SMSC VictoryBX-66 chipset
+               -added support for Winbond/Symphony Labs W83C553F South Bridge
+               -added support for ITE South Bridges IT8871F/2F and IT8888F
+               -fixed Flash ROM detection - Device IDs can have even parity
+               -changed sector structure array - can now hold more sectors
+                (upto 5*65535), 128b to 8MB each (see addchip.faq)
+               -added support for Alliance Semiconductor Flash ROMs:
+                AS29F040, AS29F002T, AS29F002B, AS29LV400T, AS29LV400B,
+                AS29F200T, AS29F200B, AS29LV800T and AS29LV800B
+               -added some AMD Flash ROMs: Am29LV001BT, Am29LV001BB,
+                Am29LV010B, Am29F004BT, Am29F004BB, Am29LV040B, Am29LV081B,
+                Am29LV008(B)T, Am29LV008(B)B, Am29LV800BT, Am29LV800BB,
+                Am29SL800CT, Am29SL800CB, Am29F016(B), Am29F017B, Am29LV017B,
+                Am29LV116BT, Am29LV116BB, Am29F160DT, Am29F160DB,
+                Am29LV160BT/DT, Am29LV160BB/DB, Am29SL160CT, Am29SL160CB,
+                Am29PL160CB, Am29F032B, Am29LV033C. Am29LV320DT, Am29LV320DB,
+                Am29LV065D
+               -added some Atmel Flash ROMs: AT29LV512, AT49x512, AT49x010,
+                AT49x001(N)T, AT49x001(N), AT49x002(N)T, AT49x002(N),
+                AT49x2048(A), AT49x4096(A), AT49x008AT, AT49x8192(A)T,
+                AT49x8192(A), AT49x8011T, AT49x8011, AT49x160/161(4)T,
+                AT49x160/161(4), AT49BV320T/321T, AT49BV320/321
+               -added some Catalyst Flash ROMs: CAT28F010, CAT28F020,
+                CAT28F102, CAT28F512
+               -added EON Flash ROMs: EN29F040, EN29F080, EN29F800T,
+                EN29F800B, EN29F002T, EN29F002B
+               -added Hyundai Flash ROMs: HY29F002T, HY29F002B, HY29F040,
+                HY29F040A, HY29F080, HY29F400T, HY29F400B, HY29F800T,
+                HY29F800B, HY29LV160T, HY29LV160B
+               -added IMT Flash ROMs: IM29F001T, IM29F001B, IM29F002T,
+                IM29F002B, IM29F004T, IM29F004B, IM29LV004T, IM29LV004B
+               -added some Intel chips: 28F256A, 28F512, 28F004Sx, 28F008Sx,
+                28F008SA, 28F016Sx, 28F016S5/SA, 28F320J3A, 28F320J5,
+                28F640J3A, 28F640J5, 28F128J3A
+               -added ISSI (Integrated Silicon Solution) Flash ROMs:
+                IS28F010 and IS28F020
+               -removed Macronix MX28F1000PC and MX28F1000PPC (not existing)
+               -added some Macronix chips: MX28F2000P, MX28F2000T, MX29F100T,
+                MX29F100B, MX28F002T, MX28F002B, MX29F001T, MX29F001B,
+                MX29F002(N)T, MX29F002(N)B, MX29F022T, MX29F022B, MX29F200T,
+                MX29F200B, MX29F004T, MX29F004B, MX29F400T, MX29F400B,
+                MX29LV004T, MX29LV004B, MX29LV400T, MX29LV400B, MX29F040,
+                MX29LV040, MX29F080, MX29LV081, MX29F800T, MX29F800B,
+                MX29LV008T, MX29LV800T, MX29LV800B, MX29F016, MX29L1611,
+                MX29L1611G, MX29F1610A, MX29LV160T, MX29LV160B, MX29F1615,
+                MX29L3211
+               -added Mosel Vitelic Flash ROMs:
+                V29C51000T, V29C51000B, V29C51001T, V29C51001B, V29C51002T,
+                V29C51002B, V29C51004T, V29C51004B, V29C51400T, V29C51400B,
+                V29C31004T, V29C31004B, V29LC51000, V29LC51001, V29LC51002
+               -added PMC Flash ROMs:
+                Pm39LV512R, Pm39LV010R, Pm29F002T, Pm29F002B, Pm29F004T/5V or
+                Pm29LV104T, Pm29F004B or Pm29LV104B
+               -added some SST Flash ROMs: 29SF512, 29VF512, 29SF010, 29VF010,
+                29SF020, 29VF020, 29SF040, 29VF040, 39SF512, 39xF512,
+                39S010(A), 39xF010, 39SF020(A), 39xF020, 39SF040, 39xF040
+                39xF080, 39xF016, 39xF200A, 39xF400A, 39xF800A, 39xF160,
+                49LF002(A), 49LF003A, 49LF004, 49LF004A, 49LF008, 49LF008A,
+                49LF020, 49LF030, 49LF040, 49LF080
+               -added some Winbond Flash ROMs: W29C040, W49F002U, W49V002(A),
+                W49V002F(A), W29F102 or W49F102, W49L102, W49F201, W49L201
+               -some code size optimizations
 1.20           -added support for these AMIC chips: A29001(1)T, A29001(1)B,
                 A29010, A29002(1)T, A29002(1)B, A29400T, A29400B and A29040
                 They're all sectored and use AMD commands.
@@ -508,14 +840,14 @@ Uniflash runs flawlessly on your system.
 Mfg           | Model + revision  | Chipset used | Flash ROM chip used
 --------------------------------------------------------------------------
 ASUSTeK       | T2P4 rev 2 & 3.10 | Intel HX     | SST 29EE010/5V
-Expertboard   | 8661 rev ?        | Intel VX     | WinBond W29EE011/5V
+Expertboard   | 8661 rev ?        | Intel VX     | Winbond W29EE011/5V
 Soyo          | 5TA2 rev ?        | Intel FX     | SST 29EE010/5V
 Shuttle       | Hot569 rev 2      | Intel TX     | Atmel 29C010A/5V
-Shuttle       | Hot565 rev ?      | Intel TX     | Winbond W29EE011
-Shuttle       | Hot603 rev ?      | AMD 640      | Winbond W29EE011
+Shuttle       | Hot565 rev ?      | Intel TX     | Winbond W29EE011/5V
+Shuttle       | Hot603 rev ?      | AMD 640      | Winbond W29EE011/5V
 ASUSTeK       | P2B rev 1.10      | Intel 440BX  | ?
-PC Chips      | M726 v3.4A        | Alladin Pro 2| ASD AE29F1008
-Abit          | BX6 rev. 2        | Intel 440BX  | AMIC A29002T
+PC Chips      | M726 v3.4A        | Alladin Pro 2| ASD AE29F1008/5V
+Abit          | BX6 rev. 2        | Intel 440BX  | AMIC A29002T/5V
 
 
 11.0            Beta testing stuff
@@ -548,3 +880,5 @@ and chipset manufacturers for their support (in random order):
             Scotts Chen at Macronix International Co., Ltd.
             Darlene Browne at Acer Laboratories, Inc., (USA), Administrator
             Niel Smith, Application Engineering Manager, ALI USA
+            Henry Ho at Macronix International Co., Ltd.
+            Michael Solinas at Silicon Storage Technology, Inc. (SST), USA

@@ -9,8 +9,6 @@ Uses Language;
 Var
 LId : Byte;
 
-{NOTE: GOD, I love C format strings - THIS sucks ....}
-
 Begin
  LId := RegisterLanguage( 'Nederlands' );
  AddMsg( LId, 1, ' Bezig met wissen' );
@@ -45,9 +43,9 @@ Begin
  AddMsg( Lid, 30, '-H or -?        Toont dit hulp scherm' );
  AddMsg( Lid, 31, '-E bnaam        Flasht bios image vanuit bestand bnaam automatisch' );
  AddMsg( Lid, 32, '                naar de flash ROM chip zonder verdere tussenkomst' );
- AddMsg( Lid, 33, '-EXPERT         Geeft toegang tot uitgebreidere menu opties' );
+{ AddMsg( Lid, 33, '-EXPERT         Geeft toegang tot uitgebreidere menu opties' );}
  AddMsg( Lid, 34, '-PCIOR          Flash naar een optie ROM op een PCI kaart' );
- AddMsg( Lid, 35, '-DEBUG          Debugging mode. Toont meer systeem gegevens' );
+{ AddMsg( Lid, 35, '-DEBUG          Debugging mode. Toont meer systeem gegevens' );}
  AddMsg( Lid, 36, '-AMI            Forceer het gebruik van de AMI FLASH INTERFACE' );
  AddMsg( Lid, 37, 'Kan geheugen boven de 1M niet aanspreken - probeer HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Sorry, maar je hebt geen 486 of beter of de processor is in V86 Mode.' );
@@ -80,17 +78,17 @@ Begin
  AddMsg( Lid, 65, 'Vendor=' );
  AddMsg( Lid, 66, ', Device=' );
  AddMsg( Lid, 67, ' at ' ); *)
- AddMsg( Lid, 68, '                    Geheugen: ' );
- AddMsg( Lid, 69, '                    ROM base: ' );
+ AddMsg( Lid, 68, 'Geheugen: ' );
+ AddMsg( Lid, 69, 'ROM base: ' );
  AddMsg( Lid, 70, ', geheugen dump op ' );
  AddMsg( Lid, 71, '              Optie ROM voor: ' );
  AddMsg( Lid, 72, 'device op ' );
  AddMsg( Lid, 73, 'Schrijf ESCD blok (PnP gegevens) naar schijf' );
  AddMsg( Lid, 74, 'Flash ESCD blok (PnP gegevens) naar Flash ROM' );
  AddMsg( Lid, 75, 'Wis ESCD blok (PnP data)' );
- AddMsg( Lid, 76, 'Schrijf DMI gegevensblok naar disk' );
+{ AddMsg( Lid, 76, 'Schrijf DMI gegevensblok naar disk' );
  AddMsg( Lid, 77, 'Flash DMI gegevensblok naar Flash ROM' );
- AddMsg( Lid, 78, 'Wis DMI gegevensblok' );
+ AddMsg( Lid, 78, 'Wis DMI gegevensblok' );}
  AddMsg( Lid, 79, 'Terug naar hoofdmenu' );
  AddMsg( Lid, 80, 'Schrijf CMOS gegevens naar schrijf' );
  AddMsg( Lid, 81, 'Lees CMOS gegevens van schijf' );
@@ -102,7 +100,7 @@ Begin
  AddMsg( Lid, 87, 'Flash oude BIOS terug naar Flash ROM' );
  AddMsg( Lid, 88, 'Wis CMOS gegevens' );
  AddMsg( Lid, 89, 'Schrijf oude CMOS gegevens terug naar CMOS' );
- AddMsg( Lid, 90, 'ESCD (PnP) en DMI submenu' );
+ AddMsg( Lid, 90, 'ESCD (PnP) submenu' );
  AddMsg( Lid, 91, 'Geavanceerde opties submenu' );
  AddMsg( Lid, 92, 'Additionele BIOS informatie' );
  AddMsg( Lid, 93, 'Verlaat UNIFLASH' );
@@ -112,14 +110,16 @@ Begin
  AddMsg( Lid, 97, '' ); {->18}
  AddMsg( Lid, 98, 'Foutieve bestandsgrootte - moet exact ' );
  AddMsg( Lid, 99, ' bytes zijn !'#7 );
- AddMsg( Lid, 100, 'BIOS Mfg: ' );
+{ AddMsg( Lid, 100, 'BIOS Mfg: ' );
  AddMsg( Lid, 101, '   BIOS Model: ' );
  AddMsg( Lid, 102, '  Part number: ' );
  AddMsg( Lid, 103, '    Id string: ' );
- AddMsg( Lid, 104, 'Mfg id string: ' );
+ AddMsg( Lid, 104, 'Mfg id string: ' );}
  AddMsg( Lid, 105, 'JN' );   {Ja Nee}
  AddMsg( Lid, 106, 'Na -FORCE optie moeten 4 hex. karakters volgen' );
  AddMsg( Lid, 107, '-CHIPLIST       Toon lijst met ondersteunde flash chips' );
  AddMsg( Lid, 108, '-FORCE xxxx     Doe net alsof chip xxxx (4 hex cijfers) is gevonden' );
  AddMsg( Lid, 109, '-SAVE bnaam     Schrijf huidige bios image naar bestand bnaam' );
+ AddMsg( Lid, 110, 'This program can''t be run under Windows.' ); {v1.22}
+ AddMsg( Lid, 111, 'PCI bus not found or not responding.' ); {v1.22}
 End.

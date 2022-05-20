@@ -1,6 +1,4 @@
 Unit Catalyst; { Unit to communicate with Catalyst chips }
-{v1.21 Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 {v1.21 CAT28F150: !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
 {v1.21 CAT29F002: !!!NEED DATASHEET FOR ORIGINAL DEVICE ID!!!}
 

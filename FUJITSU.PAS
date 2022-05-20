@@ -1,33 +1,18 @@
-Unit Alliance; { Unit to communicate with Alliance chips } {v1.21}
+Unit Fujitsu; { Unit to communicate with Fujitsu chips } {v1.22}
 Interface
-
 
 Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function AllianceIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function FujitsuIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
- AllianceIdChip := False;
+ FujitsuIdChip := False;
  With CInfo do
   Begin
    Case DevId of
-(*    $04 : Begin
-     It has totally weird commands, even the ID command is nonstandard
-     It has commands like Converge, Verify-0, Verify-1, but the datasheet
-     is crappy and doesn't say, what these commands do. There's even no
-     algorithm in the datasheet.
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := ????;
-           Erase := ????;
-           Sectors[ 0, 0 ] := 4;  {4 x 32k}
-           Sectors[ 0, 1 ] := 15;
-           Size := 128;
-           Name := ConstPtr( 'AS29F010/5V' );
-          End;*)
-    $B0,
-    $51 : Begin
+    $51,
+    $B0 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -42,12 +27,12 @@ Begin
            Sectors[ 3, 1 ] := 128;
            Size := 256;
            case DevId of
-            $B0 : Name := ConstPtr( 'AS29F002T/5V' ); {Top Boot Block}
-            $51 : Name := ConstPtr( 'AS29F200T/5V' );
+            $B0 : Name := ConstPtr( 'MBM29F002TC/5V' );
+            $51 : Name := ConstPtr( 'MBM29F200TC/5V' );
            End;
           End;
-    $34,
-    $57 : Begin
+    $57,
+    $34 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -62,8 +47,8 @@ Begin
            Sectors[ 3, 1 ] := 512;
            Size := 256;
            case DevId of
-            $34 : Name := ConstPtr( 'AS29F002B/5V' ); {Bottom Boot Block}
-            $57 : Name := ConstPtr( 'AS29F200B/5V' );
+            $34 : Name := ConstPtr( 'MBM29F002BC/5V' );
+            $57 : Name := ConstPtr( 'MBM29F200BC/5V' );
            End;
           End;
     $A4 : Begin
@@ -74,9 +59,9 @@ Begin
            Sectors[ 0, 0 ] := 8;  {8 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 512;
-           Name := ConstPtr( 'AS29F040/5V' );
+           Name := ConstPtr( 'MBM29F040C/5V' );
           End;
-    $B9 : Begin
+    $23 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -90,9 +75,9 @@ Begin
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
            Size := 512;
-           Name := ConstPtr( 'AS29LV400T/3V' ); {Top Boot Block}
+           Name := ConstPtr( 'MBM29F400TC/5V' );
           End;
-    $BA : Begin
+    $AB : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -106,14 +91,14 @@ Begin
            Sectors[ 3, 0 ] := 7;  {7 x 64k}
            Sectors[ 3, 1 ] := 512;
            Size := 512;
-           Name := ConstPtr( 'AS29LV400B/3V' ); {Bottom Boot Block}
+           Name := ConstPtr( 'MBM29F400BC/5V' );
           End;
-    $DA : Begin
+    $C4 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
            Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 15;  {15 x 64k}
+           Sectors[ 0, 0 ] := 31; {31x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
            Sectors[ 1, 1 ] := 256;
@@ -121,10 +106,10 @@ Begin
            Sectors[ 2, 1 ] := 64;
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
-           Size := 1024;
-           Name := ConstPtr( 'AS29LV800T/3V' ); {Top Boot Block}
+           Size := 2048;
+           Name := ConstPtr( 'MBM29LV160TE/3V' );
           End;
-    $5B : Begin
+    $49 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -135,18 +120,60 @@ Begin
            Sectors[ 1, 1 ] := 64;
            Sectors[ 2, 0 ] := 1;  {1 x 32k}
            Sectors[ 2, 1 ] := 256;
-           Sectors[ 3, 0 ] := 15;  {15 x 64k}
+           Sectors[ 3, 0 ] := 31; {31x 64k}
            Sectors[ 3, 1 ] := 512;
-           Size := 1024;
-           Name := ConstPtr( 'AS29LV800B/3V' ); {Bottom Boot Block}
+           Size := 2048;
+           Name := ConstPtr( 'MBM29LV160BE/3V' );
+          End;
+    $27 : Begin
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 7;  {7 x 256k}
+           Sectors[ 0, 1 ] := 2048;
+           Sectors[ 1, 0 ] := 1;  {1 x 224k}
+           Sectors[ 1, 1 ] := 1792;
+           Sectors[ 2, 0 ] := 2;  {2 x 8k}
+           Sectors[ 2, 1 ] := 64;
+           Sectors[ 3, 0 ] := 1;  {1 x 16k}
+           Sectors[ 3, 1 ] := 128;
+           Size := 2048;
+           Name := ConstPtr( 'MBM29PL160TD/3V' );
+          End;
+    $45 : Begin
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 1;  {1 x 16k}
+           Sectors[ 0, 1 ] := 128;
+           Sectors[ 1, 0 ] := 2;  {2 x 8k}
+           Sectors[ 1, 1 ] := 64;
+           Sectors[ 2, 0 ] := 1;  {1 x 224k}
+           Sectors[ 2, 1 ] := 1792;
+           Sectors[ 3, 0 ] := 7;  {7 x 256k}
+           Sectors[ 3, 1 ] := 2048;
+           Size := 2048;
+           Name := ConstPtr( 'MBM29PL160BD/3V' );
+          End;
+    $D4 : Begin
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 64; {64 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           Size := 4096;
+           Name := ConstPtr( 'MBM29F033C/5V' );
           End;
     else Exit;
    End;
   End;
- CInfo.Manuf := ConstPtr( 'Alliance' );
- AllianceIdChip := True;
+ CInfo.Manuf := ConstPtr( 'Fujitsu' );
+ FujitsuIdChip := True;
 End;
 
 Begin
- RegisterFlashManu( $52, AllianceIdChip );
+ RegisterFlashManu( $04, FujitsuIdChip );
 End.

@@ -2,23 +2,22 @@
 {$I-}
 {$S-}
 {$R-}
+{$G+}
 Program Uniflash;
 
 Uses Crt, Dos,
-     Flash,Pci,Tools, GenFlash,
+     Flash, Pci, Tools, GenFlash,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
-     ISSI, Mosel, EON, PMC, Hyundai, IMT,
+     ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu,
      Language, English, French, Dutch;
 
 
 Const
-Expert      : Boolean = False;
 Emergency   : Boolean = False;
-Debug       : Boolean = False;
 PCIOREn     : Boolean = False;
 PCIOR       : Boolean = False;
 AutoSave    : Boolean = False;
-Version     = '1.21';
+Version     = '1.22';
 ForceId     : Boolean = False;
 
 Var
@@ -26,7 +25,8 @@ M, D,
 CurOp,
 ORBus, OrDev,
 ORFun, Z,
-FlashNo,X,Y : Byte;
+FlashNo,X,Y,
+Count       : Byte; {v1.22}
 BIOSBlk     : ARRAY[ 0 .. 32767 ] of Byte;
 FlashName   : ^String;
 OldExitProc : Pointer;
@@ -37,9 +37,11 @@ FlashSize   : LongInt;
 X2,Y2       : Longint;
 AdvMenu,
 PnPDMIMenu,
+CMOSMenu,   {v1.22}
 MainMenu    : PMenuItem;
 FlashInfo   : PChipInfo;
-VErr        : Boolean;
+VErr,
+Redir       : Boolean; {v1.22}
 SelA, A     : Char;
 IFile       : File;
 CMOSImg,
@@ -70,35 +72,35 @@ StdOut      : Text;
 StdOutRec   : TextRec absolute StdOut;
 ForceIdVal  : Word;
 
-Function AskFor2(l : byte;txt : string) : boolean;
-var x,y,x2,y2 : byte;
-answer : char;
-begin
-Askfor2:=true;
-x:=wherex;
-y:=wherey;
-gotoxy(13,y+1+l);
-write(txt);
-repeat
-answer:=Upcase( readkey );
-until ( answer = AnswYes ) or ( Answer = AnswNo );
-askfor2:= Answer = AnswYes;
-writeln;
-x2:=wherex;
-y2:=wherey;
-gotoxy(13,y+1+l);
-clreol;
-gotoxy(x,y);
+Function AskFor2(L : Byte;Txt : String) : Boolean;
+Var X,Y,X2,Y2 : Byte;
+    Answer : Char;
+Begin
+ AskFor2:=True;
+ X:=WhereX;
+ Y:=WhereY;
+ GotoXY(13,Y+1+l);
+ Write(Txt);
+ repeat
+  Answer:=UpCase( ReadKey );
+ until ( Answer = AnswYes ) or ( Answer = AnswNo );
+ AskFor2:= Answer = AnswYes;
+ WriteLn;
+ X2:=WhereX;
+ Y2:=WhereY;
+ GotoXY(13,Y+1+l);
+ ClrEol;
+ GotoXY(X,Y);
 end;
 
-Function AskFor(l : byte;txt : string) : boolean;
-Var x,y : byte;
+Function AskFor(L : Byte;Txt : String) : Boolean;
+Var X,Y : Byte;
 
 begin
- x:=wherex;
- y:=wherey;
- AskFor := AskFor2( l, txt );
- gotoxy( x,y );
+ X:=WhereX;
+ Y:=WhereY;
+ AskFor := AskFor2( L, Txt );
+ GotoXY( X,Y );
 end;
 
 Procedure FlashBlock( Block, Start, Size : LongInt );
@@ -185,8 +187,7 @@ Begin
    X := SStarts[ SPos ];
    S := ( SStarts[ SPos + 1 ] - Start );
    Y := SPos + 1;
-   While ( S < Size ) and
-          ( ( Size - S ) >= ( SStarts[ Y + 1 ] - SStarts[ Y ] ) ) do
+   While ( S < Size ) and ( (Size-S) >= (SStarts[Y+1] - SStarts[Y] ) ) do
     Begin
      S := S + ( SStarts[ Y + 1 ] - SStarts[ Y ] );
      Inc( Y );
@@ -328,7 +329,6 @@ Begin
   FlashBlock( BIOS, Start, Size );
   WrtProgressBar( Msg( 3 ) );
   VErr := False;
-{writeln(hl(X * ( Size shr 5 ) + FlashBase + Start),' ',hl(X * ( Size shr 5 ) + BIOS));}
   For X := 0 to 31 do
    Begin
     If CompLinBlocks( X * ( Size shr 5 ) + FlashBase + Start,
@@ -338,7 +338,6 @@ Begin
        Write( 'X' );
        VErr := True;
       End;
-(*    Delay( 50 );  {just cosmetic}  *)
    End;
   If VErr then
    Begin
@@ -353,6 +352,12 @@ Begin
    End;
  Until ( not VErr ) or ( A = AnswNo );
  ClearProgressBar;
+ if ( not VErr ) and ( not Emergency ) then {v1.22 beep after successful flash}
+  Begin
+   Beep(  500, 100 );
+   Beep( 1000, 100 );
+   Beep( 1500, 100 );
+  End;
 End;
 
 
@@ -506,16 +511,16 @@ Begin
 
    FlashFile( IFile, BB );
    Close( IFile );
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    ClrEol;
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( 12 );
+     TextColor( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( 15 );
+     TextColor( LightGreen );
      Write( Msg( 12 ) );
     End;
   End else
@@ -582,16 +587,16 @@ Begin
                  Pos - FlashBase, 4096 );
    SetMenuItemStatus( MainMenu, 2, True );
    Close( IFile );
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    ClrEol;
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( 12 );
+     TextColor( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( 15 );
+     TextColor( LightGreen );
      Write( Msg( 12 ) );
     End;
   End else
@@ -607,11 +612,11 @@ Begin
  FlashPnPDMI( 'PnP', $FFFFD000 );
 End;
 
-{Flash DMI data from file to ROM}
+(*{Flash DMI data from file to ROM}
 Procedure FlashDMI; Far;
 Begin
  FlashPnPDMI( 'DMI', $FFFFC000 );
-End;
+End;*)
 
 Procedure ClearPnPDMI( Typ : String; Pos : LongInt );
 Begin
@@ -627,16 +632,16 @@ Begin
    FlashBIOSImg( ( LongInt( Seg( BIOSBlk ) ) shl 4 ) + LongInt( Ofs( BIOSBlk ) ),
                  Pos - FlashBase, 4096 );
    SetMenuItemStatus( MainMenu, 2, True );
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    ClrEol;
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( 12 );
+     TextColor( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( 15 );
+     TextColor( LightGreen );
      Write( Msg( 12 ) );
     End;
   End;
@@ -647,10 +652,10 @@ Begin
  ClearPnPDMI( 'PNP', $FFFFD000 );
 End;
 
-Procedure ClearDMI; Far;
+(*Procedure ClearDMI; Far;
 Begin
  ClearPnPDMI( 'DMI', $FFFFC000 );
-End;
+End;*)
 
 Procedure WritePnPDMIImg( Typ : String; Pos : LongInt );
 Var
@@ -687,10 +692,10 @@ Begin
  WritePnPDMIImg( 'PnP', $FFFFD000 );
 End;
 
-Procedure WriteDMI; Far;
+(*Procedure WriteDMI; Far;
 Begin
  WritePnPDMIImg( 'DMI', $FFFFC000 );
-End;
+End;*)
 
 Procedure WriteBootBlk; Far;
 Var
@@ -772,16 +777,16 @@ Begin
                  $FFFFE000 - FlashBase, 8192 );
    SetMenuItemStatus( MainMenu, 2, True );
    Close( IFile );
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    ClrEol;
-   GotoXY( 32, 7 );
+   GotoXY( 32, 8 );
    If VErr then
     Begin
-     TextColor( 12 );
+     TextColor( LightRed );
      Write( Msg( 11 ) );
     End else
     Begin
-     TextColor( 15 );
+     TextColor( LightGreen );
      Write( Msg( 12 ) );
     End;
   End else
@@ -1018,7 +1023,6 @@ Begin
  SetMenuItemStatus( MainMenu, 4, False );
 End;
 
-{Safety net, disable ROM access & flat real mode on exit}
 Procedure MyExitProc; Far;
 Begin
  If PCIOrEn then
@@ -1026,7 +1030,7 @@ Begin
    SetPCIRegD( ORBus, ORDev, ORFun, $04, PCIReg4 );
    SetPCIRegD( ORBus, ORDev, ORFun, $30, PCIReg30 );
   End;
- textcolor( lightgray );
+ TextColor( LightGray );
  RomEnable( Unmap );
  FlatRealOff;
  ExitProc := OldExitProc;
@@ -1067,7 +1071,7 @@ Begin
   End else OpStr := '';
 End;
 
-procedure BiosInfo; far;
+(*procedure BiosInfo; far; {v1.22 DISABLED}
 var s1,s2,s3,s4,s5 : string;
 begin
 gotoxy(6,21);
@@ -1104,8 +1108,33 @@ clreol;
 gotoxy(1,25);
 clreol;
 
+end;*)
+
+procedure CheckRedir; {v1.22}
+var A:Byte;
+Begin
+  A:=WhereX;
+  Write(StdOut,' ');
+  Redir:=WhereX=A;
+End;
+
+procedure WriteLnStd(S:String); {v1.22}
+begin
+  Inc( Count );
+  if not Redir and ( Count >= Hi( WindMax ) ) then
+   Begin
+    Write( '-- More --' );
+    ReadKey;
+    WriteLn;
+    Count:=0;
+   End;
+  WriteLn( StdOut, S );
 end;
 
+procedure RedetectFlashROM;
+begin
+ {!!!!NOT IMPLEMENTED!!!!}
+end;
 
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
 {---------------------- MAIN PART OF THE PROGRAM -------------------------}
@@ -1119,19 +1148,20 @@ Begin
  Assign( StdOut, 'CON' );
  Rewrite( StdOut );
  StdOutRec.Handle := 1;
+ CheckRedir; {v1.22 Check if STDOUT is redirected}
 
  ClrScr;
  GotoXY(11,2);
- textcolor(yellow);
+ TextColor(Yellow);
  Write('UniFlash ');
- textcolor(lightgreen);
+ TextColor(LightGreen);
  Write('v' + Version );
- textcolor(lightcyan);
- WriteLn(' (c) 1998 Pascal van Leeuwen & Galkowski Adam ');
- textcolor(lightmagenta);
+ TextColor(LightCyan);
+ WriteLn(' (c) 2001 Rainbow Software (http://rainbow.ht.st)');
+ TextColor(LightMagenta);
  GotoXY(11,3);
- Write('Development continues...by Rainbow Software (http://rnbw.tsx.org)');
- textcolor(lightgray);
+ Write('Original version by Pascal van Leeuwen & Galkowski Adam');
+ TextColor(LightGray);
 
  SetLanguage( 1 ); {default = English}
  If ( ParamCount > 0 ) then
@@ -1174,15 +1204,13 @@ Begin
     Begin
      WriteLn;
      WriteLn;
-     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-EXPERT][-PCIOR|-AMI]' );
-     WrtCenter( '          [-DEBUG][-SAVE fname]|-CHIPLIST|-FORCE xxxx]' );
+     WrtCenter( 'UNIFLASH [-H|-?|[-E fname][-PCIOR|-AMI]' );
+     WrtCenter( '          [-SAVE fname]|-CHIPLIST|-FORCE xxxx]' );
      WrtCenter( '' );
      WrtCenter( Msg( 30 ) );
      WrtCenter( Msg( 31 ) );
      WrtCenter( Msg( 32 ) );
-     WrtCenter( Msg( 33 ) );
      WrtCenter( Msg( 34 ) );
-     WrtCenter( Msg( 35 ) );
      WrtCenter( Msg( 36 ) );
      WrtCenter( Msg( 107 ) );
      WrtCenter( Msg( 108 ) );
@@ -1190,15 +1218,13 @@ Begin
      WriteLn;
      Halt;
     End else
-   If PStr = 'EXPERT' then Expert := True else
-   If PStr = 'DEBUG' then Debug := True else
    If PStr = 'PCIOR' then PCIOR := True else
    If PStr = 'AMI' then WantToUseAmi := True else
    If PStr = 'CHIPLIST' then
     Begin
-     WriteLn( StdOut );
-     WriteLn( StdOut, '  List of supported flash chips' );
-     WriteLn( StdOut, '  -----------------------------' );
+     WriteLnStd( '' );
+     WriteLnStd( '  List of supported flash chips' );
+     WriteLnStd( '  -----------------------------' );
      CurManuf := ManuRoot;
      Repeat
       With CurManuf^ do
@@ -1206,8 +1232,7 @@ Begin
         M := Manuf;
         For D := 0 to $FF do {v1.21 FF}
          If IdChip( D, CurCInfo ) then With CurCInfo do
-          WriteLn( StdOut,
-                   '  ', Hb( M ), Hb( D ), ' - ', Manuf^, ' ', Name^ );
+          WriteLnStd( '  '+ Hb( M )+ Hb( D )+ ' - '+ Manuf^+ ' '+ Name^ );
        End;
       CurManuf := CurManuf^.Next;
      Until ( CurManuf = Nil );
@@ -1242,6 +1267,11 @@ Begin
    Inc( X );
   End;
 
+ If Windows then Err( Msg( 110 ) ); {v1.22}
+
+ If not LocatePIIX then { Sets address of PIIX } {v1.22 moved here}
+  Err( Msg( 111 ) ); {v1.22}
+
  InitXMS; {Init memory subsystem. Should be done before FlatRealOn}
  If XMSLeft = -1 then
   Err( Msg( 37 ) );
@@ -1253,9 +1283,6 @@ Begin
  AllocHimem;
 
  CMOSSize := GetCMOSSize;
-
-{Program the chipset that way it lets you to see the BIOS}
- RomEnable( Map );
 
  OldExitProc := ExitProc;
  ExitProc := @MyExitProc;
@@ -1292,37 +1319,23 @@ Begin
           SetPCIRegD( OrBus, OrDev, OrFun, $30, $FFFFFFFF );  {Check for stuck 0's}
           Img := GetPCIRegD( OrBus, OrDev, OrFun, $30 );
           SetPCIRegD( OrBus, OrDev, OrFun, $30, $00000001 );  {Check for stuck 1's}
-          Img := Img xor
-                 GetPCIRegD( OrBus, OrDev, OrFun, $30 ); {Now every 0 is a hw bit}
+          Img := Img xor GetPCIRegD( OrBus, OrDev, OrFun, $30 ); {Now every 0 is a hw bit}
           {Scan for 1st non-hardwired bit}
           For Z := 1 to 32 do
            If ( Img and ( 1 shl LongInt( Z ) ) ) <> 0 then Break;
           {We don't support option ROM's at (semi-)fixed addresses}
-          If ( Z < 32 ) and
-             ( ( Img xor ( - ( 1 shl LongInt( Z ) ) ) ) = 0 ) then
+          If ( Z < 32 ) and ( ( Img xor ( - ( 1 shl LongInt( Z ) ) ) ) = 0 ) then
            Begin
-(*            {Map the ROM at $80000000}
-            SetPCIRegD( OrBus, OrDev, OrFun, $30, $80000001 );
-            {And check for a valid PCI option rom at $80000000}
-            If ( FIMemW( $80000000 ) = $AA55 ) then
+            {found PCI option ROM, add to list}
+            Inc( OPRCnt );
+            With OPRom[ OPRCnt ] do
              Begin
-              If ( FIMemW( $80000000 + FIMemW( $80000018 ) ) = $4350 {PC} ) and
-                 ( FIMemW( $80000000 + FIMemW( $80000018 ) + 2 ) = $5249 {IR} ) then
-               Begin
-                {found PCI option ROM, add to list} *)
-                Inc( OPRCnt );
-                With OPRom[ OPRCnt ] do
-                 Begin
-                  MaxSize := 1 shl LongInt( Z );
-(*                  Size := FIMemB( $80000002 ); *)
-                  VenID := GetPCIRegD( OrBus, OrDev, OrFun, $00 );
-                  DevID := GetPCIRegD( OrBus, OrDev, OrFun, $00 ) shr 16;
-                  Bus := OrBus;
-                  Pos := ( OrDev shl 3 ) or OrFun;
-                 End;
-(*               End;
-             End; *)
-
+              MaxSize := 1 shl LongInt( Z );
+              VenID := GetPCIRegD( OrBus, OrDev, OrFun, $00 );
+              DevID := GetPCIRegD( OrBus, OrDev, OrFun, $00 ) shr 16;
+              Bus := OrBus;
+              Pos := ( OrDev shl 3 ) or OrFun;
+             End;
            End;
           {Restore PCI device state}
           SetPCIRegD( OrBus, OrDev, OrFun, $04, PCIReg4 );
@@ -1381,18 +1394,20 @@ Begin
        PCIReg4 := GetPCIRegD( ORBus, ORDev, ORFun, $04 );       {Save reg 4}
        SetPCIRegD( ORBus, ORDev, ORFun, $04, PCIReg4 or $02 );  {Enable memory}
        PCIReg30 := GetPCIRegD( ORBus, ORDev, ORFun, $30 );      {Save reg 30}
-       SetPCIRegD( ORBus, ORDev, ORFun, $30, $80000001 );
+       If Hi( PCIReg30 shr 16 ) = $CB then {v1.22}
+        SetPCIRegD( ORBus, ORDev, ORFun, $30, PCIReg30 or 1 )
+       else SetPCIRegD( ORBus, ORDev, ORFun, $30, $80000001 );
        PCIOrEn := True;
-       ROMBase := $80000000;
+       ROMBase := GetPCIRegD( ORBus, ORDev, ORFun, $30 ) and $FFFFFFFE{ $80000000}; {v1.22}
       End;
 
-     Window( 1, 5, 80, 25 );
+     Window( 1, 4, 80, 25 );
      ClrScr;
      Window( 1, 1, 80, 25 );
      GotoXY( 1, 3 );
 
     End else Err( Msg( 45 ) );
-  End;
+  End else RomEnable( Map ); {Program the chipset so it lets you see the BIOS}
 
  If ForceId then
   Begin
@@ -1410,31 +1425,10 @@ Begin
     ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
   End else FlashInfo := FlashDetect;
 
-(*
-if pcior then begin
-if askfor2(2,Msg( 46 ) ) then begin
-                      write( Msg( 47 ) );
-                      readln(savename);
-                      assign(savefile,savename);
-                      rewrite(savefile,1);
-                       X2 := 0;
-                       While ( X2 < Oprom[curop].maxsize ) do
-                        Begin
-                         MoveLinBlockD( X2 + $80000000, LongInt(  Seg( BIOSBlk ) ) shl 4 + LongInt( Ofs( BIOSBlk ) ), 32768 );
-                         BlockWrite( savefile, BIOSBlk, 32768 );
-                         X2 := X2 + 32768;
-                        End;
-
-
-                      close(savefile);
-                      writeln( Msg( 48 ) );
-                      end;
-end; *)
-
- {Abort if option ROM is not a recognised flash ROM. This to avoid  }
+(* {Abort if option ROM is not a recognised flash ROM. This to avoid  }
  {the corruption of memory local to the PCI card as much as possible}
  If PCIOR and ( FlashError <> 0 ) then
-  Err( Msg( 49 ) );
+  Err( Msg( 49 ) );   disabled in v1.22 *)
 
  If FlashError = 0 then
   Begin
@@ -1470,7 +1464,8 @@ end; *)
    If PCIOr then
     Begin
      FlashBase := ROMBase;
-     FlashSize := FlashSize shl 9;
+{     FlashSize := FlashSize shl 9;}
+     FlashSize := OpROM[ CurOp ].MaxSize; {v1.22}
     End else
     Begin
      FlashSize := 131072;    {128K default}
@@ -1482,25 +1477,22 @@ end; *)
     Err( Msg( 50 ) );
   End;
  textcolor(yellow);
- GotoXY( 2, 4 );
+ GotoXY( 2, 5 );
  Write( Msg( 51 ) );
  With FlashInfo^ do
   Begin
    TextColor( 15 );
-   If FlashError <> 0 then Write( Msg( 52 ) ) else
+   If FlashError <> 0 then Write( Msg( 52 ) )
+   else
     Begin
      If Count > 1 then Write( Count, ' x ' );
      Write( Manuf^, ' ', Name^ );
     End;
-   If ForceId then
-    Write( ' (forced)' ) else
-   If Debug then
-    Begin
-     GotoXY( 1, 4 ); {v1.21}
-     Write(' (' + Hb( Man1 ) + Hb( Dev1 ) +
-           ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
-    End;
-   GotoXY( 2, 5 );
+   If ForceId then Write( ' (forced)' );
+   GotoXY( 1, 5 ); {v1.21}
+   Write(' (' + Hb( Man1 ) + Hb( Dev1 ) + ',' + Hb( Man2 ) + Hb( Dev2 ) + ')' );
+
+   GotoXY( 2, 6 );
    TextColor(yellow);
    Write( Msg( 53 ) );
    TextColor( 15 );
@@ -1538,7 +1530,7 @@ end; *)
       Write( ' (', Size shr 10, 'M)' );
     End;
   End;
- GotoXY( 11, 7 );
+{ GotoXY( 11, 8 );}
 
  If AutoSave then
   Begin
@@ -1558,40 +1550,35 @@ end; *)
    Close( IFile );
    {double beep : flash done}
    Beep( 1000, 200 );
-   Delay( 20 );
+   Delay( 50 ); {v1.22 changed 20 -> 50}
    Beep( 1000, 200 );
    Halt;
   End;
 
- GotoXY( 2, 6 );
+ GotoXY( 2, 7 );
  TextColor(yellow);
  Write( Msg( 61 ) );
  TextColor( 15 );
  Write( CurrentChipset);
- GotoXY( 2, 7 );
+ GotoXY( 2, 8 );
  TextColor(yellow);
  Write( Msg( 62 ) );
  TextColor( 15 );
  Write( Msg( 63 ) );
- If Debug then
-  Begin
-(*   TextColor( yellow );
-   GotoXY( 2, 9 );
-   Write( Msg( 64 ) );
-   TextColor( 15 );
-   Write( Msg( 65 ), Hw( PiixMan ), Msg( 66 ), Hw( PIIXId ), Msg( 67 ), Hb( PiixL shr 3 ), ':',
-          Hb( PiixL and 7 ) ); *)
-   TextColor( yellow );
-   GotoXY( 2, 1{3} ); {v1.21}
-   Write( Msg( 68 ) );
-   TextColor( 15 );
-   Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
-   TextColor( yellow );
-   GotoXY( 2, 8 );
-   Write( Msg( 69 ) );
-   TextColor( 15 );
-   Write( Hl( ROMBase )+ Msg( 70 ) +hl(rombase)+'-->('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
-  End;
+
+(* TextColor( yellow );
+ GotoXY( 2, 9 );
+ Write( Msg( 64 ) );
+ TextColor( 15 );
+ Write( Msg( 65 ), Hw( PiixMan ), Msg( 66 ), Hw( PIIXId ), Msg( 67 ), Hb( PiixL shr 3 ), ':',
+        Hb( PiixL and 7 ) ); *)
+ TextColor( DarkGray );
+ GotoXY( 1, 24 );
+ Write( Msg( 68 ) );
+ Write( 'XMSPos=', Hl( XMSPos ), ', XMSLeft=', XMSLeft );
+ GotoXY( 1, 23 );
+ Write( Msg( 69 ) );
+ Write( Hl( ROMBase )+ Msg( 70 ) +hl(rombase)+'-->('+hw(fimemw(rombase))+hw(fimemw(rombase+2))+')' );
 
  If PCIOr then
   Begin
@@ -1615,80 +1602,53 @@ end; *)
 
  textcolor(WHITE);
 
- PnPDMIMenu :=
-  AddMenuItem( Msg( 73 ),
-               0, 1, @WritePnp,
-  AddMenuItem( Msg( 74 ),
-               1, 1, @FlashPnp,
-  AddMenuItem( Msg( 75 ),
-               2, 1, @ClearPnp,
-  AddMenuItem( Msg( 76 ),
-               3, 1, @WriteDMI,
-  AddMenuItem( Msg( 77 ),
-               4, 1, @FlashDMI,
-  AddMenuItem( Msg( 78 ),
-               5, 1, @ClearDMI,
-  AddMenuItem( Msg( 79 ),
-               7, 1, Nil,
-  Nil ) ) ) ) ) ) );
+ PnPDMIMenu := AddMenuItem( Msg( 73 ), 0, 1, @WritePnp,
+               AddMenuItem( Msg( 74 ), 1, 1, @FlashPnp,
+               AddMenuItem( Msg( 75 ), 2, 1, @ClearPnp,
+(*               AddMenuItem( Msg( 76 ), 4, 1, @WriteDMI,
+               AddMenuItem( Msg( 77 ), 5, 1, @FlashDMI,
+               AddMenuItem( Msg( 78 ), 6, 1, @ClearDMI,*)
+               AddMenuItem( Msg( 79 ), 4, 1, Nil, Nil ) ) ) ) {) ) )};
 
- AdvMenu :=
-  AddMenuItem( Msg( 80 ),
-               0, 1, @SaveCMOS,
-  AddMenuItem( Msg( 81 ),
-               1, 1, @RestoreCMOS,
-  AddMenuItem( Msg( 82 ),
-               2, 1, @FlashBIOSBB,
-  AddMenuItem( Msg( 83 ),
-               3, 1, @WriteBootBlk,
-  AddMenuItem( Msg( 84 ),
-               4, 1, @FlashBootBlk,
-  AddMenuItem( Msg( 79 ),
-               6, 1, Nil,
-  Nil ) ) ) ) ) );
+ AdvMenu := AddMenuItem( Msg( 82 ), 0, 1, @FlashBIOSBB,
+            AddMenuItem( Msg( 83 ), 1, 1, @WriteBootBlk,
+            AddMenuItem( Msg( 84 ), 2, 1, @FlashBootBlk,
+            AddMenuItem( Msg( 79 ), 4, 1, Nil, Nil ) ) ) );
 
- MainMenu :=
-  AddMenuItem( Msg( 85 ),
-               0, 1, @WriteBIOSImg,
-  AddMenuItem( Msg( 86 ),
-               1, 1, @FlashBIOS,
-  AddMenuItem( Msg( 87 ),
-               2, 0, @FlashOldBIOS,
-  AddMenuItem( Msg( 88 ),
-               3, 1, @ClearCMOS,
-  AddMenuItem( Msg( 89 ),
-               4, 0, @WrtOldCMOS,
-  AddMenuItem( Msg( 90 ),
-               5, 3, PnPDMIMenu,
-  AddMenuItem( Msg( 91 ),
-               6, 3, AdvMenu,
-  AddMenuItem( Msg( 92 ),
-               7, 1, @biosinfo,
-  AddMenuItem( Msg( 93 ),
-               9, 1, Nil,
-  Nil ) ) ) ) ) ) ) ) );
+ CMOSMenu := AddMenuItem( Msg( 80 ), 0, 1, @SaveCMOS,
+             AddMenuItem( Msg( 81 ), 1, 1, @RestoreCMOS,
+             AddMenuItem( Msg( 88 ), 2, 1, @ClearCMOS,
+             AddMenuItem( Msg( 89 ), 3, 0, @WrtOldCMOS,
+             AddMenuItem( Msg( 79 ), 5, 1, Nil, Nil ) ) ) ) );
+
+ MainMenu := AddMenuItem( Msg( 85 ), 0, 1, @WriteBIOSImg,
+             AddMenuItem( Msg( 86 ), 1, 1, @FlashBIOS,
+             AddMenuItem( Msg( 87 ), 2, 0, @FlashOldBIOS,
+             AddMenuItem( 'Redetect Flash ROM', 3, 0, @RedetectFlashROM,
+             AddMenuItem( 'CMOS submenu ¯', 4, 3, CMOSMenu,
+             AddMenuItem( Msg( 90 ), 5, 3, PnPDMIMenu,
+             AddMenuItem( Msg( 91 ), 6, 3, AdvMenu,
+{             AddMenuItem( Msg( 92 ), 7, 1, @BIOSInfo,}
+             AddMenuItem( Msg( 93 ), 8, 1, Nil, Nil ) ) ) ) ) ) ) );
 
  If FlashInfo = Nil then
   Begin
    SetMenuItemStatus( MainMenu, 1, False );
    SetMenuItemStatus( MainMenu, 5, False );
-   SetMenuItemStatus( AdvMenu, 2, False );
+   SetMenuItemStatus( MainMenu, 6, False );
+{   SetMenuItemStatus( AdvMenu, 2, False );
    SetMenuItemStatus( AdvMenu, 3, False );
-   SetMenuItemStatus( AdvMenu, 4, False );
+   SetMenuItemStatus( AdvMenu, 4, False );}
   End;
  If ( FlashInfo^.Flags and 3 ) = 2 then
   SetMenuItemStatus( MainMenu, 5, False );
-
- If not Expert or PCIOR then
-  Begin
-   SetMenuItemStatus( MainMenu, 5, False );
-   SetMenuItemStatus( MainMenu, 6, False );
-  End;
 
  If PCIOR then
   Begin
    SetMenuItemStatus( MainMenu, 3, False );
    SetMenuItemStatus( MainMenu, 4, False );
+   SetMenuItemStatus( MainMenu, 5, False );
+   SetMenuItemStatus( MainMenu, 6, False );
   End;
 
  VErr := False;

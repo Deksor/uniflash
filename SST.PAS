@@ -1,13 +1,11 @@
 Unit SST; { Unit to communicate with SST chips }
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 Interface
 
 Implementation
 
 Uses Flash, GenFlash, Tools;
 
-{Unprotect}
+{Unprotect 28x040(A) series}
 Procedure SSTUnprot;
 Begin
  FIMemB( ROMBase + $1823 );
@@ -19,7 +17,7 @@ Begin
  FIMemB( ROMBase + $041A );
 End;
 
-{Protect}
+{Protect 28x040(A) series}
 Procedure SSTProt;
 Begin
  FIMemB( ROMBase + $1823 );
@@ -31,8 +29,7 @@ Begin
  FIMemB( ROMBase + $040A );
 End;
 
-{Erase & program one full sector - for 28x040(A) series}
-Procedure SSTSecProg( Pos, Data : LongInt ); Far;
+Procedure SSTSecProg( Pos, Data : LongInt ); Far; {for 28x040(A) series}
 Var
 X        : Word;
 Attempt,
@@ -43,7 +40,7 @@ Begin
  SSTUnprot;
  {Erase the sector}
  FOMemB( ROMBase, $20 ); {Erase sector setup}
- FOMemB( Pos, $D0 );       {Erase sector containing address Pos}
+ FOMemB( Pos, $D0 );   {Erase sector containing address Pos}
  Repeat
   X := FiMemB( Pos + 127 );    {Read last byte written}
  Until ( ( X and $A0 ) <> 0 );
@@ -90,8 +87,7 @@ Begin
  SSTProt;
 End;
 
-{Erase & program one full sector - for 29SF/VFxxx}
-Procedure SSTSecProg2( Pos, Data : LongInt ); Far;
+Procedure SSTSecProg2( Pos, Data : LongInt ); Far; {for 29SF/VFxxx}
 Var
 Attempt,
 X        : Byte;
@@ -115,7 +111,7 @@ Begin
    End;
 
   {Wait for erase to finish}
-  TimeOut := 25000; {15 sec max normally, but waits 25 sec to be sure}
+  TimeOut := 50; {25ms max normally, but waits 50ms to be sure}
   While ( ( FiMemB( Pos ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
    Begin
     Dec( TimeOut );
@@ -127,8 +123,7 @@ Begin
   FlashCmd( $F0 ); {Reset}
  Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
  If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
- { Use AMD standard sector programming }
- AMDSecProg(Pos, Data);
+ AMDSecProg ( Pos, Data );
 End;
 
 
@@ -144,7 +139,7 @@ Begin
    Progr  := GenPageProgB;
    Case DevId of
     $01 : Begin
-           Name := ConstPtr( '28EE011/5V' );
+           Name := ConstPtr( '28EE010/011/5V' );
            Size := 128;
           End;
     $5D : Begin
@@ -216,7 +211,7 @@ Begin
     $04 : Begin
            Name := ConstPtr( '28x040(A) series (5V/3V/2.7V)' );
            Flags  := 3;   {small sectors}
-           PgSize := 256; {sector size} {v1.21 - 128->256}
+           PgSize := 256; {sector size}
            Progr  := SSTSecProg;
            Size := 512;
           End;
@@ -424,7 +419,7 @@ Begin
            Size := 1024;
            Name := ConstPtr( '49LF008/3.3V (Firmware Hub)' );
           End;
-      $5A : Begin {v1.21}
+    $5A : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;

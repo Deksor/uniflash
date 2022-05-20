@@ -1,6 +1,4 @@
 Unit Atmel; { Unit to communicate with Atmel chips }
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 Interface
 
 Implementation
@@ -43,6 +41,52 @@ Begin
   End;
 End;
 
+Procedure AtmelPageProgB( Pos, Data : LongInt ); Far;
+Var
+Attempt,
+Ld, X   : Byte;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FlashCmd( $80 );
+  FlashCmd( $20 );
+  MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
+  Wait( 10000 );  {Wait 10ms} {v1.22 750us->10ms}
+
+  Ld := FiMemB( Data + 127 ) and $80; {Last data byte, bit 7}
+  Repeat
+   X := FiMemB( Pos + 127 );    {Read last byte written}
+  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+  X := FiMemB( Pos + 127 );    {Read last byte written}
+  Inc( Attempt );
+ Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
+ If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
+End;
+
+Procedure AtmelPageProgW( Pos, Data : LongInt ); Far;
+Var
+Attempt,
+Ld, X   : Byte;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FlashCmd( $80 );
+  FlashCmd( $20 );
+  MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
+  Wait( 10000 );  {Wait 10ms} {v1.22 750us->10ms}
+  Ld := FiMemB( Data + 255 ) and $80; {Last data byte, bit 7}
+  Repeat
+   X := FiMemB( Pos + 255 );    {Read last byte written}
+  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
+  X := FiMemB( Pos + 255 );    {Read last byte written}
+  Inc( Attempt );
+ Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
+ If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
+End;
+
+
 Function AtmelIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  AtmelIdChip := False;
@@ -54,28 +98,28 @@ Begin
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $BC : Begin
            Name := ConstPtr( 'AT29LV256/3V' );
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $5D : Begin
            Name := ConstPtr( 'AT29C512/5V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $3D : Begin {v1.21}
            Name := ConstPtr( 'AT29LV512/3V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $03 : Begin {v1.21}
            Name := ConstPtr( 'AT49x512 series (5V/3V/2.7V)' );
@@ -90,7 +134,7 @@ Begin
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
 (*    $05 : Begin
            Name := ConstPtr( 'AT49BV010/2.7V' );
@@ -113,7 +157,7 @@ Begin
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $04 : Begin {v1.21}
            Flags  := 0;   {sector mode}
@@ -150,16 +194,16 @@ Begin
     $25 : Begin
            Name := ConstPtr( 'AT29C1024/5V' );
            Flags := 1; {page mode}
-           PgSize := 256; {128 words!}
+           PgSize := 256; {128 words}
            Size := 128;
-           Progr := GenPageProgWAtmel;
+           Progr := AtmelPageProgW;
           End;
     $26 : Begin
            Name := ConstPtr( 'AT29LV1024/3V' );
            Flags := 1; {page mode}
-           PgSize := 256; {128 words!}
+           PgSize := 256; {128 words}
            Size := 128;
-           Progr  := GenPageProgWAtmel;
+           Progr  := AtmelPageProgW;
           End;
     $87 : Begin
            Name := ConstPtr( 'AT49x1024/1025 series (5V/3V)' );
@@ -170,18 +214,18 @@ Begin
            Erase := AtBulkErase;
           End;
     $DA : Begin
-           Name := ConstPtr( 'AT29C020/5V' );
+           Name := ConstPtr( 'AT29C020(A)/5V' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $BA : Begin
            Name := ConstPtr( 'AT29xV020 series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $0B : Begin
            Name := ConstPtr( 'AT49x020 series (5V/3V/2.7V)' );
@@ -240,14 +284,14 @@ Begin
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $C4 : Begin
            Name := ConstPtr( 'AT29xV040A series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := GenPageProgBAtmel;
+           Progr  := AtmelPageProgB;
           End;
     $13 : Begin
            Name := ConstPtr( 'AT49x040 series (5V/3V/2.7V)' );

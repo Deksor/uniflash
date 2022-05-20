@@ -5,6 +5,7 @@ Interface
 
 Type
 ProcType   = Procedure;
+WaitProc   = Procedure( MicroSec: LongInt ); {v1.22}
 PMenuItem  = ^MenuItem;
 MenuItem   = Record
               X, Y   : Byte;
@@ -23,6 +24,7 @@ MenuItem   = Record
 Const
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
+var Wait:WaitProc;
 
 Function ConstPtr( Const S : String ) : Pointer;
 Function FIMemB( Addr : LongInt ) : Byte;
@@ -32,6 +34,7 @@ Procedure FOMemW( Addr : LongInt; Data : Word );
 Function Hb( B : Byte ) : String;
 Function Hw( W : Word ) : String;
 Function Hl( L : Longint ) : String;
+Function Windows : Boolean; {v1.22}
 Function FlatRealOn : Boolean;
 Procedure FlatRealOff;
 Procedure InitXMS;
@@ -49,10 +52,10 @@ Procedure RunMenu( Menu : PMenuItem );
 Procedure WrtProgressBar( Msg : String );
 Procedure ClearProgressBar;
 Procedure Beep( Hz, Ms : Word );
-Procedure Wait( MiSec : LongInt );
+{Procedure Wait( MiSec : LongInt );}
 function zero2str(s,o : word) : string;
-procedure cwriteln(c1,c2 : byte; s1,s2 : string);
-procedure cwrite(c1,c2 : byte; s1,s2 : string);
+{procedure cwriteln(c1,c2 : byte; s1,s2 : string);
+procedure cwrite(c1,c2 : byte; s1,s2 : string);}
 function strcomp(s1,s2 : string; b : byte) : boolean;
 
 Implementation
@@ -60,7 +63,7 @@ Implementation
 Uses Crt;
 
 Const
-MTop    = 9;
+MTop    = 10{9}; {v1.22}
 XMSHnd  : Word = 0;
 
 Var
@@ -69,6 +72,7 @@ SaveEProc : Pointer;
 XMMRtn    : LongInt;
 CurMenu   : PMenuItem;
 MicroSec  : Word;
+TSC,uSec  : LongInt; {v1.22}
 
 Function ConstPtr( Const S : String ) : Pointer;
 Begin
@@ -149,14 +153,27 @@ Begin
  Hl := Hw( L shr 16 ) + hw(l);
 End;
 
+{Detect if Windows is running}
+Function Windows : Boolean; Assembler; {v1.22}
+Asm
+        MOV     AX,1600H
+        INT     2FH
+        CMP     AL,0H
+        JE      @nowin
+        MOV     AX,1
+        JMP     @exit
+@nowin: XOR     AX,AX
+@exit:
+End;
+
 {Set flat real mode, return false on error}
 Function FlatRealOn : Boolean; Assembler;
 Asm
-{286 check, probably too late anyway (depending on $G switch) <G>}
+(*{286 check, probably too late anyway (depending on $G switch) <G>}
         PUSH    SP
         POP     AX
         CMP     AX,SP
-        JNZ     @error
+        JNZ     @error*)
 {check for protected (V86) mode}
         SMSW    AX
         TEST    AL,1
@@ -593,7 +610,7 @@ End;
 Procedure CursorOff; Assembler;
 Asm
  MOV AH,01H
- MOV CX,0100H
+ MOV CX,2000H{0100H} {v1.22}
  INT 10H
 End;
 
@@ -681,14 +698,14 @@ Begin
              CurItem := Nil;
             End else
             Begin
-             Window( 1, MTop, 80, 25 );
+             Window( 1, MTop, 80, 22 );
              TextBackGround( 0 );
              ClrScr;
              Window( 1, 1, 80, 25 );
              SvItem := CurItem;
              RunMenu( CurItem^.Action.M );
              CursorOff;
-             Window( 1, MTop, 80, 25 );
+             Window( 1, MTop, 80, 22 );
              TextBackGround( 0 );
              ClrScr;
              Window( 1, 1, 80, 25 );
@@ -710,6 +727,16 @@ Begin
           Case A of
            #80 : If CurItem^.Next <> Nil then NewItem := CurItem^.Next;
            #72 : If CurItem^.Prev <> Nil then NewItem := CurItem^.Prev;
+           #71,
+           #73 : Begin {v1.22}
+                  If CurItem^.Prev <> Nil then NewItem := CurItem^.Prev;
+                  while NewItem^.Prev <> Nil do NewItem := NewItem^.Prev;
+                 End;
+           #79,
+           #81 : Begin {v1.22}
+                  If CurItem^.Next <> Nil then NewItem := CurItem^.Next;
+                  while NewItem^.Next <> Nil do NewItem := NewItem^.Next;
+                 End;
           End;
          End;
   End;
@@ -758,7 +785,7 @@ End;
 
 {NOTE: Should work reliably on 486-25 and up, overflow will}
 {      occur on slower processors                          }
-Function CalibrateWait : Word; Assembler;
+Function InitOldWait : Word; Assembler;
 Asm
         IN      AL,61H
         AND     AL,0FCH
@@ -794,8 +821,9 @@ Asm
 @@2:
 End;
 
+{$F+}
 {High precision (usec) delay}
-Procedure Wait( MiSec : LongInt ); Assembler;
+Procedure OldWait( MiSec : LongInt ); Assembler;
 Asm
         DB      66H
         XOR     BX,BX
@@ -813,6 +841,7 @@ Asm
         JNZ     @@1
         POPF
 End;
+{$F-}
 
 function zero2str(s, o : word) : string;
 var outstr : string;
@@ -831,7 +860,7 @@ outstr[0]:=#0;
 zero2str:=outstr;
 end;
 
-procedure cwriteln(c1,c2 : byte; s1,s2 : string);
+{procedure cwriteln(c1,c2 : byte; s1,s2 : string);
 begin
 textcolor(c1);
 write(s1);
@@ -845,7 +874,7 @@ textcolor(c1);
 write(s1);
 textcolor(c2);
 write(s2);
-end;
+end;}
 
 
 function strcomp(s1,s2 : string; b : byte) : boolean;
@@ -856,7 +885,121 @@ for i:=1 to b do
     if s1[i]<>s2[i] then strcomp:=false;
 end;
 
+procedure _Delay; {v1.22}
+begin
+  Delay(100);
+end;
+
+procedure InitTSC;assembler; {Requires Pentium or newer CPU} {v1.22}
+asm
+  pushf                     {PUSHF}
+  cli                       {CLI}
+  dw   310fh                {RDTSC}
+  db   66h
+  push ax                   {PUSH EAX}
+  call _Delay               {DELAY(100)}         {Delay 100ms}
+  dw   310fh                {RDTSC}
+  db   66h
+  pop  bx                   {POP EBX}
+  db   66h
+  sub  ax,bx                {SUB EAX,EBX}        {Ticks elapsed ->EAX}
+  db   66h
+  mov  word ptr tsc,ax      {MOV TSC,EAX}        {Ticks per second}
+  popf                      {POPF}               {Instead of STI}
+end;
+
+{$F+}
+procedure TSCWait(MicroSec:LongInt);assembler; {v1.22}
+asm
+  dw   310fh                {RDTSC}
+  db   66h
+  mov  bx,ax                {MOV EBX,EAX}
+  db   66h
+  mov  cx,dx                {MOV ECX,EDX}
+  db   66h
+  mov  ax,word ptr MicroSec {MOV EAX,MicroSec}
+  db   66h
+  mul  word ptr uSec        {MUL uSec}          {Ticks to wait ->EDX:EAX}
+  db   66h
+  add  bx,ax                {ADD EBX,EAX}
+  db   66h
+  adc  cx,dx                {ADC ECX,EDX}
+@:dw   310fh                {RDTSC}
+  db   66h
+  cmp  dx,cx                {CMP EDX,ECX}       {Waiting enough?}
+  je   @low                 {JE  @low}          {Waiting enough (high)}
+  ja   @exit                {JA  @exit}         {Waiting more! Exit!}
+  jmp  @                    {JMP @}             {Not enough, wait more}
+@low:
+  db   66h
+  cmp  ax,bx                {CMP EAX,EBX}       {Waiting enough?}
+  jae  @exit                {JL  @}             {Not enough, wait more}
+  jmp  @
+@exit:
+end;
+{$F-}
+
+function TSCPresent:Boolean;assembler; {v1.22}
+asm
+  db   66h
+  pushf                     {PUSHFD}
+  db   66h
+  pop  ax                   {POP EAX}           {Read EFLAGS register to EAX}
+  db   66h
+  push ax                   {PUSH EAX}          {Save it for later use}
+  db   66h
+  or   ax,0h
+  dw   20h                  {OR EAX,200000h}    {Set CPUID bit}
+  db   66h
+  push ax                   {PUSH EAX}
+  db   66h
+  popf                      {POPFD}             {Put EAX to EFLAGS}
+  db   66h
+  pushf                     {PUSHFD}
+  db   66h
+  pop  ax                   {POP EAX}           {Read back EFLAGS to EAX}
+  db   66h
+  and  ax,0h
+  dw   20h                  {AND EAX,200000h}
+  db   66h
+  cmp  ax,0h
+  dw   20h                  {CMP EAX,200000h}   {Is CPUID bit set?}
+  jne  @bad                 {JNE @BAD}          {If not, CPUID not supported}
+  db   66h
+  xor  ax,ax                {XOR EAX,EAX}
+  dw   0a20fh               {CPUID}             {Call level 0 CPUID}
+  dd   0f88366h             {CMP EAX,0}         {Is MaxLevel 0?}
+  je   @bad                 {JE @BAD}           {If yes, it's bad, we need 1}
+  db   66h
+  xor  ax,ax                {XOR EAX,EAX}
+  db   66h
+  inc  ax                   {INC EAX}           {MOV EAX,1}
+  dw   0a20fh               {CPUID}             {Call level 1 CPUID}
+  dd   10e28366h            {AND EDX,10h}
+  db   66h
+  cmp  dx,10h               {CMP EDX,10h}       {Is TSC bit set?}
+  jne  @bad                 {JNE @BAD}          {If not, TSC not present}
+  mov  ax,1                 {MOV AX,1}          {Return TRUE}
+  jmp  @exit
+@bad:
+  xor  ax,ax                {XOR AX,AX}         {Return FALSE}
+  jmp  @exit
+@exit:
+  db 66h
+  popf                      {POPFD}             {Restore EFLAGS register}
+end;
+
 
 Begin
- MicroSec := 312785 div CalibrateWait;
+ If TSCPresent then {v1.22}
+  Begin
+    InitTSC;
+    uSec := TSC div 100000;
+    Wait := TSCWait;
+  End
+ else
+  Begin
+    MicroSec := 312785 div InitOldWait;
+    Wait := OldWait;
+  End;
 End.

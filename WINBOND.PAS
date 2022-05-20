@@ -1,7 +1,4 @@
 Unit WinBond; { Unit to communicate with WinBond chips }
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
-
 { Boot Block Erase is not supported on some chips!!! }
 Interface
 

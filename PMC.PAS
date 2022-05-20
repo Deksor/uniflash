@@ -1,6 +1,4 @@
 Unit PMC; { Unit to communicate with PMC chips } {v1.21}
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 Interface
 
 

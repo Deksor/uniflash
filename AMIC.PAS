@@ -1,6 +1,4 @@
 Unit AMIC; { Unit to communicate with AMIC chips } {v1.20}
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 Interface
 
 

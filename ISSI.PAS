@@ -1,5 +1,4 @@
 Unit ISSI; { Unit to communicate with ISSI chips } {v1.21}
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
 Interface
 
 

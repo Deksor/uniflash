@@ -1,6 +1,4 @@
 Unit Intel; { Unit to communicate with Intel chips }
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 Interface
 
 {29FXXXB3.PDF:}
@@ -12,7 +10,6 @@ Interface
 
 {28FXXXS3.PDF: 28F160S3 conflict, 28F320S3 not done}
 {28FXXXS5.PDF: 28F160S5 conflict, 28F320S5 not done}
-{28FXXXW1.PDF: all not supported}
 Implementation
 
 Uses Flash, GenFlash, Tools;
@@ -57,7 +54,7 @@ Begin
            Progr  := AMDFlashWrite;
            Erase := AMDFlashErase;
            Size := 32;
-           Name := ConstPtr( '28F256A/12V' );
+           Name := ConstPtr( '28F256(A)/12V' );
           End;
     $B8 : Begin {v1.21}
            Flags  := 6;   {bulk erase, need blanking}
@@ -124,8 +121,7 @@ Begin
            Sectors[ 2, 1 ] := 64;
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
-           Size := 256;          {28F002BC-T/12V - no bottom}
-                                 {28F002BX-T/12V}
+           Size := 256;
            Name := ConstPtr( '28F002-T series (12V/5V)' );
           End;
     $7D : Begin
@@ -141,7 +137,7 @@ Begin
            Sectors[ 2, 1 ] := 768;
            Sectors[ 3, 0 ] := 1;  {1 x 128k}
            Sectors[ 3, 1 ] := 1024;
-           Size := 256;          {28F002BX-B/12V}
+           Size := 256;
            Name := ConstPtr( '28F002-B series (12V/5V)' );
           End;
     $74 : Begin
@@ -157,7 +153,7 @@ Begin
            Sectors[ 2, 1 ] := 64;
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
-           Size := 256;   {28F200BX-T/12V}
+           Size := 256;
            Name := ConstPtr( '28F200-T series (12V/5V)' );
           End;
     $75 : Begin
@@ -173,7 +169,7 @@ Begin
            Sectors[ 2, 1 ] := 768;
            Sectors[ 3, 0 ] := 1;  {1 x 128k}
            Sectors[ 3, 1 ] := 1024;
-           Size := 256;   {28F200BX-B/12V}
+           Size := 256;
            Name := ConstPtr( '28F200-B series (12V/5V)' );
           End;
     $78 : Begin
@@ -287,6 +283,38 @@ Begin
            Sectors[ 1, 1 ] := 512;
            Size := 1024;
            Name := ConstPtr( '28F008B3-B/3V' );
+          End;
+    $98 : Begin {v1.22}
+           Flags  := 0;   {sector mode}
+           PgSize := 256; {'page' size, program 128 words at a time}
+           Progr  := IntelSecProg;
+           Erase := IntelSecErase;
+           Sectors[ 0, 0 ] := 7;  {7 x 128k}
+           Sectors[ 0, 1 ] := 1024;
+           Sectors[ 1, 0 ] := 1;  {1 x 96k}
+           Sectors[ 1, 1 ] := 768;
+           Sectors[ 2, 0 ] := 2;  {2 x 8k}
+           Sectors[ 2, 1 ] := 64;
+           Sectors[ 3, 0 ] := 1;  {1 x 16k}
+           Sectors[ 3, 1 ] := 128;
+           Size := 1024;
+           Name := ConstPtr( '28F008-T series (5V/3V/2.7V)' );
+          End;
+    $99 : Begin {v1.22}
+           Flags  := 0;   {sector mode}
+           PgSize := 256; {'page' size, program 128 words at a time}
+           Progr  := IntelSecProg;
+           Erase := IntelSecErase;
+           Sectors[ 0, 0 ] := 1;  {1 x 16k}
+           Sectors[ 0, 1 ] := 128;
+           Sectors[ 1, 0 ] := 2;  {2 x 8k}
+           Sectors[ 1, 1 ] := 64;
+           Sectors[ 2, 0 ] := 1;  {1 x 96k}
+           Sectors[ 2, 1 ] := 768;
+           Sectors[ 3, 0 ] := 7;  {7 x 128k}
+           Sectors[ 3, 1 ] := 1024;
+           Size := 1024;
+           Name := ConstPtr( '28F008-B series (5V/3V/2.7V)' );
           End;
     $9C : Begin
            Flags  := 0;   {sector mode}

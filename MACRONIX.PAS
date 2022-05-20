@@ -1,6 +1,4 @@
 Unit Macronix; { Unit to communicate with Macronix chips }
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 {v1.21 Removed 2 non-existing chips and added new chips}
 Interface
 

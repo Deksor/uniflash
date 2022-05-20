@@ -43,9 +43,9 @@ Begin
  AddMsg( Lid, 30, '-H or -?        Affiche cet ‚cran d''aide' );
  AddMsg( Lid, 31, '-E fname        Ecrit le bios du fichier fname dans la FLASH ROM' );
  AddMsg( Lid, 32, '                sans intervention de la part de l''utilisateur.' );
- AddMsg( Lid, 33, '-EXPERT         Donne accŠs … des fonctions plus avanc‚es' );
+{ AddMsg( Lid, 33, '-EXPERT         Donne accŠs … des fonctions plus avanc‚es' );}
  AddMsg( Lid, 34, '-PCIOR          Utilise la FLASH ROM d''une carte PCI' );
- AddMsg( Lid, 35, '-DEBUG          Mode de d‚boguage. Donne des infos utiles' );
+{ AddMsg( Lid, 35, '-DEBUG          Mode de d‚boguage. Donne des infos utiles' );}
  AddMsg( Lid, 36, '-AMI            Forcer UniFlash … utiliser l''interface FLASH de AMI' );
  AddMsg( Lid, 37, 'Impossible d''acc‚der … la m‚moire au-del… de 1Mo - utilisez HIMEM.SYS.' );
  AddMsg( Lid, 38, 'Le processeur n''est pas un 486+ ou le processeur est en mode virtuel' );
@@ -78,17 +78,17 @@ Begin
  AddMsg( Lid, 65, 'Vendeur=' );
  AddMsg( Lid, 66, ', P‚riph‚rique=' );
  AddMsg( Lid, 67, ' … ' ); *)
- AddMsg( Lid, 68, '                     M‚moire: ' );
- AddMsg( Lid, 69, '  Addresse de base de la ROM: ' );
+ AddMsg( Lid, 68, 'M‚moire: ' );
+ AddMsg( Lid, 69, 'Addresse de base de la ROM: ' );
  AddMsg( Lid, 70, ', memory dump at ' );
  AddMsg( Lid, 71, '              Option ROM for: ' );
  AddMsg( Lid, 72, 'device at ' );
  AddMsg( Lid, 73, 'Sauvegarder l''ESCD (donn‚es PnP)' );
  AddMsg( Lid, 74, 'Flasher l''ESCD (donn‚es PnP)' );
  AddMsg( Lid, 75, 'Effacer ESCD (donn‚es PnP)' );
- AddMsg( Lid, 76, 'Sauvegarder les donn‚es DMI' );
+{ AddMsg( Lid, 76, 'Sauvegarder les donn‚es DMI' );
  AddMsg( Lid, 77, 'Flasher les donn‚es DMI' );
- AddMsg( Lid, 78, 'Effacer les donn‚es DMI' );
+ AddMsg( Lid, 78, 'Effacer les donn‚es DMI' );}
  AddMsg( Lid, 79, 'Revenir au menu principal' );
  AddMsg( Lid, 80, 'Sauvegarder les donn‚es CMOS' );
  AddMsg( Lid, 81, 'Restaurer les donn‚es CMOS' );
@@ -100,7 +100,7 @@ Begin
  AddMsg( Lid, 87, 'Flasher le BIOS pr‚cedent' );
  AddMsg( Lid, 88, 'Effacer les donn‚es CMOS' );
  AddMsg( Lid, 89, 'R‚‚crire les pr‚c‚dentes donn‚es CMOS' );
- AddMsg( Lid, 90, 'Menu ESCD (PnP) et DMI' );
+ AddMsg( Lid, 90, 'Menu ESCD (PnP)' );
  AddMsg( Lid, 91, 'Menu avanc‚' );
  AddMsg( Lid, 92, 'Informations BIOS suppl‚mentaires' );
  AddMsg( Lid, 93, 'Quitter' );
@@ -110,14 +110,16 @@ Begin
  AddMsg( Lid, 97, 'Nom de fichier de donn‚es ' );
  AddMsg( Lid, 98, 'Taille du fichier incorrecte - doit ˆtre de ' );
  AddMsg( Lid, 99, ' octets exactement!'#7 );
- AddMsg( Lid, 100, '  Fabriquant du BIOS: ' );
+{ AddMsg( Lid, 100, '  Fabriquant du BIOS: ' );
  AddMsg( Lid, 101, '           ModŠle du BIOS: ' );
  AddMsg( Lid, 102, '          Num‚ro de s‚rie: ' );
  AddMsg( Lid, 103, '  ChaŒne d''identification: ' );
- AddMsg( Lid, 104, 'ChaŒne d''id du fabriquant: ' );
+ AddMsg( Lid, 104, 'ChaŒne d''id du fabriquant: ' );}
  AddMsg( Lid, 105, 'ON' ); {Oui Non}
  AddMsg( Lid, 106, '-FORCE option must be followed by 4 hex digits' );
  AddMsg( Lid, 107, '-CHIPLIST       Show list of supported flash chips' );
  AddMsg( Lid, 108, '-FORCE xxxx     Force using routines for chip xxxx (4 hex digits)' );
  AddMsg( Lid, 109, '-SAVE fname     Write current bios image to file fname' );
+ AddMsg( Lid, 110, 'This program can''t be run under Windows.' ); {v1.22}
+ AddMsg( Lid, 111, 'PCI bus not found or not responding.' ); {v1.22}
 End.

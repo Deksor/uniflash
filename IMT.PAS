@@ -1,6 +1,4 @@
 Unit IMT; { Unit to communicate with IMT chips } {v1.21}
-{v1.21 Manufacturer & Device ID codes are now not ANDed $7F !!}
-{v1.21 New Sector table format}
 Interface
 {Used device ID 7F - it's actually $1F, but Atmel has $1F}
 {Detection needs to be heavily modified}

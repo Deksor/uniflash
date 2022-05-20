@@ -1,5 +1,5 @@
 {$R-}
-unit pci;  { Unit to communicate with ChipSet }
+unit PCI;  { Unit to communicate with chipsets }
 
 interface
 
@@ -22,13 +22,14 @@ SouthPos       : Byte;
 CurrentChipset : string;
 WantToUseAMI,
 AMIUsed,
-ChipsetFound   : boolean;
+ChipsetFound,
+ROMEnabled     : Boolean; {v1.22}
 
 Procedure OPortD( Prt : Word; Val : LongInt );
 Function IPortD( Prt : Word ) : LongInt;
 Function GetPCIRegD( Bus, Dev, Func, Reg : Byte ) : LongInt;
 Procedure SetPCIRegD( Bus, Dev, Func, Reg : Byte; Value : LongInt );
-Function LocatePIIX : byte;
+Function LocatePIIX : {byte}Boolean; {v1.22 byte->boolean}
 Procedure RomEnable( Map : boolean);
 
 implementation
@@ -79,9 +80,9 @@ Begin
  OPortD( PCICfData, Value );
 End;
 
-Function LocatePIIX : byte;
+Function LocatePIIX : Boolean{byte}; {v1.22 byte->boolean}
 Const
-NbName    : ARRAY[ 1 .. $38 ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
+NbName    : ARRAY[ 1 .. $3A ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
 {1}         ( 'i82433LX',
 {2}           'i82433NX',
 {3}           'i82437FX',
@@ -102,42 +103,44 @@ NbName    : ARRAY[ 1 .. $38 ] of String[ 24 ] = { Rainbow } {16->24 v1.21}
 {12}          'i82820', {v1.19}
 {13}          'i82840', {v1.19}
 {14}          'i82850', {v1.19}
-{15}          'VT82C576M',
-{16}          'VT82C585VP/VPX',
-{17}          'VT82C595/AMD-640',
-{18}          'VT82C597',
-{19}          'VT82C598[AT]',
-{1A}          'VT82C685',
-{1B}          'VT8501', {v1.20}
-{1C}          'VT82C691/693(A)/694X', {v1.20}
-{1D}          'VT82C693(A)', {v1.20}
-{1E}          'VT8601', {v1.20}
-{1F}          'VT8605', {v1.20}
-{20}          'VT8371', {v1.20}
-{21}          'VT8363(A)', {v1.20}
-{22}          'VT8366', {v1.20}
-{23}          'VT8633', {v1.20}
-{24}          'VT8653', {v1.20} {???}
-{25}          'VT8662', {v1.20} {???}
-{26}          'VT8615', {v1.20} {???}
-{27}          'VT8361', {v1.20} {???}
-{28}          'VT3133', {v1.20} {???}
-{29}          'M1621', {v1.18}
-{2A}          'AMD-751', {v1.20}
-{2B}          'AMD-761', {v1.20}
-{2C}          'AMD-762', {v1.20}
-{2D}          'SiS 85C496+497', {v1.21}
-{2E}          'SiS 501/5101/5501', {v1.21}
-{2F}          'SiS 5511', {v1.21}
-{30}          'SiS 5571', {v1.21}
-{31}          'SiS 5591/5592', {v1.21}
-{32}          'SiS 5596', {v1.21}
-{33}          'SiS 5597/5598/5581/5120', {v1.21}
-{34}          'SiS 530', {v1.21}
-{35}          'SiS 540', {v1.21}
-{36}          'SiS 600', {v1.21}
-{37}          'SiS 620', {v1.21}
-{38}          'SiS 630' ); {v1.21}
+{15}          'i82860', {v1.22}
+{16}          'VT82C576M',
+{17}          'VT82C585VP/VPX',
+{18}          'VT82C595/AMD-640',
+{19}          'VT82C597',
+{1A}          'VT82C598[AT]',
+{1B}          'VT82C685',
+{1C}          'VT8501', {v1.20}
+{1D}          'VT82C691/693(A)/694X', {v1.20}
+{1E}          'VT82C693(A)', {v1.20}
+{1F}          'VT8601', {v1.20}
+{20}          'VT8605', {v1.20}
+{21}          'VT8371', {v1.20}
+{22}          'VT8363(A)', {v1.20}
+{23}          'VT8366', {v1.20}
+{24}          'VT8633', {v1.20}
+{25}          'VT8653', {v1.20} {???}
+{26}          'VT8662', {v1.20} {???}
+{27}          'VT8615', {v1.20} {???}
+{28}          'VT8361', {v1.20} {???}
+{29}          'VT3133', {v1.20} {???}
+{2A}          'M1621', {v1.18}
+{2B}          'M1541', {v1.22}
+{2C}          'AMD-751', {v1.20}
+{2D}          'AMD-761', {v1.20}
+{2E}          'AMD-762', {v1.20}
+{2F}          'SiS 85C496+497', {v1.21}
+{30}          'SiS 501/5101/5501', {v1.21}
+{31}          'SiS 5511', {v1.21}
+{32}          'SiS 5571', {v1.21}
+{33}          'SiS 5591/5592', {v1.21}
+{34}          'SiS 5596', {v1.21}
+{35}          'SiS 5597/5598/5581/5120', {v1.21}
+{36}          'SiS 530', {v1.21}
+{37}          'SiS 540', {v1.21}
+{38}          'SiS 600', {v1.21}
+{39}          'SiS 620', {v1.21}
+{3A}          'SiS 630' ); {v1.21}
 
 SbName    : ARRAY[ 1 .. $18 ] of String[ 21 ] =
 {1}         ( 'i82378IB SIO',
@@ -187,6 +190,12 @@ Begin
   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
    If ( GetPCIRegD( $00, Pos shr 3,
                     Pos and $07, $08 ) shr 8 ) = $60000 then Break;
+ If Pos = $FF then {v1.22}
+  Begin
+   LocatePIIX := False;
+   Exit;
+  End
+ else LocatePIIX:=True;
  NorthPos := Pos;
  {Get north bridge MID & DID}
  NorthMan := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $07, $00 );
@@ -199,6 +208,13 @@ Begin
   If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
    If ( GetPCIRegD( $00, Pos shr 3,
                     Pos and $07, $08 ) shr 8 ) = $60100 then Break;
+ If Pos = $FF then {v1.22 for i430MX}
+  Begin
+   For Pos := 0 to $FF do
+    If ( GetPCIRegD( $00, Pos shr 3, Pos and $07, $00 ) and $FFFF ) <> $FFFF then
+     If ( GetPCIRegD( $00, Pos shr 3,
+                      Pos and $07, $08 ) shr 8 ) = $68000 then Break;
+  End;
  SouthPos := Pos;
  {Get south bridge MID & DID}
  SouthMan := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $07, $00 );
@@ -240,6 +256,7 @@ Begin
     $2500: NbId := $12; {82820} {v1.19}
     $1A21: NbId := $13; {82840} {v1.19}
     $2530: NbId := $14; {82850} {v1.19}
+    $2531: NbId := $15; {82860} {v1.22}
    End;
   End else
  If NorthMan = $1106 {VIA} then
@@ -247,38 +264,38 @@ Begin
    case NorthId of {case v1.21}
      $576: Begin
             NorthFunc := $0100; {VIA A8/A9 scheme}
-            NbId := $15 {82C576M}
+            NbId := $16 {82C576M}
            End;
-     $585: NbId := $16; {82C585VP/VPX}
-     $595: NbId := $17; {82C595}
-     $597: NbId := $18; {82C597}
-     $598: NbId := $19; {82C598(AT)}
+     $585: NbId := $17; {82C585VP/VPX}
+     $595: NbId := $18; {82C595}
+     $597: NbId := $19; {82C597}
+     $598: NbId := $1A; {82C598(AT)}
      $685: Begin
             NorthFunc := $0100; {VIA A8/A9 scheme}
-            NbId := $1A; {82C685}
+            NbId := $1B; {82C685}
            End;
-     $501: NbId := $1B; {8501}
-     $691: NbId := $1C; {82C691/693(A)/694X}
-     $693: NbId := $1D; {82C693(A)}
-     $601: NbId := $1E; {82C601}
-     $605: NbId := $1F; {8605}
-     $391: NbId := $20; {82371}
-     $305: NbId := $21; {8363(A)}
-    $3099: NbId := $22; {8366}
-    $3091: NbId := $23; {8633}
-    $3101: NbId := $24; {8653}
-    $3102: NbId := $25; {8662}
-    $3103: NbId := $26; {8615}
-    $3112: NbId := $27; {8361}
-    $3133: NbId := $28; {3133}
+     $501: NbId := $1C; {8501}
+     $691: NbId := $1D; {82C691/693(A)/694X}
+     $693: NbId := $1E; {82C693(A)}
+     $601: NbId := $1F; {82C601}
+     $605: NbId := $20; {8605}
+     $391: NbId := $21; {82371}
+     $305: NbId := $22; {8363(A)}
+    $3099: NbId := $23; {8366}
+    $3091: NbId := $24; {8633}
+    $3101: NbId := $25; {8653}
+    $3102: NbId := $26; {8662}
+    $3103: NbId := $27; {8615}
+    $3112: NbId := $28; {8361}
+    $3133: NbId := $29; {3133}
    End;
   End else
  If NorthMan = $1022 {AMD} then {v1.20}
   Begin
    case NorthId of {case v1.21}
-    $7006: NbId := $2A; {AMD-751}
-    $700E: NbId := $2B; {AMD-761}
-    $700C: NbId := $2C; {AMD-762}
+    $7006: NbId := $2C; {AMD-751}
+    $700E: NbId := $2D; {AMD-761}
+    $700C: NbId := $2E; {AMD-762}
    End;
   End else
  If NorthMan = $1045 {Opti} then
@@ -294,39 +311,42 @@ Begin
      $496: Begin {85C496+497} {v1.21}
             NorthFunc := $0200; {SiS reg. D0 scheme}
             SouthFunc := 0;
-            NbId := $2D;
+            NbId := $2F;
            End;
      $406: Begin {501/5101/5501} {v1.21}
             SouthFunc := $0501; {SiS internal reg. 80h}
-            NbId := $2E;
+            NbId := $30;
            End;
     $5511: Begin {5511} {v1.21}
             SouthFunc := $0502; {SiS internal reg. 50h}
-            NbId := $2F;
+            NbId := $31;
            End;
-    $5571: NbId := $30; {5571} {v1.21}
-    $5591: NbId := $31; {5591/5592} {v1.21}
+    $5571: NbId := $32; {5571} {v1.21}
+    $5591: NbId := $33; {5591/5592} {v1.21}
     $5596: Begin {5596} {v1.21}
             SouthFunc := $0502; {SiS internal reg. 50h}
-            NbId := $32;
+            NbId := $34;
            End;
-    $5597: NbId := $33; {5597/5598/5581/5120} {v1.21}
-    $0530: NbId := $34; {530} {v1.21}
+    $5597: NbId := $35; {5597/5598/5581/5120} {v1.21}
+    $0530: NbId := $36; {530} {v1.21}
     $0540: Begin {540} {v1.21}
             SouthFunc := $0504; {SiS reg. 45 bits 7,6}
-            NbId := $35;
+            NbId := $37;
            End;
-    $5600: NbId := $36; {600} {v1.21}
-    $0620: NbId := $37; {620} {v1.21}
+    $5600: NbId := $38; {600} {v1.21}
+    $0620: NbId := $39; {620} {v1.21}
     $0630: Begin {630} {v1.21}
             SouthFunc := $0504; {SiS reg. 45 bits 7,6}
-            NbId := $38;
+            NbId := $3A;
            End;
    End;
   End else
  If NorthMan = $10B9 {ALi} then
   Begin
-   If NorthId = $1621 then NbId := $29; {M1621} {v1.19}
+   case NorthId of
+    $1621: NbId := $2A; {M1621} {v1.19}
+    $1541: NbId := $2B; {M1541} {v1.22}
+   End;
   End;
 
  {Id southbridge}
@@ -357,8 +377,8 @@ Begin
    SouthFunc := $0300; {VIA/AMD method}
    case SouthId of {case v1.21}
      $586: SbId := $0B;
-     $596: SbId := $0C;
-     $686: SbId := $0D; {VT82C686(A)} {v1.20}
+     $596: Begin SbId := $0C; Inc( SouthFunc ); End; {VT82C596(A|B)}
+     $686: Begin SbId := $0D; Inc( SouthFunc ); End; {VT82C686(A)} {v1.20}
     $8231: SbId := $0E; {VT8231} {v1.20}
     $3074: SbId := $0F; {VT8233} {v1.20}
    End;
@@ -452,40 +472,42 @@ Begin
         End;
   $13 : If (SbId = $07) or (SbId = $08) then CurrentChipset := 'Intel 840'; {v1.19}
   $14 : If SbId = $09 then CurrentChipset := 'Intel 850'; {v1.19}
-  $15 : CurrentChipset := 'VIA Apollo Master';
-  $16 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP/VPX';
-  $17 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP2/AMD 640';
-  $18 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP3';
-  $19 : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
-  $1A : CurrentChipset := 'VIA Apollo P6';
-  $1B : If SbId = $0D then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
-  $1C : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo Pro (Plus/133/133A)'; {v1.20}
-  $1D : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo Pro Plus/133/133A'; {v1.20}
-  $1E : If SbId = $0D then CurrentChipset := 'VIA Apollo ProMedia'; {v1.20}
-  $1F : CurrentChipset := 'VIA Apollo Pro 133Z/PM133'; {v1.20}
-  $20 : If SbId = $0D then CurrentChipset := 'VIA Apollo KX133'; {v1.20}
-  $21 : If SbId = $0D then CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
-  $22 : If SbId = $0F then CurrentChipset := 'VIA Apollo KT266'; {v1.20}
-  $23 : If SbId = $0F then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
-  $29 : If SbId = $10 then CurrentChipset := 'ALi Alladin Pro II'; {v1.18}
-  $2A : If SbId = $11 then CurrentChipset := 'AMD 750'; {v1.20}
-  $2B : case SbId of {v1.20}
+  $15 : If SbId = $09 then CurrentChipset := 'Intel 860'; {v1.22}
+  $16 : CurrentChipset := 'VIA Apollo Master';
+  $17 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP/VPX';
+  $18 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP2/AMD 640';
+  $19 : If SbId = $0B then CurrentChipset := 'VIA Apollo VP3';
+  $1A : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo MVP3'; {0D v1.20}
+  $1B : CurrentChipset := 'VIA Apollo P6';
+  $1C : If SbId = $0D then CurrentChipset := 'VIA Apollo MVP4'; {v1.20}
+  $1D : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo Pro (Plus/133/133A)'; {v1.20}
+  $1E : If (SbId = $0C) or (SbId = $0D) then CurrentChipset := 'VIA Apollo Pro Plus/133/133A'; {v1.20}
+  $1F : If SbId = $0D then CurrentChipset := 'VIA Apollo ProMedia'; {v1.20}
+  $20 : CurrentChipset := 'VIA Apollo Pro 133Z/PM133'; {v1.20}
+  $21 : If SbId = $0D then CurrentChipset := 'VIA Apollo KX133'; {v1.20}
+  $22 : If SbId = $0D then CurrentChipset := 'VIA Apollo KT133(A)'; {v1.20}
+  $23 : If SbId = $0F then CurrentChipset := 'VIA Apollo KT266'; {v1.20}
+  $24 : If SbId = $0F then CurrentChipset := 'VIA Apollo Pro 266'; {v1.20}
+  $2A : If SbId = $10 then CurrentChipset := 'ALi Aladdin Pro II'; {v1.18}
+  $2B : If SbId = $10 then CurrentChipset := 'ALi Aladdin V'; {v1.22}
+  $2C : If SbId = $11 then CurrentChipset := 'AMD 750'; {v1.20}
+  $2D : case SbId of {v1.20}
          $0D : CurrentChipset := 'AMD 760 (VIA South)';
          $12 : CurrentChipset := 'AMD 760 (AMD South)';
         end;
-  $2C : If SbId = $12 then CurrentChipset := 'AMD 760MP'; {v1.20}
-  $2D : CurrentChipset := 'SiS 85C496+497'; {v1.21}
-  $2E : If SbId = $13 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
-  $2F : If SbId = $13 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
-  $30 : If SbId = $13 then CurrentChipset := 'SiS 5571'; {v1.21}
-  $31 : If SbId = $13 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
-  $32 : If SbId = $13 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
-  $33 : If SbId = $13 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
-  $34 : If SbId = $13 then CurrentChipset := 'SiS 530'; {v1.21}
-  $35 : If (SbId = $13) or (SbId = $14) then CurrentChipset := 'SiS 540'; {v1.21}
-  $36 : If SbId = $13 then CurrentChipset := 'SiS 600'; {v1.21}
-  $37 : If SbId = $13 then CurrentChipset := 'SiS 620'; {v1.21}
-  $38 : If (SbId = $13) or (SbId = $14) then CurrentChipset := 'SiS 630'; {v1.21}
+  $2E : If SbId = $12 then CurrentChipset := 'AMD 760MP'; {v1.20}
+  $2F : CurrentChipset := 'SiS 85C496+497'; {v1.21}
+  $30 : If SbId = $13 then CurrentChipset := 'SiS 501/5101/5501'; {v1.21}
+  $31 : If SbId = $13 then CurrentChipset := 'SiS 5511+5513'; {v1.21}
+  $32 : If SbId = $13 then CurrentChipset := 'SiS 5571'; {v1.21}
+  $33 : If SbId = $13 then CurrentChipset := 'SiS 5591/5592+5595'; {v1.21}
+  $34 : If SbId = $13 then CurrentChipset := 'SiS 5596+5595'; {v1.21}
+  $35 : If SbId = $13 then CurrentChipset := 'SiS 5597/5598/5581/5120'; {v1.21}
+  $36 : If SbId = $13 then CurrentChipset := 'SiS 530'; {v1.21}
+  $37 : If (SbId = $13) or (SbId = $14) then CurrentChipset := 'SiS 540'; {v1.21}
+  $38 : If SbId = $13 then CurrentChipset := 'SiS 600'; {v1.21}
+  $39 : If SbId = $13 then CurrentChipset := 'SiS 620'; {v1.21}
+  $3A : If (SbId = $13) or (SbId = $14) then CurrentChipset := 'SiS 630'; {v1.21}
  End;
 
  ChipsetFound := ( NbId <> 0 ) or ( SbId <> 0 ); {One of 'm might be enough}
@@ -524,6 +546,7 @@ Var
 Mask : LongInt;
 
 Begin
+ If ROMEnabled=Map then Exit; {v1.22}
  {AMI FLASH INTERFACE STUFF}
  If AMIUsed then
   Begin
@@ -595,6 +618,7 @@ Begin
          If Map then
           Begin
            Mask := $C0000001;  {write enable, 512K enable}
+           If ( SouthFunc and 1 ) <> 0 then Mask := Mask or $20000000; {1M enable} {v1.22}
 
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40 );
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $40, PIIXReg or Mask );
@@ -609,13 +633,7 @@ Begin
            Mask := $43000000; {write enable, 256K enable}
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44, PIIXReg or Mask );
-           {M1543C rev. B1 - supports 512K ROM} {uncommented in v1.19}
-           {According to ALi, there is only one correct way to detect revision
-            of the M1543 chip: by looking at the label. But that's pretty hard
-            to do in software. Also, if your M1543 is relabelled (TXpro on the
-            chip with BXcel sticker), you never know, what it really is.
-            This reg. is Reserved on pre-B1 revisions of M1543C, but I hope
-            writing to this register will not cause any problems...}
+           {M1543C rev. B1 - supports 512K ROM}
            Mask := $10000000; {512K enable} {v1.19}
            PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78 ); {v1.19}
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $78, PIIXReg2 or Mask ); {v1.19}
@@ -740,21 +758,6 @@ Begin
      SetPCIRegD( $00, PiixL shr 3, PiixL and $7, $48, PIIXReg2 );
     End;
   End;
- If PiixMan=$1039 then  {SiS}
-   begin
-   CurrentChipset:='SiS ';
-   Case PiixId of
-        $5597 : CurrentChipset:=CurrentChipset+'5597 +VGA (SuperTX)';
-        $0496 : CurrentChipset:=CurrentChipset+'496/497 (486)';
-        end;
-   CurrentChipset:=CurrentChipset+'(N/A)';
-   if Map then
-              begin
-              end
-          else
-              begin
-              end;
-   end;
 
 If PiixMan=$1060 then  {UMC}
    begin
@@ -772,11 +775,13 @@ If PiixMan=$1060 then  {UMC}
               begin
               end;
    end; *)
+ ROMEnabled:=Map; {v1.22}
 End;
 
 begin
  AMIUsed:=False;
  WantToUseAMI :=False;
  ChipsetFound:=false;
- LocatePIIX;      { Sets address of PIIX }
+ ROMEnabled:=False; {v1.22}
+ {v1.22 Initialization moved to UNIFLASH.PAS}
 end.

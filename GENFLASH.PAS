@@ -4,8 +4,6 @@ Interface
 
 Procedure GenPageProgB( Pos, Data : LongInt ); Far;
 Procedure GenPageProgW( Pos, Data : LongInt ); Far;
-Procedure GenPageProgBAtmel( Pos, Data : LongInt ); Far;
-Procedure GenPageProgWAtmel( Pos, Data : LongInt ); Far;
 Procedure IntelResetB;
 Procedure IntelResetW;
 Procedure IntelSecProg( Pos, Data : LongInt ); Far;
@@ -15,6 +13,7 @@ Procedure IntelSecEraseW( SAddr : LongInt ); Far;
 Procedure AMDSecProg( Pos, Data : LongInt ); Far;
 Procedure AMDSecProgW( Pos, Data : LongInt ); Far; {v1.21}
 Procedure AMDSecErase( SAddr : LongInt ); Far;
+Procedure AMDBulkErase( SAddr : LongInt ); Far; {v1.22}
 Procedure AMDSecEraseW( SAddr : LongInt ); Far; {v1.21}
 Procedure AMDEmbdErase( SAddr : LongInt ); Far;
 Procedure AMDEmbdWrite( Pos, Data : LongInt ); Far;
@@ -37,7 +36,7 @@ Begin
  Repeat
   FlashCmd( $A0 );
   MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
-  Wait( 300 );  {Wait min. 300 usec}
+  Wait( 5000 {300});  {Wait 5ms} {v1.22 300us->5ms}
 
   Ld := FiMemB( Data + {127}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
   Repeat
@@ -61,7 +60,7 @@ Begin
  Repeat
   FlashCmd( $A0 );
   MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
-  Wait( 300 ); {Min. 300 usec}
+  Wait( 5000 {300});  {Wait 5ms} {v1.22 300us->5ms}
   Ld := FiMemB( Data + {255}CurCInfo.PgSize - 1 ) and $80; {Last data byte, bit 7}
   Repeat
    X := FiMemB( Pos + {255}CurCInfo.PgSize - 1 );    {Read last byte written}
@@ -71,54 +70,6 @@ Begin
  Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
  If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
 End;
-
-Procedure GenPageProgBAtmel( Pos, Data : LongInt ); {Similar to GenPageProg}
-{The difference is the command set used to init a write cycle & wait delay}
-Var
-Attempt,
-Ld, X   : Byte;
-
-Begin
- Attempt := 0;
- Repeat
-  FlashCmd( $80 );
-  FlashCmd( $20 );
-  MoveLinBlockB( Data, Pos, CurCInfo.PgSize );
-  Wait( 750 );  {Wait min. 650 usec}
-
-  Ld := FiMemB( Data + 127 ) and $80; {Last data byte, bit 7}
-  Repeat
-   X := FiMemB( Pos + 127 );    {Read last byte written}
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-  X := FiMemB( Pos + 127 );    {Read last byte written}
-  Inc( Attempt );
- Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
- If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
-End;
-
-{not tested yet}
-Procedure GenPageProgWAtmel( Pos, Data : LongInt ); {Similar to GenPageProg}
-Var
-Attempt,
-Ld, X   : Byte;
-
-Begin
- Attempt := 0;
- Repeat
-  FlashCmd( $80 );
-  FlashCmd( $20 );
-  MoveLinBlockW( Data, Pos, CurCInfo.PgSize );
-  Wait( 750 ); {Min. 650 usec}
-  Ld := FiMemB( Data + 255 ) and $80; {Last data byte, bit 7}
-  Repeat
-   X := FiMemB( Pos + 255 );    {Read last byte written}
-  Until ( ( X and $80 ) = Ld ) or ( ( X and $20 ) <> 0 );
-  X := FiMemB( Pos + 255 );    {Read last byte written}
-  Inc( Attempt );
- Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
- If ( ( X and $A0 ) <> Ld ) then FlashError := 2; {programming error, timeout}
-End;
-
 
 Procedure IntelResetB;
 Begin
@@ -368,6 +319,42 @@ Begin
  If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
 End;
 
+Procedure AMDBulkErase( SAddr : LongInt ); {v1.22}
+Var
+Attempt,
+X        : Byte;
+TimeOut  : Word;
+
+Begin
+ Attempt := 0;
+ Repeat
+  FlashCmd( $80 );      {Erase setup}
+  FlashCmd( $10 );      {Erase confirm}
+
+  TimeOut := 15;    {80 usec max normally, but waits 150usec to be sure}
+  {Wait for erase to start}
+  While ( ( FiMemB( SAddr ) and $08 ) = 0 ) and ( TimeOut > 0 ) do
+   Begin
+    Dec( TimeOut );
+    Wait( 10 );
+   End;
+
+  {Wait for erase to finish}
+  TimeOut := 25000; {15 sec max normally, but waits 25 sec to be sure}
+  While ( ( FiMemB( SAddr ) and $A0 ) = 0 ) and ( TimeOut > 0 ) do
+   Begin
+    Dec( TimeOut );
+    Wait( 1000 );
+   End;
+
+  X := FiMemB( SAddr );
+  Inc( Attempt );
+  FlashCmd( $F0 ); {Reset}
+ Until ( Attempt > 3 ) or ( ( X and $80 ) <> 0 );
+ If ( X and $80 ) = 0 then FlashError := 3; {erasing error}
+End;
+
+
 Procedure AMDSecEraseW( SAddr : LongInt ); {v1.21}
 Var
 Attempt  : Byte;
@@ -456,7 +443,7 @@ Begin
  For Y := 0 to CurCInfo.PgSize - 1 do
   Begin
    Attempt := 0;
-   D := FIMemB( Data + Pos );
+   D := FIMemB( Data + Y{Pos} ); {v1.22 _VERY_ NASTY BUG FIXED}
    If D <> $FF then
     Begin
      Repeat
@@ -489,7 +476,7 @@ Begin
  For Y := 0 to CurCInfo.PgSize - 1 do
   Begin
    Attempt := 0;
-   D := FIMemW( Data + Pos );
+   D := FIMemW( Data + Y ); {v1.22 _VERY_ NASTY BUG FIXED}
    If D <> $FFFF then
     Begin
      Repeat
@@ -562,4 +549,5 @@ Begin
  IntelResetW;
 End;
 
+Begin
 End.

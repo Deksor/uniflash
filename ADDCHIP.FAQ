@@ -1,0 +1,224 @@
+This file will quickly explain you how to easily implement new flash rom chips
+in UniFlash.
+
+Here's a skeleton for chip implementation
+
+---------------------------------------------------
+Unit Skeleton; { Unit to communicate with XXXXX chips }
+
+Interface
+
+Implementation
+
+Uses Flash, GenFlash, Tools;
+
+Function Mychip_IdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Begin
+ Mychip_IdChip := False;
+ With CInfo do
+  Begin
+   Case DevId of   { Identification of the model of the device }
+    $00 AND $7f : Begin { Please note that the "and $7f" is always necessary
+
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := IntelSecProg; { These two vars allow you to set a flash}
+           Erase := IntelSecErase; { and erase procedure (if necessary for}
+                                   { this chip.}
+
+           Size := 128;
+           Name := ConstPtr( 'Mychip/12V' );
+          End;
+    $01 and $7f: Begin
+          { <<< See above >>> }
+          { ... }
+          End;
+          { Here you continue giving chips ...}
+          { ... }
+
+    else Exit;
+   End;
+  End;
+ CInfo.Manuf := ConstPtr( 'Mychip_manufacturer_name' );
+ Mychip_IdChip := True;
+End;
+
+Begin
+{ Below we register your chip in the chip database}
+RegisterFlashManu( Manufacturer_code_of_the_chip AND $7F,
+                   Mychip_IdChip ); { Also here, the "and $7f" is necessary }
+End.
+
+---------------------------------------------------
+
+
+As you can see, it's very easy to make these files. You'll only have to set
+the parameters correctly (since a lot of chips can be programmed the same way,
+you can look in the other units and use the pre-set parameters).
+The flashing/erasing procedures are in the GENFLASH unit. You can use
+functions already defined there.
+
+
+Now, I'll try to make some things clearer.
+
+1. How to define the sectors of a sectored chip?
+------------------------------------------------
+
+Let's take the example of the Intel 28F001BX-T (/12V)
+It has:
+       -1 sector of 112 Kb      (Main sector)
+       -2 sectors of 4 Kb each  (Parameter sector (or ESCD))
+       -1 sector of 8 Kb        (Bootblock)
+
+       so (1*112)+(2*4)+(1*8) = 112 + 4 + 4 + 8
+
+       Now we want to put this result in the "Sector" array
+       Sectors[0,0]:=1;  {1 sector...}
+       Sectors[0,1]:=55; {...of 112Kb. Why 55? Because 55=(112/2)-1}
+
+       Sectors[1,0]:=2;  {2 sectors...}
+       Sectors[1,1]:=1; {...of 4Kb each. Why 1? Because 1=(4/2)-1}
+
+       Sectors[2,0]:=1;  {1 sector...}
+       Sectors[2,1]:=3; {...of 4Kb. Why 1? Because 1=(4/2)-1}
+
+       Sectors[3,0]:=0; {The zero is used to terminate the sector list. It
+                        is necessary if Sector[3,x] doesn't contain any
+                        sector information. If Sector[3,x] IS defined, the
+                        zero isn't necessary }
+
+
+        And here's the ready-to-use formula:
+        Sectors[X+0,0]:=Number_of_linear_sectors_of_size_defined_below
+        Sectors[X+0,1]:=(Size_of_the_sector_in_kilobytes / 2) - 1
+
+        { ... }
+        Sectors[X+1 or 2 or 3,0]:=0; { <---- END OF THE LIST }
+
+I hope you have understand this.
+
+
+2. What are the flash rom chip's flags?
+---------------------------------------
+
+When you add a new chip, you have to specify what is the chip's internal
+architecture (page mode, sector mode, bulk erase, etc...).
+
+Here's a list of main flags:
+       0 - sector mode
+       1 - page mode
+       2 - bulk erase
+       3 - small sectors
+       6 - bulk erase, needs blanking
+
+Here are examples of use of flags:
+
+1) SECTOR MODE (FLAGS=0)
+   The chip is divided into sectors
+       ex:        (INTEL 28F001BX-T/12V)
+          $14 : Begin
+                  Flags  := 0;   {sector mode}
+                  PgSize := 128; {'page' size, program 128 bytes at a time}
+                  Progr  := IntelSecProg;
+                  Erase := IntelSecErase;
+                  Sectors[ 0, 0 ] := 1;  {1 x 112k}
+                  Sectors[ 0, 1 ] := 55;
+                  Sectors[ 1, 0 ] := 2;  {2 x 4k}
+                  Sectors[ 1, 1 ] := 1;
+                  Sectors[ 2, 0 ] := 1;  {1 x 8k}
+                  Sectors[ 2, 1 ] := 3;
+                  Sectors[ 3, 0 ] := 0;  {end of list}
+                  Size := 128;
+                  Name := ConstPtr( '28F001BX-T/12V or 28F001BN-T/12V' );
+                End;
+
+2) PAGE MODE (FLAGS=1)
+   The easiest mode of all. Erase isn't required. To program it, you load a
+page of 128 bytes and the chip does the write&reset operations automatically.
+       ex:         (SST 29EE010/5V)
+          $07 : Begin
+                Flags  := 1;   {page mode}
+                PgSize := 128; {page size}
+                Progr  := GenPageProgB;
+                Name := ConstPtr( '29EE010/5V' );
+                Size := 128;
+                End;
+
+3) BULK-ERASE MODE (FLAGS=2)
+   The chip needs to be nearly fully erased in order to write data. Mainly
+used in some older flash chips (12V ones)
+       ex:         (AMD Am28F010A/12V)
+          $22 : Begin
+                Flags  := 2;   {bulk erase}
+                PgSize := 128; {'page' size, program 128 bytes at a time}
+                Progr  := AMDEmbdWrite;
+                Erase := AMDEmbdErase;
+                Size := 128;
+                Name := ConstPtr( 'Am28F010A/12V' );
+                End;
+
+4) SMALL SECTORS (FLAGS=3)
+   Similar to "page-mode". This is the less used mode.
+       ex:        (SST 28x040 series (5V/3V/2.7V))
+          $04 : Begin
+                Flags  := 3;   {small sectors}
+                PgSize := 128; {sector size}
+                Progr  := SSTSecProg;
+                Name := ConstPtr( '28x040 series (5V/3V/2.7V)' );
+                Size := 512;
+                End;
+
+
+5) BULK-ERASE, NEEDS BLANKING (FLAGS=6)
+   Similar to "bulk-erase mode", but needs blanking prior to erasing. Mainly
+used in some older flash chips (12V ones)
+       ex:      (INTEL 28F010/12V)
+  $B4 and $7F : Begin
+                Flags  := 6;   {bulk erase, need blanking}
+                PgSize := 128; {'page' size, program 128 bytes at a time}
+                Progr  := AMDFlashWrite;
+                Erase := AMDFlashErase;
+                Size := 128;
+                Name := ConstPtr( '28F010/12V' );
+                End;
+
+
+
+3. What are these procedures in GENFLASH unit?
+----------------------------------------------
+
+The GENFLASH unit contains some generic procedures for flashing & erasing.
+This unit was created, because there's a lot of flash rom chips that are
+programmed nearly the same way. For example, AMDFlashWrite/Erase will work
+on most "bulk-erase, need blanking" chips. (The Intel 28F010/12V uses them,
+for example).
+
+Here's a list:
+-GenPageProgB: This one will work on about 70% of >=5V chips. Programs bytes.
+-GenPageProgW: Same as above. Programs words.
+
+-GenPageProgBAtmel: Similar to GenPageProgB, but uses different commands to
+write. Programs bytes.
+-GenPageProgWAtmel: Same as above. Programs words.
+
+-IntelSecProg: Programs sectored chips compatible with Intel's command set.
+Programs bytes.
+-IntelSecProgW: Same as above. Programs words.
+-IntelSecErase: Erases sectored chips compatible with Intel's command set.
+Erases bytes.
+-IntelSecEraseW: Same as above. Erases words.
+
+-AMDSecProg: Programs sectored chips compatible with AMD's command set.
+-AMDSecErase: Erases sectored chips compatible with AMD's command set.
+-AMDEmbdErase: Same as above. Uses extended features of AMD chips.
+-AMDEmbdWrite: Writes using extended features of AMD chips.
+-AMDFlashWrite: Writes "bulk-erase, need blanking" chips.
+-AMDFlashErase: Erases "bulk-erase, need blanking" chips.
+
+The program procedures MUST be set while adding new chips.
+The erase procedures aren't necessary to be set while adding new chips. Some
+chips (the sectored ones) might need it.
+
+
+
+

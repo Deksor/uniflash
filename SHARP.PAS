@@ -77,6 +77,10 @@ begin
    end;
 end;
 
+Const
+ ProgSHARPSecProg : Fl_Program = @SHARPSecProg;
+ EraseSHARPSecErase : Fl_Erase = @SHARPSecErase;
+
 Function SHARPIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  SHARPIdChip := False;
@@ -86,8 +90,8 @@ Begin
     $C9 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := SHARPSecProg;
-           Erase := SHARPSecErase;
+           SetChipProgram( Progr, ProgSHARPSecProg );
+           SetChipErase( Erase, EraseSHARPSecErase );
            Sectors[ 0, 0 ] := 15; {15 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 8; {8 x 8k}
@@ -98,8 +102,8 @@ Begin
     $CF : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := SHARPSecProg;
-           Erase := SHARPSecErase;
+           SetChipProgram( Progr, ProgSHARPSecProg );
+           SetChipErase( Erase, EraseSHARPSecErase );
            Sectors[ 0, 0 ] := 15; {15 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 8; {8 x 8k}
@@ -110,8 +114,8 @@ Begin
     $CA : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := SHARPSecProg;
-           Erase := SHARPSecErase;
+           SetChipProgram( Progr, ProgSHARPSecProg );
+           SetChipErase( Erase, EraseSHARPSecErase );
            Sectors[ 0, 0 ] := 16; {16 x 4k}
            Sectors[ 0, 1 ] := 32;
            Sectors[ 1, 0 ] := 30; {30 x 64k}
@@ -127,7 +131,10 @@ Begin
  CInfo.Manuf := ConstPtr( 'SHARP' );
  SHARPIdChip := True;
 End;
+Const
+ IdSHARPIdChip : Fl_IdChip = @SHARPIdChip;
+
 
 Begin
- RegisterFlashManu( $B0, SHARPIdChip );
+ RegisterFlashManu( $B0, IdSHARPIdChip );
 End.

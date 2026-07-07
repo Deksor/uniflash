@@ -54,7 +54,9 @@ Procedure FillLinBlockD( Dest, Size : LongInt; Data : Byte );
 Function CompLinBlocks( Block1, Block2, Size : LongInt ) : Boolean;
 Procedure SetMenuItemStatus( Menu : PMenuItem; YVal : Byte; Act : Boolean );
 Function AddMenuItem( Txt, Hlp : String; RY, Flg : Byte;
-                      Proc : Pointer; Nxt : PMenuItem ) : PMenuItem;
+                      Proc : ProcType; Nxt : PMenuItem ) : PMenuItem;
+Function AddSubMenuItem( Txt, Hlp : String; RY, Flg : Byte;
+                         Sub : PMenuItem; Nxt : PMenuItem ) : PMenuItem;
 Procedure RunMenu( Menu : PMenuItem );
 Procedure WrtProgressBar( Msg : String );
 Procedure ClearProgressBar;
@@ -328,7 +330,7 @@ Begin
  End;
 End;
 
-Procedure XMSExitProc; Far;
+Procedure XMSExitProc;
 Begin
  CloseXMS;
  ExitProc := nil;
@@ -628,7 +630,7 @@ Asm
 End;
 
 Function AddMenuItem( Txt, Hlp : String; RY, Flg : Byte;
-                      Proc : Pointer; Nxt : PMenuItem ) : PMenuItem;
+                      Proc : ProcType; Nxt : PMenuItem ) : PMenuItem;
 Var
 This : PMenuItem;
 
@@ -641,12 +643,34 @@ Begin
    Descr := ' ' + Txt + ' ';
    Help := Hlp;
    Flags := Flg;
-   Action.T := Proc;
+  Action.P := Proc;
+  Next := Nxt;
+  Prev := Nil;
+  End;
+ If Nxt <> Nil then Nxt^.Prev := This;
+ AddMenuItem := This;
+End;
+
+Function AddSubMenuItem( Txt, Hlp : String; RY, Flg : Byte;
+                 Sub : PMenuItem; Nxt : PMenuItem ) : PMenuItem;
+Var
+This : PMenuItem;
+
+Begin
+ New( This );
+ With This^ do
+  Begin
+  X := ( 78 - Length( Txt ) ) shr 1;
+  Y := RY;
+  Descr := ' ' + Txt + ' ';
+  Help := Hlp;
+  Flags := Flg;
+  Action.M := Sub;
    Next := Nxt;
    Prev := Nil;
   End;
  If Nxt <> Nil then Nxt^.Prev := This;
- AddMenuItem := This;
+   AddSubMenuItem := This;
 End;
 
 Procedure CursorOn; Assembler;
@@ -684,6 +708,14 @@ Begin
       Write( Descr );
      End;
    End;
+End;
+
+Procedure ExecuteMenuAction( Item : PMenuItem );
+Var
+ P : ProcType;
+Begin
+ P := Item^.Action.P;
+ P;
 End;
 
 Procedure RunMenu( Menu : PMenuItem );
@@ -747,7 +779,7 @@ Begin
              Text_Color( 7 );
              Text_Background( 0 );
              CursorOn;
-             CurItem^.Action.P;
+             ExecuteMenuAction( CurItem );
              CursorOff;
              NewItem := CurItem;
              CurItem := Nil;
@@ -815,17 +847,17 @@ Begin
  ClrEol;
  Text_Color(yellow);
  GotoXY( 33, 19 );
- write('ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»');
+ write('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»');
  GotoXY( 11, 20 );
  Write( Msg );
  GotoXY( 33, 20 );
- Write( 'º');
+ Write( 'ï¿½');
  Text_Color(4);
- Write('±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±');
+ Write('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
  Text_Color(yellow);
- Write('º' );
+ Write('ï¿½' );
  GotoXY( 33, 21 );
- write('ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼');
+ write('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼');
  Text_Color(white);
  GotoXY( 34, 20 );
  Text_Color( 2 );
@@ -1658,11 +1690,11 @@ Begin
   Begin
     InitTSC;
     uSec := TSC div 100000;
-    Wait := TSCWait;
+    Wait := @TSCWait;
   End
  else
   Begin
     MicroSec := 312785 div InitOldWait;
-    Wait := OldWait;
+    Wait := @OldWait;
   End;
 End.

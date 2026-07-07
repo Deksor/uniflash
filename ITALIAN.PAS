@@ -46,7 +46,7 @@ begin
  AddMsg(35, '  [BUS DEV FUN] Manually specify PCI device (decimal numbers)' );
  AddMsg(36, '-AMI            Forza l''utilizzo dell'' AMI FLASH INTERFACE' );
  AddMsg(37, 'Impossibile accedere alla maemoria estesa - prova con HIMEM.SYS.' );
- AddMsg(38, 'Spiacente ma o non hai un 486+ la CPU è in V86 mode.' );
+ AddMsg(38, 'Spiacente ma o non hai un 486+ la CPU ï¿½ in V86 mode.' );
  AddMsg(39, 'Seleziona la ROM PCI dalla lista sottostante:' );
  AddMsg(40, 'BUS ' );
  AddMsg(41, ' periferica ' );
@@ -58,7 +58,7 @@ begin
  AddMsg(47, 'Nome del file: ' );
  AddMsg(48, '            Fatto.' );
  AddMsg(49, 'BOOTBLOCK MISMATCH. FLASH INCLUDING BOOTBLOCK (HIGHLY RECOMMENDED) [Y,N]?' ); {v1.30}
- AddMsg(50, 'Non c''è abbastanza memoria..' );
+ AddMsg(50, 'Non c''ï¿½ abbastanza memoria..' );
  AddMsg(51, '              Flash ROM chip: ' );
  AddMsg(52, 'SCONOSCIUTO' );
  AddMsg(53, '                Organisation: ' );
@@ -88,7 +88,7 @@ begin
  AddMsg(76, 'Scrivi i dati DMI in un file' );
  AddMsg(77, 'Programma i dati DMI nella Flash ROM' );
  AddMsg(78, 'Clear DMI data' );}
- AddMsg(79, '® Ritorna a l menu principale' );
+ AddMsg(79, 'ï¿½ Ritorna a l menu principale' );
  AddMsg(80, 'Salva i dati CMOS in un file' );
  AddMsg(81, 'Ripristina i dati CMOS da un file' );
  AddMsg(82, 'Programma il BIOS COMPRESO il bootblock' );
@@ -99,8 +99,8 @@ begin
  AddMsg(87, 'Programa il backup del BIOS Nella Flash ROM' );
  AddMsg(88, 'Cancella i dati CMOS' );
  AddMsg(89, 'Ripristina il backup dei dati CMOS' );
-{ AddMsg(90, 'sottomenu'' ESCD (PnP) ¯' );}
- AddMsg(91, 'Sottomenu AVANZATO ¯' );
+{ AddMsg(90, 'sottomenu'' ESCD (PnP) ï¿½' );}
+ AddMsg(91, 'Sottomenu AVANZATO ï¿½' );
 { AddMsg(92, 'Informazioni aggiuntive BIOS' );}
  AddMsg(93, 'ESCI' );
  AddMsg(94, 'L''ULTIMA PROGRAMMAZIONE NON HA AVUTO SUCCESSO. USCIRE [S/N]?'#7 );
@@ -110,7 +110,7 @@ begin
  AddMsg(98, 'Dimensioni del file non valide - must be exactly ' );
  AddMsg(99, ' bytes !'#7 );
  AddMsg(100, 'Redetect Flash ROM' ); {v1.23}
- AddMsg(101, 'CMOS submenu ¯' ); {v1.23}
+ AddMsg(101, 'CMOS submenu ï¿½' ); {v1.23}
 { AddMsg(100, 'BIOS Mfg: ' );
  AddMsg(101, ' Modello BIOS: ' );
  AddMsg(102, '  Part number: ' );
@@ -122,7 +122,7 @@ begin
  AddMsg(108, '-FORCE xxxx     Forza le routines del chip xxxx (4 cifre hex)' );
  AddMsg(109, '-SAVE nomef     Scrive il bios corrente nel file nomef' );
  AddMsg(110, 'Questo programma non puo'' funzionare in Windows.' ); {v1.22}
- AddMsg(111, 'Il Bus PCI non è presente o non risponde.' ); {v1.22}
+ AddMsg(111, 'Il Bus PCI non ï¿½ presente o non risponde.' ); {v1.22}
  AddMsg(112, 'c''t Flasher not found.'); {v1.32}
 (* AddMsg(112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
  AddMsg(113, 'Flash ESCD (Plug & Play) data from file to Flash ROM' ); {v1.23}
@@ -155,5 +155,5 @@ end;
 {$F-}
 
 Begin
-  RegisterLanguage('Italiano',InitItalian);
+  RegisterLanguage('Italiano',@InitItalian);
 End.

@@ -88,7 +88,7 @@ begin
  AddMsg(76, 'Write DMI data to file' );
  AddMsg(77, 'Flash DMI data image to Flash ROM' );
  AddMsg(78, 'Clear DMI data' );}
- AddMsg(79, '® Back to main menu' );
+ AddMsg(79, 'ï¿½ Back to main menu' );
  AddMsg(80, 'Save CMOS data to file' );
  AddMsg(81, 'Restore CMOS data from file' );
  AddMsg(82, 'Flash BIOS image WITHOUT bootblock' );
@@ -99,8 +99,8 @@ begin
  AddMsg(87, 'Flash backup BIOS image to Flash ROM' );
  AddMsg(88, 'Clear CMOS data' );
  AddMsg(89, 'Restore backup CMOS data' );
-{ AddMsg(90, 'ESCD (PnP) submenu ¯' );}
- AddMsg(91, 'ADVANCED submenu ¯' );
+{ AddMsg(90, 'ESCD (PnP) submenu ï¿½' );}
+ AddMsg(91, 'ADVANCED submenu ï¿½' );
  AddMsg(92, '-BASE option must be followed by at least 5 hex digits' );
 { AddMsg(92, 'Additional BIOS info' );}
  AddMsg(93, 'Quit' );
@@ -111,7 +111,7 @@ begin
  AddMsg(98, 'Invalid file size - must be exactly ' );
  AddMsg(99, ' bytes !'#7 );
  AddMsg(100, 'Redetect Flash ROM' ); {v1.23}
- AddMsg(101, 'CMOS submenu ¯' ); {v1.23}
+ AddMsg(101, 'CMOS submenu ï¿½' ); {v1.23}
 { AddMsg(100, 'BIOS Mfg: ' );
  AddMsg(101, '   BIOS Model: ' );
  AddMsg(102, '  Part number: ' );
@@ -157,5 +157,5 @@ end;
 {$F-}
 
 Begin
- RegisterLanguage('English',InitEnglish);
+ RegisterLanguage('English',@InitEnglish);
 End.

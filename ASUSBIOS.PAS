@@ -18,7 +18,9 @@ type AsusBIOSHook=record
   Enable: Procedure;
 end;
 
-var Hook: ^AsusBIOSHook;
+type PAsusBIOSHook = ^AsusBIOSHook; far;
+
+var Hook: PAsusBIOSHook;
 
 function AsusCheckFor: Boolean;
 var A: Word;

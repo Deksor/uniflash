@@ -4,8 +4,8 @@ Interface
 uses Tools; {v1.29}
 
 Type
-Fl_Erase   = Procedure( SAddr : LongInt );
-Fl_Program = Procedure( Pos, Data : LongInt );
+Fl_Erase   = Procedure( SAddr : LongInt ); far;
+Fl_Program = Procedure( Pos, Data : LongInt ); far;
 ChipInfo   = Record
               Manuf,
               Name    : ^String;
@@ -18,7 +18,7 @@ ChipInfo   = Record
 {              Count   : Byte;}
              End;
 PChipInfo  = ^ChipInfo;
-Fl_IdChip  = Function( DevID : Byte; Var CInfo : ChipInfo ) : Boolean;
+Fl_IdChip  = Function( DevID : Byte; Var CInfo : ChipInfo ) : Boolean; far;
 PFl_Manuf  = ^Fl_Manuf;
 Fl_Manuf   = Record
               IdChip : Fl_IdChip;
@@ -54,6 +54,8 @@ function  CompLinBlocks_Flash_Low(Block1,Block2,Size:LongInt):Boolean; {v1.31}
 function  CompLinBlocks_Flash_ALiGPO(Block1,Block2,Size:LongInt):Boolean; {v1.34}
 Procedure FlashCmd( Cmd : Byte );
 Procedure RegisterFlashManu( Manu : Byte; Id : Fl_IdChip );
+Procedure SetChipErase( Var EraseProc : Fl_Erase; ProcAddr : Fl_Erase );
+Procedure SetChipProgram( Var ProgramProc : Fl_Program; ProcAddr : Fl_Program );
 Function  FlashDetect : PChipInfo;
 Procedure FlashProgram( Pos, Data : LongInt );
 Procedure FlashErase( Pos : LongInt );
@@ -65,11 +67,11 @@ FlashError : Word = 0;
 ManuRoot   : PFl_Manuf = Nil;
 ManuTail   : PFl_Manuf = Nil;
 CurManuf   : PFl_Manuf = Nil;
-Flash_Read : function(Address:LongInt):Byte=FIMemB_Flash; {v1.29}
-Flash_Write: procedure(Address:LongInt;Data:Byte)=FOMemB_Flash; {v1.29}
-Flash_ReadBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_From_Flash_D; {v1.29}
-Flash_WriteBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=MoveLinBlock_To_Flash_B; {v1.29}
-Flash_Compare: function(MemAddr,FlashAddr,Size:LongInt):Boolean=CompLinBlocks_Flash; {v1.29}
+Flash_Read : function(Address:LongInt):Byte=@FIMemB_Flash; {v1.29}
+Flash_Write: procedure(Address:LongInt;Data:Byte)=@FOMemB_Flash; {v1.29}
+Flash_ReadBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=@MoveLinBlock_From_Flash_D; {v1.29}
+Flash_WriteBlock: procedure(FlashAddr,MemAddr,Size:LongInt)=@MoveLinBlock_To_Flash_B; {v1.29}
+Flash_Compare: function(MemAddr,FlashAddr,Size:LongInt):Boolean=@CompLinBlocks_Flash; {v1.29}
 ShadowDisable: procedure=nil; {v1.31}
 ShadowRestore: procedure=nil; {v1.31}
 FirstBank  : Boolean = True;  {v1.28}
@@ -329,6 +331,16 @@ Begin
   End;
 End;
 
+Procedure SetChipErase( Var EraseProc : Fl_Erase; ProcAddr : Fl_Erase );
+Begin
+ Move( ProcAddr, EraseProc, SizeOf( EraseProc ) );
+End;
+
+Procedure SetChipProgram( Var ProgramProc : Fl_Program; ProcAddr : Fl_Program );
+Begin
+ Move( ProcAddr, ProgramProc, SizeOf( ProgramProc ) );
+End;
+
 Function ParityOdd( B : Byte ) : Boolean; Assembler;
 Asm
   MOV AL,B
@@ -340,6 +352,15 @@ Asm
   MOV AL,0
 @@2:
 End;
+
+function MatchIdChip(ManufNode: PFl_Manuf; ExpectedMan, DevId: Byte; var CInfo: ChipInfo): Boolean;
+var IdChip: Fl_IdChip;
+begin
+ MatchIdChip := False;
+ if ManufNode^.Manuf <> ExpectedMan then Exit;
+ IdChip := ManufNode^.IdChip;
+ MatchIdChip := IdChip(DevId, CInfo);
+end;
 
 
 Function FlashDetect : PChipInfo;
@@ -422,9 +443,8 @@ ROMFound        : Boolean;
          Found := False;
          repeat
           FillChar( CurCInfo.Sectors, SizeOf( CurCInfo.Sectors ), 0); {v1.21 Clear sector table}
-          with CurManuf^ do
-           if ( Manuf = Man ) and IdChip( Dev, CurCInfo ) then Found := True
-           else CurManuf := CurManuf^.Next;
+            if MatchIdChip(CurManuf, Man, Dev, CurCInfo) then Found := True
+            else CurManuf := CurManuf^.Next;
          until Found or ( CurManuf = Nil );
          if Found then
           begin

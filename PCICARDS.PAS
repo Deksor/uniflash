@@ -43,9 +43,9 @@ begin
   DetectPCIBase;
   Flash_Read:=ReadFun;
   Flash_Write:=WritePro;
-  Flash_ReadBlock:=Flash_PCI_ReadBlock;
-  Flash_WriteBlock:=Flash_PCI_WriteBlock;
-  Flash_Compare:=Flash_PCI_Compare;
+  Flash_ReadBlock:=@Flash_PCI_ReadBlock;
+  Flash_WriteBlock:=@Flash_PCI_WriteBlock;
+  Flash_Compare:=@Flash_PCI_Compare;
 end;
 
 {$F+}
@@ -180,7 +180,7 @@ begin
          $0981,
          $2774: begin
                   CurrentPCICard:=CurrentPCICard+' STE10/100(A)';
-                  SetPCIFlashAccess(Flash_PCI_Read_ADMtek,Flash_PCI_Write_ADMtek);
+                  SetPCIFlashAccess(@Flash_PCI_Read_ADMtek,@Flash_PCI_Write_ADMtek);
                 end;
         end;
       end;
@@ -190,7 +190,7 @@ begin
         case DevID of
          $0840: begin
                   CurrentPCICard:=CurrentPCICard+' W89C840AF';
-                  SetPCIFlashAccess(Flash_PCI_Read_Winbond,Flash_PCI_Write_Winbond);
+                  SetPCIFlashAccess(@Flash_PCI_Read_Winbond,@Flash_PCI_Write_Winbond);
                 end;
         end;
       end;
@@ -201,7 +201,7 @@ begin
          $9001:
           begin
             CurrentPCICard:=CurrentPCICard+' EtherLink XL PCI Combo';
-            SetPCIFlashAccess(Flash_PCI_Read_3Com,Flash_PCI_Write_3Com);
+            SetPCIFlashAccess(@Flash_PCI_Read_3Com,@Flash_PCI_Write_3Com);
           end;
         end;
       end;
@@ -228,22 +228,22 @@ begin
         case DevID of
          $8129: begin
                  CurrentPCICard:=CurrentPCICard+' RTL8129/30/39';
-                 SetPCIFlashAccess(Flash_PCI_Read_Realtek,Flash_PCI_Write_Realtek);
+                 SetPCIFlashAccess(@Flash_PCI_Read_Realtek,@Flash_PCI_Write_Realtek);
                 end;
          $8139: begin
                  CurrentPCICard:=CurrentPCICard+' RTL8139 series';
-                 SetPCIFlashAccess(Flash_PCI_Read_Realtek,Flash_PCI_Write_Realtek);
+                 SetPCIFlashAccess(@Flash_PCI_Read_Realtek,@Flash_PCI_Write_Realtek);
                 end;
          $8169: begin
                  CurrentPCICard:=CurrentPCICard+' RTL8169 series';
-                 SetPCIFlashAccess(Flash_PCI_Read_Realtek1000,Flash_PCI_Write_Realtek1000);
+                 SetPCIFlashAccess(@Flash_PCI_Read_Realtek1000,@Flash_PCI_Write_Realtek1000);
                 end;
         end;
       end;
      $1106: {VIA} {v1.31}
       begin
         CurrentPCICard:='VIA';
-        SetPCIFlashAccess(Flash_PCI_Read_VIA,Flash_PCI_Write_VIA);
+        SetPCIFlashAccess(@Flash_PCI_Read_VIA,@Flash_PCI_Write_VIA);
         case DevID of
          $3065: CurrentPCICard:=CurrentPCICard+' VT6102';
          $3106: CurrentPCICard:=CurrentPCICard+' VT6105M Rhine III';
@@ -268,7 +268,7 @@ begin
      $1317: {ADMtek} {v1.31}
       begin
         CurrentPCICard:='ADMtek';
-        SetPCIFlashAccess(Flash_PCI_Read_ADMtek,Flash_PCI_Write_ADMtek);
+        SetPCIFlashAccess(@Flash_PCI_Read_ADMtek,@Flash_PCI_Write_ADMtek);
         case DevID of
          $0981: CurrentPCICard:=CurrentPCICard+' AL981 Comet';
          $0985: CurrentPCICard:=CurrentPCICard+' AN983(B/BL) Centaur (B)';
@@ -285,7 +285,7 @@ begin
          $0201:
           begin
             CurrentPCICard:=CurrentPCICard+' ST201';
-            SetPCIFlashAccess(Flash_PCI_Read_Sundance,Flash_PCI_Write_Sundance);
+            SetPCIFlashAccess(@Flash_PCI_Read_Sundance,@Flash_PCI_Write_Sundance);
           end;
         end;
       end;

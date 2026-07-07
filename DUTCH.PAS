@@ -110,7 +110,7 @@ begin
  AddMsg(98, 'Foutieve bestandsgrootte - moet exact ' );
  AddMsg(99, ' bytes zijn !'#7 );
  AddMsg(100, 'Redetect Flash ROM' ); {v1.23}
- AddMsg(101, 'CMOS submenu ¯' ); {v1.23}
+ AddMsg(101, 'CMOS submenu ï¿½' ); {v1.23}
 { AddMsg(100, 'BIOS Mfg: ' );
  AddMsg(101, '   BIOS Model: ' );
  AddMsg(102, '  Part number: ' );
@@ -155,5 +155,5 @@ end;
 {$F-}
 
 Begin
- RegisterLanguage('Nederlands',InitDutch);
+ RegisterLanguage('Nederlands',@InitDutch);
 End.

@@ -259,9 +259,8 @@ Begin
     $3340: NorthName:='i82855PM';
     $2531: NorthName:='i82860';
     $2570: NorthName:='i82865'; {v1.34}
-    $2578: NorthName:='i82875';
+    $2578: NorthName:='i82875/iE7210';
     $255D: NorthName:='iE7205';
-    $2578: NorthName:='iE7210'; {v1.39}
     $2588: NorthName:='iE7221'; {v1.39}
     $3592: NorthName:='iE7320'; {v1.39}
     $2540: NorthName:='iE7500';
@@ -1108,11 +1107,11 @@ Begin
             if Lo(NorthFunc)=0 then
              begin {ALi Aladdin M1451/1449} {v1.31}
                ROMBase:=$E0000;
-               ShadowDisable:=ShadowDisable_Aladdin;
-               ShadowRestore:=ShadowRestore_Aladdin;
-               Flash_Read:=FIMemB_Flash_Low;
-               Flash_ReadBlock:=MoveLinBlock_From_Flash_D_Low;
-               Flash_Compare:=CompLinBlocks_Flash_Low;
+               ShadowDisable:=@ShadowDisable_Aladdin;
+               ShadowRestore:=@ShadowRestore_Aladdin;
+               Flash_Read:=@FIMemB_Flash_Low;
+               Flash_ReadBlock:=@MoveLinBlock_From_Flash_D_Low;
+               Flash_Compare:=@CompLinBlocks_Flash_Low;
                PIIXReg := GetPCIRegD( $00, NorthPos shr 3, NorthPos and $7, $4C );
                LogWrite('ALi old method: reg $4C = '+Hl(PIIXReg));
                {E and F segment write shadow disable}
@@ -1122,11 +1121,11 @@ Begin
             else
              begin {ALi FinALi 486 M1489/1487} {v1.28}
                ROMBase:=$FFFF0000;
-               Flash_Read:=FIMemB_Flash_FinALi;
-               Flash_Write:=FOMemB_Flash_FinALi;
-               Flash_ReadBlock:=MoveLinBlock_From_Flash_D_FinALi;
-               Flash_WriteBlock:=MoveLinBlock_To_Flash_B_FinALi;
-               Flash_Compare:=CompLinBlocks_Flash_FinALi;
+               Flash_Read:=@FIMemB_Flash_FinALi;
+               Flash_Write:=@FOMemB_Flash_FinALi;
+               Flash_ReadBlock:=@MoveLinBlock_From_Flash_D_FinALi;
+               Flash_WriteBlock:=@MoveLinBlock_To_Flash_B_FinALi;
+               Flash_Compare:=@CompLinBlocks_Flash_FinALi;
                Port[$22]:=$03;
                Port[$23]:=$C5;
 
@@ -1484,11 +1483,11 @@ Begin
                 if Pos_=$FF then PMUPos:=SouthPos else PMUPos:=Pos_;
                 PIIXReg5:=GetPCIRegD($00,PMUPos shr 3,PMUPos and $7,$C0);
                 LogWrite('ALi method: PMU reg $C0 = '+Hl(PIIXReg5));
-                Flash_Read:=FIMemB_Flash_ALiGPO;
-                Flash_Write:=FOMemB_Flash_ALiGPO;
-                Flash_ReadBlock:=MoveLinBlock_From_Flash_D_ALiGPO;
-                Flash_WriteBlock:=MoveLinBlock_To_Flash_B_ALiGPO;
-                Flash_Compare:=CompLinBlocks_Flash_ALiGPO;
+                Flash_Read:=@FIMemB_Flash_ALiGPO;
+                Flash_Write:=@FOMemB_Flash_ALiGPO;
+                Flash_ReadBlock:=@MoveLinBlock_From_Flash_D_ALiGPO;
+                Flash_WriteBlock:=@MoveLinBlock_To_Flash_B_ALiGPO;
+                Flash_Compare:=@CompLinBlocks_Flash_ALiGPO;
                end;
             end;
           End else

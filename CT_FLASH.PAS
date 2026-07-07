@@ -102,11 +102,11 @@ begin
   CTFlashBase:=$C0000+LongInt(Port[CTFlashPort]) and $38 shl 11;
   LogWrite('CTFlash: present at '+Hw(CTFlashPort)+', base '+Hl(CTFlashBase));
   ROMBase:=CTFlashBase;
-  Flash_Read:=FIMemB_Flash_CTFlash;
-  Flash_Write:=FOMemB_Flash_CTFlash;
-  Flash_ReadBlock:=MoveLinBlock_From_Flash_D_CTFlash;
-  Flash_WriteBlock:=MoveLinBlock_To_Flash_B_CTFlash;
-  Flash_Compare:=CompLinBlocks_Flash_CTFlash;
+  Flash_Read:=@FIMemB_Flash_CTFlash;
+  Flash_Write:=@FOMemB_Flash_CTFlash;
+  Flash_ReadBlock:=@MoveLinBlock_From_Flash_D_CTFlash;
+  Flash_WriteBlock:=@MoveLinBlock_To_Flash_B_CTFlash;
+  Flash_Compare:=@CompLinBlocks_Flash_CTFlash;
   CTFlash_AutoDetect:=True;
 end;
 

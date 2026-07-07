@@ -217,6 +217,21 @@ begin
 end;
 
 
+Const
+ ProgAMDSecProg : Fl_Program = @AMDSecProg;
+ ProgAtByteProg : Fl_Program = @AtByteProg;
+ ProgAtmelPageProg : Fl_Program = @AtmelPageProg;
+ ProgAtmelSecProgFWH : Fl_Program = @AtmelSecProgFWH;
+ ProgAtmelSecProgFWH2 : Fl_Program = @AtmelSecProgFWH2;
+ ProgAtmelSecProgFWH3 : Fl_Program = @AtmelSecProgFWH3;
+ ProgAtmelSecProgFWH4 : Fl_Program = @AtmelSecProgFWH4;
+ EraseAMDSecErase : Fl_Erase = @AMDSecErase;
+ EraseAtBulkErase : Fl_Erase = @AtBulkErase;
+ EraseAtmelSecEraseFWH : Fl_Erase = @AtmelSecEraseFWH;
+ EraseAtmelSecEraseFWH2 : Fl_Erase = @AtmelSecEraseFWH2;
+ EraseAtmelSecEraseFWH3 : Fl_Erase = @AtmelSecEraseFWH3;
+ EraseAtmelSecEraseFWH4 : Fl_Erase = @AtmelSecEraseFWH4;
+
 Function AtmelIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  AtmelIdChip := False;
@@ -228,73 +243,73 @@ Begin
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $BC : Begin
            Name := ConstPtr( 'AT29LV256/3V' );
            Flags := 1; {page mode}
            PgSize := 64;
            Size := 32;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $5D : Begin
            Name := ConstPtr( 'AT29C512/5V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $3D : Begin
            Name := ConstPtr( 'AT29LV512/3V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 64;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $03 : Begin
            Name := ConstPtr( 'AT49x512 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 64;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $D5 : Begin
            Name := ConstPtr( 'AT29C010(A)/5V' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $17 : Begin
            Name := ConstPtr( 'AT49x010 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 128;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $35 : Begin
            Name := ConstPtr( 'AT29xV010(A) series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 128;
            Size := 128;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $04 : Begin {v1.33 FIXED}
            Flags := 2; {bulk erase}
            PgSize := 128; { whatever }
            Size := 128;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
            Name := ConstPtr( 'AT49x001(A)(N)T series (5V/3V/2.7V)' ); {Top Boot Block}
           End;
     $05 : Begin {v1.33 FIXED}
            Flags := 2; {bulk erase}
            PgSize := 128; { whatever }
            Size := 128;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
            Name := ConstPtr( 'AT49x001(A)(N) series (5V/3V/2.7V)' ); {Bottom Boot Block}
           End;
     $DA : Begin
@@ -302,37 +317,37 @@ Begin
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $BA : Begin
            Name := ConstPtr( 'AT29xV020 series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 256;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $0B : Begin
            Name := ConstPtr( 'AT49x020 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 256;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $08 : Begin {v1.33 FIXED}
            Flags := 2; {bulk erase}
            PgSize := 128; { whatever }
            Size := 256;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
            Name := ConstPtr( 'AT49x002(A)(N)T series (5V/3V/2.7V)' ); {Top Boot Block}
           End;
     $07 : Begin {v1.33 FIXED}
            Flags := 2; {bulk erase}
            PgSize := 128; { whatever }
            Size := 256;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
            Name := ConstPtr( 'AT49x002(A)(N) series (5V/3V/2.7V)' ); {Bottom Boot Block}
           End;
     $82 : Begin {A has different sectors -> using bulk erase} {v1.34}
@@ -340,14 +355,14 @@ Begin
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 256;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $E9 : Begin {v1.34}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AtmelSecProgFWH2;
-           Erase := AtmelSecEraseFWH2;
+           SetChipProgram( Progr, ProgAtmelSecProgFWH2 );
+           SetChipErase( Erase, EraseAtmelSecEraseFWH2 );
            Sectors[ 0, 0 ] := 3;  {3 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -364,36 +379,36 @@ Begin
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $C4 : Begin
            Name := ConstPtr( 'AT29xV040A series (3V/2.7V)' );
            Flags := 1; {page mode}
            PgSize := 256;
            Size := 512;
-           Progr  := AtmelPageProg;
+           SetChipProgram( Progr, ProgAtmelPageProg );
           End;
     $13 : Begin
            Name := ConstPtr( 'AT49x040(A) series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 512;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $92 : Begin {A has different sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x4096(A) series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 512;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $ED : Begin {v1.34}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AtmelSecProgFWH4;
-           Erase := AtmelSecEraseFWH4;
+           SetChipProgram( Progr, ProgAtmelSecProgFWH4 );
+           SetChipErase( Erase, EraseAtmelSecEraseFWH4 );
            Sectors[ 0, 0 ] := 2;  {2 x 8k}
            Sectors[ 0, 1 ] := 64;
            Sectors[ 1, 0 ] := 1;  {1 x 16k}
@@ -408,8 +423,8 @@ Begin
     $EE : Begin {v1.34}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AtmelSecProgFWH3;
-           Erase := AtmelSecEraseFWH3;
+           SetChipProgram( Progr, ProgAtmelSecProgFWH3 );
+           SetChipErase( Erase, EraseAtmelSecEraseFWH3 );
            Sectors[ 0, 0 ] := 7;  {7 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 16k}
@@ -426,14 +441,14 @@ Begin
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 1024;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $21 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 992k}
            Sectors[ 0, 1 ] := 7936;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -448,38 +463,38 @@ Begin
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 1024;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $27 : Begin
            Name := ConstPtr( 'AT49x080T series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 1024;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $4A : Begin {weird sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x8011T series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 1024;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $CB : Begin {weird sectors -> using bulk erase}
            Name := ConstPtr( 'AT49x8011 series (5V/3V/2.7V)' );
            Flags := 2; {bulk erase}
            PgSize := 128; {whatever}
            Size := 1024;
-           Progr := AtByteProg;
-           Erase := AtBulkErase;
+           SetChipProgram( Progr, ProgAtByteProg );
+           SetChipErase( Erase, EraseAtBulkErase );
           End;
     $E1 : Begin {v1.34}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AtmelSecProgFWH;
-           Erase := AtmelSecEraseFWH;
+           SetChipProgram( Progr, ProgAtmelSecProgFWH );
+           SetChipErase( Erase, EraseAtmelSecEraseFWH );
            Sectors[ 0, 0 ] := 16;  {16 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 1024;
@@ -488,8 +503,8 @@ Begin
     $C2 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 31; {31x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 8;  {8 x 8k}
@@ -500,8 +515,8 @@ Begin
     $C0 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 8;  {8 x 8k}
            Sectors[ 0, 1 ] := 64;
            Sectors[ 1, 0 ] := 31; {31x 64k}
@@ -512,8 +527,8 @@ Begin
     $C9 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 63; {63x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 8;  {8 x 8k}
@@ -524,8 +539,8 @@ Begin
     $C8 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 8;  {8 x 8k}
            Sectors[ 0, 1 ] := 64;
            Sectors[ 1, 0 ] := 63; {63x 64k}
@@ -539,7 +554,10 @@ Begin
  CInfo.Manuf := ConstPtr( 'Atmel' );
  AtmelIdChip := True;
 End;
+Const
+ IdAtmelIdChip : Fl_IdChip = @AtmelIdChip;
+
 
 Begin
- RegisterFlashManu( $1F, AtmelIdChip );
+ RegisterFlashManu( $1F, IdAtmelIdChip );
 End.

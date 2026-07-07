@@ -17,7 +17,9 @@ function DMI_Info:Boolean;
 implementation
 uses Crt, Tools;
 
-function StrLen(Str: PChar): Word; assembler;
+type PFarChar = ^Char; far;
+
+function StrLen(Str: PFarChar): Word; assembler;
 asm
   CLD
   LES    DI,Str
@@ -28,7 +30,7 @@ asm
   SUB    AX,CX
 end;
 
-function StrPas(Str: PChar): String; assembler;
+function StrPas(Str: PFarChar): String; assembler;
 asm
    PUSH  DS
    CLD
@@ -64,8 +66,9 @@ type DMI_Header=record
 end;
 
 type ByteArray=array[0..14] of Byte;
-type DMIHeadPtr=^DMI_Header;
-type PByteArray=^ByteArray;
+type DMIHeadPtr=^DMI_Header; far;
+type PByteArray=^ByteArray; far;
+type PDMISign=^DMI_Sign; far;
 
 function NoSpaces(S:String): String;
 begin
@@ -75,21 +78,21 @@ end;
 
 function DMI_String(Head:DMIHeadPtr; S:Byte): String;
 begin
-  Head:=Pointer(LongInt(Head)+Head^.Len);
+  Head:=DMIHeadPtr(FarPointer(LongInt(Head)+Head^.Len));
   if S=0 then begin DMI_String:=''; Exit; end;
   Dec(S);
-  while (S>0) and (Byte(Pointer(Head^))<>0) do
+  while (S>0) and (PByteArray(Head)^[0]<>0) do
    begin
-     Head:=Pointer(LongInt(Head)+StrLen(PChar(Head))+1);
+     Head:=DMIHeadPtr(FarPointer(LongInt(Head)+StrLen(PFarChar(Head))+1));
      Dec(S);
    end;
-  DMI_String:=StrPas(PChar(Head));
+  DMI_String:=StrPas(PFarChar(Head));
 end;
 
 procedure DMI_Decode(Head: DMIHeadPtr);
 var Data:PByteArray;
 begin
-  Data:=Pointer(Head);
+  Data:=PByteArray(Head);
   case Head^.Type_ of
    0: begin
         DMI_BIOS.Vendor:= NoSpaces(DMI_String(Head, Data^[4]));
@@ -145,7 +148,7 @@ end;
 
 function DMI_Info: Boolean;
 var Off: Word;
-    DMISign: ^DMI_Sign;
+  DMISign: PDMISign;
 begin
   Off := 0;
   while Off<$FFF0 do

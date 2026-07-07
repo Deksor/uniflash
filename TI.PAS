@@ -5,6 +5,10 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
+Const
+ ProgAMDSecProg : Fl_Program = @AMDSecProg;
+ EraseAMDSecErase : Fl_Erase = @AMDSecErase;
+
 Function TIIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  TIIdChip := False;
@@ -14,8 +18,8 @@ Begin
     $94 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 8; {8 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 512;
@@ -27,7 +31,10 @@ Begin
  CInfo.Manuf := ConstPtr( 'Texas Instruments' );
  TIIdChip := True;
 End;
+Const
+ IdTIIdChip : Fl_IdChip = @TIIdChip;
+
 
 Begin
- RegisterFlashManu( $97, TIIdChip );
+ RegisterFlashManu( $97, IdTIIdChip );
 End.

@@ -168,6 +168,17 @@ Begin
 End;
 
 
+Const
+ ProgAMDSecProg : Fl_Program = @AMDSecProg;
+ ProgIntelSecProg : Fl_Program = @IntelSecProg;
+ ProgMxSecPageProg : Fl_Program = @MxSecPageProg;
+ ProgMxSecProg : Fl_Program = @MxSecProg;
+ EraseAMDSecErase : Fl_Erase = @AMDSecErase;
+ EraseIntelSecErase : Fl_Erase = @IntelSecErase;
+ EraseMxBulkErase : Fl_Erase = @MxBulkErase;
+ EraseMxSecErase : Fl_Erase = @MxSecErase;
+ EraseMxSecPageErase : Fl_Erase = @MxSecPageErase;
+
 Function MxIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  MxIdChip := False;
@@ -177,8 +188,8 @@ Begin
     $11 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecProg;
-           Erase := MxSecErase;
+           SetChipProgram( Progr, ProgMxSecProg );
+           SetChipErase( Erase, EraseMxSecErase );
            Sectors[ 0, 0 ] := 8;  {8 x 16k}
            Sectors[ 0, 1 ] := 128;
            Size := 128;
@@ -187,8 +198,8 @@ Begin
     $1A : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecProg;
-           Erase := MxSecErase;
+           SetChipProgram( Progr, ProgMxSecProg );
+           SetChipErase( Erase, EraseMxSecErase );
            Sectors[ 0, 0 ] := 7;  {7 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 4;  {4 x 4k}
@@ -199,8 +210,8 @@ Begin
     $2A : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecProg;
-           Erase := MxSecErase;
+           SetChipProgram( Progr, ProgMxSecProg );
+           SetChipErase( Erase, EraseMxSecErase );
            Sectors[ 0, 0 ] := 4;  {4 x 4k}
            Sectors[ 0, 1 ] := 32;
            Sectors[ 1, 0 ] := 14; {14 x 16k}
@@ -213,8 +224,8 @@ Begin
     $3C : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecProg;
-           Erase := MxSecErase;
+           SetChipProgram( Progr, ProgMxSecProg );
+           SetChipErase( Erase, EraseMxSecErase );
            Sectors[ 0, 0 ] := 14; {14 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 8;  {8 x 4k}
@@ -225,8 +236,8 @@ Begin
     $D9 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -241,8 +252,8 @@ Begin
     $DF : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -257,8 +268,8 @@ Begin
     $2D : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := IntelSecProg;
-           Erase := IntelSecErase;
+           SetChipProgram( Progr, ProgIntelSecProg );
+           SetChipErase( Erase, EraseIntelSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 128k}
            Sectors[ 0, 1 ] := 1024;
            Sectors[ 1, 0 ] := 1;  {1 x 96k}
@@ -273,8 +284,8 @@ Begin
     $2E : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := IntelSecProg;
-           Erase := IntelSecErase;
+           SetChipProgram( Progr, ProgIntelSecProg );
+           SetChipErase( Erase, EraseIntelSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -289,8 +300,8 @@ Begin
     $18 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -307,8 +318,8 @@ Begin
     $19 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 8k}
            Sectors[ 0, 1 ] := 64;
            Sectors[ 1, 0 ] := 2;  {2 x 4k}
@@ -327,8 +338,8 @@ Begin
     $51 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 3;  {3 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -349,8 +360,8 @@ Begin
     $57 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -372,8 +383,8 @@ Begin
     $B9 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 7;  {7 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -396,8 +407,8 @@ Begin
     $BA : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -418,8 +429,8 @@ Begin
     $4F : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 8;  {8 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 512;
@@ -432,8 +443,8 @@ Begin
     $38 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 16;  {16 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 1024;
@@ -447,8 +458,8 @@ Begin
     $DA : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 15;  {15 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -469,8 +480,8 @@ Begin
     $5B : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -489,8 +500,8 @@ Begin
     $AD : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 32; {32 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 2048;
@@ -500,8 +511,8 @@ Begin
     $F6 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecPageProg;
-           Erase := MxSecPageErase;
+           SetChipProgram( Progr, ProgMxSecPageProg );
+           SetChipErase( Erase, EraseMxSecPageErase );
            Sectors[ 0, 0 ] := 32; {32 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 2048;
@@ -513,8 +524,8 @@ Begin
     $FA : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecPageProg;
-           Erase := MxSecPageErase;
+           SetChipProgram( Progr, ProgMxSecPageProg );
+           SetChipErase( Erase, EraseMxSecPageErase );
            Sectors[ 0, 0 ] := 16; {16 x 128k}
            Sectors[ 0, 1 ] := 1024;
            Size := 2048;
@@ -523,8 +534,8 @@ Begin
     $C4 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 31; {31 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -539,8 +550,8 @@ Begin
     $49 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 16k}
            Sectors[ 0, 1 ] := 128;
            Sectors[ 1, 0 ] := 2;  {2 x 8k}
@@ -555,16 +566,16 @@ Begin
     $6B : Begin {v1.21}
            Flags  := 2;   {bulk erase}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecPageProg;
-           Erase := MxBulkErase;
+           SetChipProgram( Progr, ProgMxSecPageProg );
+           SetChipErase( Erase, EraseMxBulkErase );
            Size := 2048;
            Name := ConstPtr( 'MX29F1615/5V' );
           End;
     $F9 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := MxSecPageProg;
-           Erase := MxSecPageErase;
+           SetChipProgram( Progr, ProgMxSecPageProg );
+           SetChipErase( Erase, EraseMxSecPageErase );
            Sectors[ 0, 0 ] := 32; {32 x 128k}
            Sectors[ 0, 1 ] := 1024;
            Size := 4096;
@@ -576,7 +587,10 @@ Begin
  CInfo.Manuf := ConstPtr( 'Macronix' );
  MxIdChip := True;
 End;
+Const
+ IdMxIdChip : Fl_IdChip = @MxIdChip;
+
 
 Begin
- RegisterFlashManu( $C2, MxIdChip );
+ RegisterFlashManu( $C2, IdMxIdChip );
 End.

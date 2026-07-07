@@ -7,6 +7,10 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
+Const
+ ProgAMDSecProg : Fl_Program = @AMDSecProg;
+ EraseAMDSecErase : Fl_Erase = @AMDSecErase;
+
 Function IMTIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  IMTIdChip := False;
@@ -19,8 +23,8 @@ Begin
     $A6 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 256;  {256 x 512b}
            Sectors[ 0, 1 ] := 4;
            Size := 128;
@@ -35,8 +39,8 @@ Begin
     $A2 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 512;  {512 x 512b}
            Sectors[ 0, 1 ] := 4;
            Size := 256;
@@ -51,8 +55,8 @@ Begin
     $A8 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 512;  {512 x 1024b}
            Sectors[ 0, 1 ] := 8;
            Size := 512;
@@ -69,7 +73,10 @@ Begin
  CInfo.Manuf := ConstPtr( 'IMT' );
  IMTIdChip := True;
 End;
+Const
+ IdIMTIdChip : Fl_IdChip = @IMTIdChip;
+
 
 Begin
- RegisterFlashManu( $7F, IMTIdChip ); {It's actually $1F, but Atmel has $1F}
+ RegisterFlashManu( $7F, IdIMTIdChip ); {It's actually $1F, but Atmel has $1F}
 End.

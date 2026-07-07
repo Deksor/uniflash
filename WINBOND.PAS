@@ -56,6 +56,15 @@ begin
    FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01);
 end;
 
+Const
+ ProgAMDSecProg : Fl_Program = @AMDSecProg;
+ ProgGenPageProgB : Fl_Program = @GenPageProgB;
+ ProgWbSecProgFWH : Fl_Program = @WbSecProgFWH;
+ EraseAMDBulkErase : Fl_Erase = @AMDBulkErase;
+ EraseAMDSecErase : Fl_Erase = @AMDSecErase;
+ EraseWbSecErase : Fl_Erase = @WbSecErase;
+ EraseWbSecEraseFWH : Fl_Erase = @WbSecEraseFWH;
+
 Function WBIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  WBIdChip := False;
@@ -64,7 +73,7 @@ Begin
    {Common info for some chips v1.21}
    Flags  := 1;   {page mode}
    PgSize := 128; {page size}
-   Progr  := GenPageProgB;
+   SetChipProgram( Progr, ProgGenPageProgB );
    Case DevId of
     $C8 : Begin
            Name := ConstPtr( 'W29x512/5V series' );
@@ -87,8 +96,8 @@ Begin
           End;
     $38 : Begin {v1.29}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := WbSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseWbSecErase );
            Sectors[ 0, 0 ] := 16; {16 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 64;
@@ -97,8 +106,8 @@ Begin
     $A1,
     $31 : Begin {v1.29}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := WbSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseWbSecErase );
            Sectors[ 0, 0 ] := 32; {32 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 128;
@@ -109,8 +118,8 @@ Begin
           End;
     $B5 : Begin {v1.29}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := WbSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseWbSecErase );
            Sectors[ 0, 0 ] := 64; {64 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 256;
@@ -118,8 +127,8 @@ Begin
           End;
     $B6 : Begin {v1.29}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := WbSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseWbSecErase );
            Sectors[ 0, 0 ] := 128; {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 512;
@@ -127,8 +136,8 @@ Begin
           End;
     $D6 : Begin {v1.39}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 8; {8 x 64k}
            Sectors[ 0, 1 ] := 512;
            Size := 512;
@@ -136,8 +145,8 @@ Begin
           End;
     $3D : Begin {v1.39}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := WbSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseWbSecErase );
            Sectors[ 0, 0 ] := 128; {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 512;
@@ -145,8 +154,8 @@ Begin
           End;
     $34 : Begin {v1.29}
            Flags  := 0;   {sector mode}
-           Progr  := WbSecProgFWH;
-           Erase := WbSecEraseFWH;
+           SetChipProgram( Progr, ProgWbSecProgFWH );
+           SetChipErase( Erase, EraseWbSecEraseFWH );
            Sectors[ 0, 0 ] := 128; {128 x 4k}
            Sectors[ 0, 1 ] := 32;
            Size := 512;
@@ -154,15 +163,15 @@ Begin
           End;
     $8C : Begin {v1.29}
            Flags  := 2;   {bulk erase}
-           Progr  := AMDSecProg;
-           Erase := AMDBulkErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDBulkErase );
            Size := 256;
            Name := ConstPtr( 'W49F020/5V' );
           End;
     $0B : Begin {v1.21}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 1;  {1 x 128k}
            Sectors[ 0, 1 ] := 1024;
            Sectors[ 1, 0 ] := 1;  {1 x 96k}
@@ -177,8 +186,8 @@ Begin
     $B0,
     $32 : Begin {v1.21}
            Flags  := 0;   {sector mode}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           SetChipProgram( Progr, ProgAMDSecProg );
+           SetChipErase( Erase, EraseAMDSecErase );
            Sectors[ 0, 0 ] := 3;  {3 x 64k}
            Sectors[ 0, 1 ] := 512;
            Sectors[ 1, 0 ] := 1;  {1 x 32k}
@@ -199,7 +208,10 @@ Begin
  CInfo.Manuf := ConstPtr( 'Winbond' );
  WBIdChip := True;
 End;
+Const
+ IdWBIdChip : Fl_IdChip = @WBIdChip;
+
 
 Begin
- RegisterFlashManu( $DA, WBIdChip );
+ RegisterFlashManu( $DA, IdWBIdChip );
 End.

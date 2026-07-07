@@ -32,7 +32,7 @@ Count       : Byte; {v1.22}
 Int         : Integer;
 BIOSBlk     : ARRAY[ 0 .. 32767 ] of Byte;
 FlashName   : ^String;
-OldExitProc : Pointer;
+OldExitProc : FarPointer;
 OldBIOS,
 NewBIOS     : LongInt;
 FlashBase,
@@ -210,7 +210,7 @@ Begin
          If NxtUpd = 0 then
           Begin
            if FlashError=0 then TextColor(Green) else TextColor(Red);
-           Write( 'Û' );
+           Write( 'ï¿½' );
            NxtUpd := UpdStat;
           End;
          FlashProgram( {FlashBase +} X, TempBuf ); {v1.29}
@@ -255,7 +255,7 @@ Begin
        If NxtUpd = 0 then
         Begin
          if FlashError=0 then TextColor(Green) else TextColor(Red);
-         Write( 'Û' );
+         Write( 'ï¿½' );
          NxtUpd := UpdStat;
         End;
        FlashProgram( SStarts[ SPos ] + ( X * FlashInfo^.PgSize ),
@@ -277,7 +277,7 @@ Begin
        If NxtUpd = 0 then
         Begin
          if FlashError=0 then TextColor(Green) else TextColor(Red);
-         Write( 'Û' );
+         Write( 'ï¿½' );
          NxtUpd := UpdStat;
         End;
        FlashProgram( SStarts[ SPos ] + ( X * FlashInfo^.PgSize ), Block + Pos );
@@ -301,7 +301,7 @@ Begin
        If NxtUpd = 0 then
         Begin
          if FlashError=0 then TextColor(Green) else TextColor(Red);
-         Write( 'Û' );
+         Write( 'ï¿½' );
          NxtUpd := UpdStat;
         End;
        FlashProgram( SStarts[ SPos ] + ( X * FlashInfo^.PgSize ),
@@ -335,7 +335,7 @@ Begin
      If NxtUpd = 0 then
       Begin
        if FlashError=0 then TextColor(Green) else TextColor(Red);
-       Write( 'Û' );
+       Write( 'ï¿½' );
        NxtUpd := UpdStat;
       End;
      FlashProgram( Start + Pos, Block + Pos );
@@ -377,8 +377,8 @@ Begin
     If (Flash_Compare(X*(FlashSize shr 5)+Start,
                       X*(FlashSize shr 5)+BIOS, FlashSize shr 5)) {v1.29}
      and (X*(FlashSize shr 5)<Size)
-     then Write( 'Û' ) else
-      if X*(FlashSize shr 5)>=Size then Write('±') else
+     then Write( 'ï¿½' ) else
+      if X*(FlashSize shr 5)>=Size then Write('ï¿½') else
        Begin
         Write( 'X' );
         VErr := True;
@@ -477,7 +477,7 @@ End;
 
 
 {Write old BIOS image to file with user supplied name}
-Procedure WriteBIOSImg; Far;
+Procedure WriteBIOSImg;
 Var
 IName : String;
 IFile : File;
@@ -606,12 +606,12 @@ Begin
   End;
 End;
 
-Procedure FlashBIOS; Far;
+Procedure FlashBIOS;
 Begin
  _FlashBIOS( False );
 End;
 
-Procedure FlashBIOSBB; Far;
+Procedure FlashBIOSBB;
 Begin
  _FlashBIOS( True );
 End;
@@ -781,7 +781,7 @@ Begin
  WritePnPDMIImg( 'DMI',{ $FFFFC000 }FlashSize-$4000);
 End;*)
 
-Procedure WriteBootBlk; Far;
+Procedure WriteBootBlk;
 Var
 IName : String;
 IFile : File;
@@ -816,7 +816,7 @@ Begin
  ClrEol;
 End;
 
-Procedure FlashBootBlk; Far;
+Procedure FlashBootBlk;
 Var
 IName : String;
 X     : LongInt;
@@ -891,7 +891,7 @@ Begin
 End;
 
 {Flash BIOS backup back into flash chip}
-Procedure FlashOldBIOS; Far;
+Procedure FlashOldBIOS;
 Begin
  Text_Color( 12 );
  GotoXY( 11, 22 );
@@ -1002,7 +1002,7 @@ begin
 end;
 
 {Clear CMOS ram area}
-Procedure ClearCMOS; Far;
+Procedure ClearCMOS;
 Begin
  Text_Color( 12 );
  GotoXY( 2, 22 );
@@ -1052,7 +1052,7 @@ begin
 end;
 
 {Write CMOS data to disk}
-Procedure SaveCMOS; Far;
+Procedure SaveCMOS;
 Var
 IName : String;
 IFile : File;
@@ -1127,7 +1127,7 @@ begin
 end;
 
 {Read CMOS data from disk}
-Procedure RestoreCMOS; Far;
+Procedure RestoreCMOS;
 Var
 IName : String;
 IFile : File;
@@ -1167,7 +1167,7 @@ Begin
 End;
 
 
-Procedure WrtOldCMOS; Far;
+Procedure WrtOldCMOS;
 var X,Z:Byte;
     OK:Boolean;
 
@@ -1225,7 +1225,7 @@ Begin
  LogWrite('CMOS settings restored from backup in memory'); {v1.23}
 End;
 
-Procedure MyExitProc; Far;
+Procedure MyExitProc; far;
 Begin
  LogWrite('Exiting UniFlash...');
  If PCIROMEn then
@@ -1254,6 +1254,14 @@ End;
 Procedure WrtCenter( Msg : String );
 Begin
  WriteLn( '        ' + Msg );
+End;
+
+Function CanIdentifyChip( ManufNode : PFl_Manuf; Dev : Byte; Var CInfo : ChipInfo ) : Boolean;
+Var
+ IdFn : Fl_IdChip;
+Begin
+ IdFn := ManufNode^.IdChip;
+ CanIdentifyChip := IdFn( Dev, CInfo );
 End;
 
 Procedure Err( Msg : String );
@@ -1630,7 +1638,7 @@ begin
  Write( Hl( ROMBase )+ Msg( 70 ) +Hl(ROMBase)+'-->('+Hw(FIMemW(ROMBase))+Hw(FIMemW(ROMBase+2))+')' );
 end;
 
-procedure RedetectFlashROM;Far; {v1.24}
+procedure RedetectFlashROM; {v1.24}
 begin
  ForceID:=False; {v1.30}
  LogWrite('Restarting UniFlash...');
@@ -1820,7 +1828,7 @@ Begin
        Begin
         M := Manuf;
         For D := 0 to $FF do {v1.21 FF}
-         If IdChip( D, CurCInfo ) then With CurCInfo do
+         If CanIdentifyChip( CurManuf, D, CurCInfo ) then With CurCInfo do
           if not WriteLnStd( '  '+ Hb( M )+ Hb( D )+ ' - '+ Manuf^+ ' '+ Name^ ) then
            begin ClrKbBuf; Exit; end;
        End;
@@ -1976,7 +1984,7 @@ Begin
    Repeat
     With CurManuf^ do
      If ( Manuf = Hi( ForceIdVal ) ) and
-          IdChip( Lo( ForceIdVal ), CurCInfo ) then FlashError := 0;
+        CanIdentifyChip( CurManuf, Lo( ForceIdVal ), CurCInfo ) then FlashError := 0;
     CurManuf := CurManuf^.Next;
    Until ( FlashError = 0 ) or ( CurManuf = Nil );
    If ROMBase = 0 then
@@ -2103,9 +2111,9 @@ Begin
              AddMenuItem( Msg( 86 ),  Msg( 123 ), 1, 1, @FlashBIOSBB,
              AddMenuItem( Msg( 87 ),  Msg( 124 ), 2, 0, @FlashOldBIOS,
              AddMenuItem( Msg( 100 ), Msg( 125 ), 3, 1, @RedetectFlashROM,
-             AddMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
+             AddSubMenuItem( Msg( 101 ), Msg( 126 ), 4, 3, CMOSMenu,
 {             AddMenuItem( Msg( 90 ),  Msg( 127 ), 5, 3, PnPDMIMenu,}
-             AddMenuItem( Msg( 91 ),  Msg( 128 ), 5, 3, AdvMenu,
+             AddSubMenuItem( Msg( 91 ),  Msg( 128 ), 5, 3, AdvMenu,
              AddMenuItem( Msg( 93 ),  Msg( 129 ), 7, 1, Nil, Nil ) ) ) ) ) ) ) {)};
 
  If FlashInfo = Nil then

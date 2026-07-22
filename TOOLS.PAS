@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.40';
+Version    = '1.50';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -95,10 +95,18 @@ Ext       : Char; {v1.23}
 History   : String[2]; {v1.23}
 Shift     : Boolean; {v1.23}
 XMSManager: Boolean; {v1.27}
+ConstStringPos : Byte;
+ConstStrings   : Array[ 0 .. 7 ] of String;
 
 Function ConstPtr( Const S : String ) : Pointer;
 Begin
- ConstPtr := @S;
+ {Borland kept literal const parameters in stable storage.  FPC may pass a
+  temporary here, so returning @S leaves a dangling pointer.  Keep a small
+  rotating pool; chip identification consumes the strings immediately and
+  retains only the final manufacturer/name pair.}
+ ConstStrings[ ConstStringPos ] := S;
+ ConstPtr := @ConstStrings[ ConstStringPos ];
+ ConstStringPos := ( ConstStringPos + 1 ) and 7;
 End;
 
 Function FIMemB( Addr : LongInt ) : Byte; Assembler;

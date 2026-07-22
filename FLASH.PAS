@@ -366,40 +366,73 @@ end;
 Function FlashDetect : PChipInfo;
 Var
 MinB,MaxB,Tries : Byte;
-ROMFound        : Boolean;
+ ROMFound        : Boolean;
 
  Function DetectLoop( Method : Byte; Var Man, Dev : Byte ) : Boolean;
  Var
  M, D, X   : Byte;
- M0,D0     : Byte; {v1.24}
- Done,
- Found     : Boolean;
+  M0,D0     : Byte; {v1.24}
+  BusStage  : Byte;
+  Done,
+  Found     : Boolean;
+
+  Procedure WaitWithIRQs( MicroSeconds : LongInt );
+  Begin
+   {FPC's DOS timing path and resident DOS drivers may require IRQs while
+    waiting.  The caller keeps the flash command/read sequence protected.}
+   Asm STI End;
+   Wait( MicroSeconds );
+   Asm CLI End;
+  End;
+
+  Procedure SerializeFlashWrite;
+  Begin
+   {An uncached VGA-bus transaction drains posted chipset writes.  Use an
+    off-screen cell so this has the proven timing of the diagnostic markers
+    without changing the visible display.}
+   MemW[$B800:$1000] := $0700 or BusStage;
+   Inc(BusStage);
+  End;
+
+  Procedure SendFlashCommand( Cmd : Byte );
+  Begin
+   {Serialize posted chipset/ROM writes.  The original compiler generated
+    enough delay between accesses; the FPC build can issue this unlock
+    sequence too quickly on some cached/shadowed configurations.}
+   Flash_Write($5555,$AA);
+   SerializeFlashWrite;
+   Flash_Write($2AAA,$55);
+   SerializeFlashWrite;
+   Flash_Write($5555,Cmd);
+   SerializeFlashWrite;
+  End;
 
   Procedure SendIdCmd;
    Begin
     Case Method of
       0 : Begin {old method}
-           FlashCmd( $80 );
-           FlashCmd( $60 );
+           SendFlashCommand( $80 );
+           SendFlashCommand( $60 );
           End;
       1 : Begin {new method}
-           FlashCmd( $90 );
+           SendFlashCommand( $90 );
           End;
     End;
-    Wait( 50 );
+    WaitWithIRQs( 50 );
    End;
 
   Procedure ResetROM;
   Begin
-    FlashCmd( $F0 ); {v1.28}
-    Wait(1000); {v1.28}
-    Flash_Write(0,$FF);
-    Flash_Write(0,$FF);
-    Wait(1000); {v1.28}
-    Flash_Write(0,0);
-    Wait(1000); {v1.28}
-    FlashCmd( $F0 );
-    Wait(1000); {v1.28}
+    {Exit software-ID/status mode with the command appropriate for the
+     detected command set.  The old sequence wrote FF, FF, 00 after an
+     unlock/F0 command; on some shadowed/cached DOS configurations the
+     first raw FF write never returns.}
+    If M = $89 then
+      Flash_Write(0,$FF)             {Intel read-array command}
+    else
+      Flash_Write(0,$F0);            {AMD/SST reset/read command}
+    SerializeFlashWrite;
+    WaitWithIRQs(1000); {v1.28}
   End;
 
 
@@ -407,14 +440,18 @@ ROMFound        : Boolean;
   LogWrite('DetectLoop');
   DetectLoop := True;
   Found := False;
+  BusStage := 0;
   for X := MinB to MaxB do
    begin
     if X > 0 then ROMBase := ( - ( LongInt( 1 ) shl X ) );
     Done := False;
 
     repeat
+     LogWrite('DetectLoop: reading initial ROM bytes at '+Hl(ROMBase));
      M0:=Flash_Read(0);
      D0:=Flash_Read(1);
+     LogWrite('DetectLoop: initial bytes '+Hb(M0)+','+Hb(D0)+
+              '; entering interrupt-disabled ID sequence');
      asm CLI end;
      SendIdCmd;
      {Get mfg. code}
@@ -431,6 +468,7 @@ ROMFound        : Boolean;
      if D = $7F then D := Flash_Read($101); {Dev. ID for EON}
      ResetROM;
      asm STI end;
+     LogWrite('DetectLoop: ID sequence complete, read '+Hb(M)+','+Hb(D));
 
      if ((M<>M0) or (D<>D0)) and ParityOdd(M) then
       begin

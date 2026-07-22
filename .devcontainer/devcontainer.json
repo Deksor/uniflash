@@ -13,8 +13,19 @@
     "containerEnv": {},
     "customizations": {
         "vscode": {
-            "settings": {},
+            "settings": {
+                "pascal.formatter.engine": "ptop",
+                "pascal.formatter.enginePath": "/usr/bin/ptop",
+                "[pascal]": {
+                    "editor.defaultFormatter": "alefragnani.pascal-formatter"
+                },
+                "[objectpascal]": {
+                    "editor.defaultFormatter": "alefragnani.pascal-formatter"
+                }
+            },
             "extensions": [
+                "alefragnani.pascal-formatter",
+                "alefragnani.pascal"
             ]
         }
     }

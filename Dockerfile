@@ -13,10 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     binutils \
     ca-certificates \
     curl \
-    dosbox \
     file \
     fpc \
     fpc-source \
+    fp-utils \
     make \
     mtools \
     nasm \

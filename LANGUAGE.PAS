@@ -1,48 +1,52 @@
-unit Language;
 
-interface
-const LangCount: Byte = 0;
-var   CurLang  : Byte;
-type  InitProc = procedure;
+Unit Language;
 
-function Msg(Id:Word):String;
-procedure RegisterLanguage(const Name:String;Init:InitProc);
-procedure InitLanguage(LId:Byte);
-procedure AddMsg(MId:Word;const Msg:String);
-function GetLangName(LangId:Byte):String;
+Interface
 
-implementation
+Const LangCount: Byte = 0;
 
-var MsgPtrs  : array[1..150] of ^String;
-    LangNames: array[1..5] of ^String;
-    LangInits: array[1..5] of InitProc;
+Var   CurLang  : Byte;
 
-function Msg(Id:Word):String;
-begin
-  Msg:=MsgPtrs[Id]^;
-end;
+Type  InitProc = Procedure ;
 
-procedure RegisterLanguage(const Name:String;Init:InitProc);
-begin
+Function Msg(Id:Word): String;
+Procedure RegisterLanguage(Const Name:String;Init:InitProc);
+Procedure InitLanguage(LId:Byte);
+Procedure AddMsg(MId:Word;Const Msg:String);
+Function GetLangName(LangId:Byte): String;
+
+Implementation
+
+Var MsgPtrs  : array[1..150] Of ^String;
+  LangNames: array[1..5] Of ^String;
+  LangInits: array[1..5] Of InitProc;
+
+Function Msg(Id:Word): String;
+Begin
+  Msg := MsgPtrs[Id]^;
+End;
+
+Procedure RegisterLanguage(Const Name:String;Init:InitProc);
+Begin
   Inc(LangCount);
-  LangNames[LangCount]:=@Name;
-  LangInits[LangCount]:=Init;
-end;
+  LangNames[LangCount] := @Name;
+  LangInits[LangCount] := Init;
+End;
 
-procedure InitLanguage(LId:Byte); {v1.31}
-begin
+Procedure InitLanguage(LId:Byte); {v1.31}
+Begin
   LangInits[LId];
-end;
+End;
 
-procedure AddMsg(MId:Word;const Msg:String);
-begin {The compiler is not %!$# anymore when we use constant parameter :-)) }
-  MsgPtrs[MId]:=@Msg;
-end;
+Procedure AddMsg(MId:Word;Const Msg:String);
+Begin {The compiler is not %!$# anymore when we use constant parameter :-)) }
+  MsgPtrs[MId] := @Msg;
+End;
 
-function GetLangName(LangId:Byte):String;
-begin
-  GetLangName:=LangNames[LangId]^;
-end;
+Function GetLangName(LangId:Byte): String;
+Begin
+  GetLangName := LangNames[LangId]^;
+End;
 
 {begin}
-end.
+End.

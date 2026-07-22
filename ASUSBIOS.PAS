@@ -1,55 +1,61 @@
-unit AsusBios; { Unit to use Asus flash interface when exists } {v1.39}
 
-interface
-function AsusCheckFor: Boolean;
+Unit AsusBios; { Unit to use Asus flash interface when exists } {v1.39}
 
-procedure AsusEnable;
-procedure AsusDisable;
+Interface
+Function AsusCheckFor: Boolean;
 
-implementation
-uses Tools;
-const Sign: array[1..10] of Char='ASUS_FLASH';
+Procedure AsusEnable;
+Procedure AsusDisable;
 
-type AsusBIOSHook=record
-  Sign: array[1..16] of Char;
+Implementation
+
+Uses Tools;
+
+Const Sign: array[1..10] Of Char = 'ASUS_FLASH';
+
+Type AsusBIOSHook = Record
+  Sign: array[1..16] Of Char;
   X: Word; {???}
-  Disable: Procedure;
+  Disable: Procedure ;
   Len: Word;
-  Enable: Procedure;
-end;
+  Enable: Procedure ;
+End;
 
-type PAsusBIOSHook = ^AsusBIOSHook; far;
+Type PAsusBIOSHook = ^AsusBIOSHook;
+  far;
 
-var Hook: PAsusBIOSHook;
+Var Hook: PAsusBIOSHook;
 
-function AsusCheckFor: Boolean;
-var A: Word;
-type Array10= array[1..10] of Char;
-begin
- AsusCheckFor:=False;
+Function AsusCheckFor: Boolean;
+
+Var A: Word;
+
+Type Array10 = array[1..10] Of Char;
+Begin
+  AsusCheckFor := False;
  {search for signature in $F000 segment}
- for A:=$0 to $FFFF-SizeOf(Sign) do
-  begin
-    Hook:=Ptr($F000, A);
-    if Copy(Hook^.Sign, 1, Length(Sign))=Sign then
-     begin
-       AsusCheckFor:=True;
-       Break;
-     end;
-  end;
-end;
+  For A:=$0 To $FFFF-SizeOf(Sign) Do
+    Begin
+      Hook := Ptr($F000, A);
+      If Copy(Hook^.Sign, 1, Length(Sign))=Sign Then
+        Begin
+          AsusCheckFor := True;
+          Break;
+        End;
+    End;
+End;
 
-procedure AsusEnable;
-begin
+Procedure AsusEnable;
+Begin
   Hook^.Enable;
   LogWrite('Asus flash interface - flash enable');
-end;
+End;
 
-procedure AsusDisable;
-begin
+Procedure AsusDisable;
+Begin
   Hook^.Disable;
   LogWrite('Asus flash interface - flash disable');
-end;
+End;
 
 {begin}
-end.
+End.

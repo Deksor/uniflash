@@ -1,179 +1,214 @@
-unit DMI; { Unit to read SMBIOS/DMI info } {v1.39}
 
-interface
-var DMI_Board:record
+Unit DMI; { Unit to read SMBIOS/DMI info } {v1.39}
+
+Interface
+
+Var DMI_Board: Record
   Vendor, Name, Version: String;
-end;
-var DMI_Board_String: String;
-var DMI_BIOS:record
+End;
+
+Var DMI_Board_String: String;
+
+Var DMI_BIOS: Record
   Vendor, Version, Release: String;
-end;
-var DMI_System:record
+End;
+
+Var DMI_System: Record
   Vendor, Name, Version, SerialNo: String;
-end;
+End;
 
-function DMI_Info:Boolean;
+Function DMI_Info: Boolean;
 
-implementation
-uses Crt, Tools;
+Implementation
 
-type PFarChar = ^Char; far;
+Uses Crt, Tools;
 
-function StrLen(Str: PFarChar): Word; assembler;
+Type PFarChar = ^Char;
+  far;
+
+Function StrLen(Str: PFarChar): Word;
+assembler;
 asm
-  CLD
-  LES    DI,Str
-  MOV    CX,0FFFFH
-  XOR    AL,AL
-  REPNE  SCASB
-  MOV    AX,0FFFEH
-  SUB    AX,CX
-end;
+CLD
+LES    DI,Str
+MOV    CX,0FFFFH
+XOR    AL,AL
+REPNE  SCASB
+MOV    AX,0FFFEH
+SUB    AX,CX
+End;
 
-function StrPas(Str: PFarChar): String; assembler;
+Function StrPas(Str: PFarChar): String;
+assembler;
 asm
-   PUSH  DS
-   CLD
-   LES   DI,Str
-   MOV   CX,0FFFFH
-   XOR   AL,AL
-   REPNE SCASB
-   NOT   CX
-   DEC   CX
-   LDS   SI,Str
-   LES   DI,@Result
-   MOV   AL,CL
-   STOSB
-   REP   MOVSB
-   POP   DS
-end;
+PUSH  DS
+CLD
+LES   DI,Str
+MOV   CX,0FFFFH
+XOR   AL,AL
+REPNE SCASB
+NOT   CX
+DEC   CX
+LDS   SI,Str
+LES   DI,@Result
+MOV   AL,CL
+STOSB
+REP   MOVSB
+POP   DS
+End;
 
-const DMI_Signature='_DMI_';
+Const DMI_Signature = '_DMI_';
 
-type DMI_Sign=record
-  Sign:   array[1..5] of Char;
+Type DMI_Sign = Record
+  Sign:   array[1..5] Of Char;
   Chksum: Byte;
   Len:    Word;
   Base:   LongInt;
   Num:    Word;
   Ver:    Byte;
-end;
+End;
 
-type DMI_Header=record
+Type DMI_Header = Record
   Type_: Byte;
   Len: Byte;
   Handle: Word;
-end;
+End;
 
-type ByteArray=array[0..14] of Byte;
-type DMIHeadPtr=^DMI_Header; far;
-type PByteArray=^ByteArray; far;
-type PDMISign=^DMI_Sign; far;
+Type ByteArray = array[0..14] Of Byte;
 
-function NoSpaces(S:String): String;
-begin
-  while S[Length(S)]=' ' do Delete(S,Length(S),1);
-  NoSpaces:=S;
-end;
+Type DMIHeadPtr = ^DMI_Header;
+  far;
 
-function DMI_String(Head:DMIHeadPtr; S:Byte): String;
-begin
-  Head:=DMIHeadPtr(FarPointer(LongInt(Head)+Head^.Len));
-  if S=0 then begin DMI_String:=''; Exit; end;
+Type PByteArray = ^ByteArray;
+  far;
+
+Type PDMISign = ^DMI_Sign;
+  far;
+
+Function NoSpaces(S:String): String;
+Begin
+  While S[Length(S)]=' ' Do
+    Delete(S,Length(S),1);
+  NoSpaces := S;
+End;
+
+Function DMI_String(Head:DMIHeadPtr; S:Byte): String;
+Begin
+  Head := DMIHeadPtr(FarPointer(LongInt(Head)+Head^.Len));
+  If S=0 Then
+    Begin
+      DMI_String := '';
+      Exit;
+    End;
   Dec(S);
-  while (S>0) and (PByteArray(Head)^[0]<>0) do
-   begin
-     Head:=DMIHeadPtr(FarPointer(LongInt(Head)+StrLen(PFarChar(Head))+1));
-     Dec(S);
-   end;
-  DMI_String:=StrPas(PFarChar(Head));
-end;
+  While (S>0) And (PByteArray(Head)^[0]<>0) Do
+    Begin
+      Head := DMIHeadPtr(FarPointer(LongInt(Head)+StrLen(PFarChar(Head))+1));
+      Dec(S);
+    End;
+  DMI_String := StrPas(PFarChar(Head));
+End;
 
-procedure DMI_Decode(Head: DMIHeadPtr);
-var Data:PByteArray;
-begin
-  Data:=PByteArray(Head);
-  case Head^.Type_ of
-   0: begin
-        DMI_BIOS.Vendor:= NoSpaces(DMI_String(Head, Data^[4]));
-        DMI_BIOS.Version:=NoSpaces(DMI_String(Head, Data^[5]));
-        DMI_BIOS.Release:=NoSpaces(DMI_String(Head, Data^[8]));
-      end;
-   1: begin
-        DMI_System.Vendor:=  NoSpaces(DMI_String(Head, Data^[4]));
-        DMI_System.Name:=    NoSpaces(DMI_String(Head, Data^[5]));
-        DMI_System.Version:= NoSpaces(DMI_String(Head, Data^[6]));
-        DMI_System.SerialNo:=NoSpaces(DMI_String(Head, Data^[7]));
-      end;
-   2: begin
-        DMI_Board.Vendor:= NoSpaces(DMI_String(Head, Data^[4]));
-        DMI_Board.Name:=   NoSpaces(DMI_String(Head, Data^[5]));
-        DMI_Board.Version:=NoSpaces(DMI_String(Head, Data^[6]));
-      end;
-  end;
-end;
+Procedure DMI_Decode(Head: DMIHeadPtr);
 
-procedure DMI_Table(Base: Word; Len, Num: Word);
-var Buf: PByteArray;
-    Off, I: Word;
-    Head: DMIHeadPtr;
-begin
+Var Data: PByteArray;
+Begin
+  Data := PByteArray(Head);
+  Case Head^.Type_ Of 
+    0:
+       Begin
+         DMI_BIOS.Vendor := NoSpaces(DMI_String(Head, Data^[4]));
+         DMI_BIOS.Version := NoSpaces(DMI_String(Head, Data^[5]));
+         DMI_BIOS.Release := NoSpaces(DMI_String(Head, Data^[8]));
+       End;
+    1:
+       Begin
+         DMI_System.Vendor :=  NoSpaces(DMI_String(Head, Data^[4]));
+         DMI_System.Name :=    NoSpaces(DMI_String(Head, Data^[5]));
+         DMI_System.Version := NoSpaces(DMI_String(Head, Data^[6]));
+         DMI_System.SerialNo := NoSpaces(DMI_String(Head, Data^[7]));
+       End;
+    2:
+       Begin
+         DMI_Board.Vendor := NoSpaces(DMI_String(Head, Data^[4]));
+         DMI_Board.Name :=   NoSpaces(DMI_String(Head, Data^[5]));
+         DMI_Board.Version := NoSpaces(DMI_String(Head, Data^[6]));
+       End;
+  End;
+End;
+
+Procedure DMI_Table(Base: Word; Len, Num: Word);
+
+Var Buf: PByteArray;
+  Off, I: Word;
+  Head: DMIHeadPtr;
+Begin
   Off := 0;
   i := 0;
-  while (i < Num) and (Off+SizeOf(DMI_Header) <= Len) do
-   begin
-     Head:=Ptr($F000, Base+Off);
-     Off:=Off+Head^.Len;
-     Buf:=Ptr($F000, Base+Off);
-     while (Off < Len-1) and ((Buf^[0] <> 0) or (Buf^[1] <> 0)) do
-      begin
-        Inc(Off);
-        Buf:=Ptr($F000, Base+Off);
-      end;
-     if Off<Len-1 then DMI_Decode(Head);
-     Inc(Off,2);
-     Inc(i);
-   end;
-end;
+  While (i < Num) And (Off+SizeOf(DMI_Header) <= Len) Do
+    Begin
+      Head := Ptr($F000, Base+Off);
+      Off := Off+Head^.Len;
+      Buf := Ptr($F000, Base+Off);
+      While (Off < Len-1) And ((Buf^[0] <> 0) Or (Buf^[1] <> 0)) Do
+        Begin
+          Inc(Off);
+          Buf := Ptr($F000, Base+Off);
+        End;
+      If Off<Len-1 Then DMI_Decode(Head);
+      Inc(Off,2);
+      Inc(i);
+    End;
+End;
 
-function DMI_Checksum(var Buf):Byte;
-var Sum, i: Byte;
-begin
-  Sum:=0;
+Function DMI_Checksum(Var Buf): Byte;
+
+Var Sum, i: Byte;
+Begin
+  Sum := 0;
   {$R-}
-  for i:=0 to 14 do Sum:=Sum+ByteArray(Buf)[i];
+  For i:=0 To 14 Do
+    Sum := Sum+ByteArray(Buf)[i];
   {$R+}
-  DMI_Checksum:=Sum;
-end;
+  DMI_Checksum := Sum;
+End;
 
-function DMI_Info: Boolean;
-var Off: Word;
+Function DMI_Info: Boolean;
+
+Var Off: Word;
   DMISign: PDMISign;
-begin
+Begin
   Off := 0;
-  while Off<$FFF0 do
-   begin
-     DMISign:=Ptr($F000, Off);
-     if (DMISign^.Sign=DMI_Signature) and (DMI_Checksum(DMISign^)=0) then
-      begin
-        DMI_Table(Word(DMISign^.Base), DMISign^.Len, DMISign^.Num);
-        DMI_Board_String:=DMI_Board.Name;
-        if DMI_Board.Vendor<>'' then DMI_Board_String:=DMI_Board.Vendor+' '+DMI_Board_String;
-        if DMI_Board.Version<>'' then DMI_Board_String:=DMI_Board_String+' '+DMI_Board.Version;
-        GotoXY(81-Length(DMI_Board_String),24);
-        Write(DMI_Board_String);
-        if DMISign^.Ver <> 0 then
-         LogWrite('Found DMI '+IntToStr(DMISign^.Ver shr 4)+'.'+IntToStr(DMISign^.Ver and $0F)
-          +' board info: '+DMI_Board_String)
-        else LogWrite('Found DMI board info: '+DMI_Board_String);
-        DMI_Info:=True;
-        Exit;
-      end;
-     Off:=Off+16;
-   end;
+  While Off<$FFF0 Do
+    Begin
+      DMISign := Ptr($F000, Off);
+      If (DMISign^.Sign=DMI_Signature) And (DMI_Checksum(DMISign^)=0) Then
+        Begin
+          DMI_Table(Word(DMISign^.Base), DMISign^.Len, DMISign^.Num);
+          DMI_Board_String := DMI_Board.Name;
+          If DMI_Board.Vendor<>'' Then DMI_Board_String := DMI_Board.Vendor+' '+
+                                                           DMI_Board_String;
+          If DMI_Board.Version<>'' Then DMI_Board_String := DMI_Board_String+' '
+                                                            +DMI_Board.Version;
+          GotoXY(81-Length(DMI_Board_String),24);
+          Write(DMI_Board_String);
+          If DMISign^.Ver <> 0 Then
+            LogWrite('Found DMI '+IntToStr(DMISign^.Ver shr 4)+'.'+IntToStr(
+                                                                         DMISign
+                                                                            ^.
+                                                                            Ver
+                                                                            And
+                                                                            $0F)
+            +' board info: '+DMI_Board_String)
+          Else LogWrite('Found DMI board info: '+DMI_Board_String);
+          DMI_Info := True;
+          Exit;
+        End;
+      Off := Off+16;
+    End;
   LogWrite('DMI not found');
-  DMI_Info:=False;
-end;
+  DMI_Info := False;
+End;
 
 {begin}
-end.
+End.

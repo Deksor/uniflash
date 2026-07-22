@@ -1,129 +1,134 @@
-unit AMIBios; { Unit to use AMI's flash interface when exists }
+
+Unit AMIBios; { Unit to use AMI's flash interface when exists }
+
+
 { This interface is used to help the flash utility to prepare the system
 for a BIOS upgrade. It can be found in all new AMI WinBIOSes. These functions
 are common to every chipset.
 Uniflash can use these functions if user wants and the BIOS is recent AMIBIOS}
 
-interface
-function AMICheckFor : boolean;
-function AMISaveChipsetState : boolean;
-function AMIRestoreChipsetState : boolean;
-function AMILowerVpp : boolean;
-function AMIRaiseVpp : boolean;
-function AMIFlashProtect : boolean;
-function AMIFlashUNProtect : boolean;
-function AMISaveCacheState : boolean;
-function AMIRestoreCacheState : boolean;
+Interface
+Function AMICheckFor : boolean;
+Function AMISaveChipsetState : boolean;
+Function AMIRestoreChipsetState : boolean;
+Function AMILowerVpp : boolean;
+Function AMIRaiseVpp : boolean;
+Function AMIFlashProtect : boolean;
+Function AMIFlashUNProtect : boolean;
+Function AMISaveCacheState : boolean;
+Function AMIRestoreCacheState : boolean;
 
-procedure AMIEnable;          {MAP}
-procedure AMIDisable;         {UNMAP}
-implementation
-uses Dos;
+Procedure AMIEnable;          {MAP}
+Procedure AMIDisable;         {UNMAP}
 
-var
-   reg : registers;
-   CSMemory : array[0..4095] of byte;
-   Cache : array[0..16384] of byte;
+Implementation
 
-procedure AMICallFunction(Fnc : Byte; var Regs : Registers);
-begin
- Regs.AH:=$E0;
- Regs.AL:=Fnc;
- Intr($16,Regs);
-end;
+Uses Dos;
 
-function AMICheckFor : Boolean;
-begin
- AMICheckFor:=False;
- AMICallFunction($00,Reg);
- if (Reg.AL = $fA) and (Reg.BX>=$0200) then AMICheckFor:=True;
-end;
+Var 
+  reg : registers;
+  CSMemory : array[0..4095] Of byte;
+  Cache : array[0..16384] Of byte;
 
+Procedure AMICallFunction(Fnc : Byte; Var Regs : Registers);
+Begin
+  Regs.AH := $E0;
+  Regs.AL := Fnc;
+  Intr($16,Regs);
+End;
 
-function AMISaveChipsetState : Boolean;
-begin
- AMISaveChipsetState:=False;
- Reg.ES:=Seg(CSMemory);
- Reg.DI:=Ofs(CSMemory);
- AMICallFunction($02,Reg);
- if (Reg.Flags and FCarry = 0) then AMISaveChipsetState:=True;
-end;
-
-function AMIRestoreChipsetState : Boolean;
-begin
- AMIRestoreChipsetState:=False;
- Reg.ES:=Seg(CSMemory);
- Reg.DI:=Ofs(CSMemory);
- AMICallFunction($03,Reg);
- if (Reg.Flags and FCarry = 0) then AMIRestoreChipsetState:=True;
-end;
+Function AMICheckFor : Boolean;
+Begin
+  AMICheckFor := False;
+  AMICallFunction($00,Reg);
+  If (Reg.AL = $fA) And (Reg.BX>=$0200) Then AMICheckFor := True;
+End;
 
 
-function AMILowerVpp : Boolean;
-begin
- AMILowerVpp:=False;
- AMICallFunction($04,Reg);
- if (Reg.Flags and FCarry = 0) then AMILowerVpp:=True;
-end;
+Function AMISaveChipsetState : Boolean;
+Begin
+  AMISaveChipsetState := False;
+  Reg.ES := Seg(CSMemory);
+  Reg.DI := Ofs(CSMemory);
+  AMICallFunction($02,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMISaveChipsetState := True;
+End;
 
-function AMIRaiseVpp : Boolean;
-begin
- AMIRaiseVpp:=False;
- AMICallFunction($05,Reg);
- if (Reg.Flags and FCarry = 0) then AMIRaiseVpp:=True;
-end;
-
-function AMIFlashProtect : Boolean;
-begin
- AMIFlashProtect:=False;
- AMICallFunction($06,Reg);
- if (Reg.Flags and FCarry = 0) then AMIFlashProtect:=True;
-end;
-
-function AMIFlashUNProtect : Boolean;
-begin
- AMIFlashUnProtect:=False;
- AMICallFunction($07,Reg);
- if (Reg.Flags and FCarry = 0) then AMIFlashUnProtect:=True;
-end;
-
-function AMISaveCacheState : Boolean;
-begin
- AMISaveCacheState:=False;
- Reg.ES:=Seg(Cache);
- Reg.DI:=Ofs(Cache);
- AMICallFunction($0B,Reg);
- if (Reg.Flags and FCarry = 0) then AMISaveCacheState:=True;
-end;
-
-function AMIRestoreCacheState : Boolean;
-begin
- AMIRestoreCacheState:=False;
- Reg.ES:=Seg(Cache);
- Reg.DI:=Ofs(Cache);
- AMICallFunction($0C,Reg);
- if (Reg.Flags and FCarry = 0) then AMIRestoreCacheState:=True;
-end;
+Function AMIRestoreChipsetState : Boolean;
+Begin
+  AMIRestoreChipsetState := False;
+  Reg.ES := Seg(CSMemory);
+  Reg.DI := Ofs(CSMemory);
+  AMICallFunction($03,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMIRestoreChipsetState := True;
+End;
 
 
+Function AMILowerVpp : Boolean;
+Begin
+  AMILowerVpp := False;
+  AMICallFunction($04,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMILowerVpp := True;
+End;
 
-procedure AMIEnable;
-begin
- if Not AMICheckFor then Exit;
- AMISaveChipsetState;
- AMISaveCacheState;
- AMIRaiseVpp;
- AMIFlashUnprotect;
-end;
+Function AMIRaiseVpp : Boolean;
+Begin
+  AMIRaiseVpp := False;
+  AMICallFunction($05,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMIRaiseVpp := True;
+End;
 
-procedure AMIDisable;
-begin
- if Not AMICheckFor then Exit;
- AMIRestoreChipsetState;
- AMIRestoreCacheState;
- AMILowerVpp;
- AmiFlashProtect;
-end;
+Function AMIFlashProtect : Boolean;
+Begin
+  AMIFlashProtect := False;
+  AMICallFunction($06,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMIFlashProtect := True;
+End;
+
+Function AMIFlashUNProtect : Boolean;
+Begin
+  AMIFlashUnProtect := False;
+  AMICallFunction($07,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMIFlashUnProtect := True;
+End;
+
+Function AMISaveCacheState : Boolean;
+Begin
+  AMISaveCacheState := False;
+  Reg.ES := Seg(Cache);
+  Reg.DI := Ofs(Cache);
+  AMICallFunction($0B,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMISaveCacheState := True;
+End;
+
+Function AMIRestoreCacheState : Boolean;
+Begin
+  AMIRestoreCacheState := False;
+  Reg.ES := Seg(Cache);
+  Reg.DI := Ofs(Cache);
+  AMICallFunction($0C,Reg);
+  If (Reg.Flags And FCarry = 0) Then AMIRestoreCacheState := True;
+End;
+
+
+
+Procedure AMIEnable;
+Begin
+  If Not AMICheckFor Then Exit;
+  AMISaveChipsetState;
+  AMISaveCacheState;
+  AMIRaiseVpp;
+  AMIFlashUnprotect;
+End;
+
+Procedure AMIDisable;
+Begin
+  If Not AMICheckFor Then Exit;
+  AMIRestoreChipsetState;
+  AMIRestoreCacheState;
+  AMILowerVpp;
+  AmiFlashProtect;
+End;
 
 {begin}
-end.
+End.

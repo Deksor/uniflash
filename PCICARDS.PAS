@@ -1,320 +1,358 @@
-unit PCICards; {Specific support for some PCI/AGP/CardBus cards} {v1.31}
 
-interface
-procedure PCIROMEnable(Map:Boolean); {v1.29}
-procedure Flash_PCI_ReadBlock(FlashAddr,MemAddr,Size:LongInt); {v1.31}
-procedure Flash_PCI_WriteBlock(FlashAddr,MemAddr,Size:LongInt); {v1.31}
-function Flash_PCI_Compare(MemAddr,FlashAddr,Size:LongInt):Boolean; {v1.31}
+Unit PCICards; {Specific support for some PCI/AGP/CardBus cards} {v1.31}
 
-implementation
-uses PCI,Flash;
-var PCIReg,PCIMemBase:LongInt;
-    PCIBase:Word;
-type ReadFunc=function(Address:LongInt):Byte;
-     WriteProc=procedure(Address:LongInt;Data:Byte);
+Interface
+Procedure PCIROMEnable(Map:Boolean); {v1.29}
+Procedure Flash_PCI_ReadBlock(FlashAddr,MemAddr,Size:LongInt); {v1.31}
+Procedure Flash_PCI_WriteBlock(FlashAddr,MemAddr,Size:LongInt); {v1.31}
+Function Flash_PCI_Compare(MemAddr,FlashAddr,Size:LongInt): Boolean; {v1.31}
 
-procedure DetectPCIBase;
-var A:Byte;
-    X:LongInt;
-begin
-  A:=$10;
-  repeat
-    X:=GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,A);
-    if X and 7=4 then A:=A+4;
-    if X and 1=0 then A:=A+4;
-  until (X and 1=1) or (A>$28);
-  if A<=$28 then PCIBase:=X shr 2 else PCIBase:=$FFFF;
-end;
+Implementation
 
-procedure DetectPCIMemBase;
-var A:Byte;
-    X:LongInt;
-begin
-  A:=$10;
-  repeat
-    X:=GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,A);
-    if X and 1=1 then A:=A+4;
-  until (X and 1=0) or (A>$28);
-  if A<=$28 then PCIMemBase:=X shr 4 else PCIMemBase:=$FFFFFFFF;
-end;
+Uses PCI,Flash;
 
-procedure SetPCIFlashAccess(ReadFun:ReadFunc;WritePro:WriteProc);
-begin
+Var PCIReg,PCIMemBase: LongInt;
+  PCIBase: Word;
+
+Type ReadFunc = Function (Address:LongInt): Byte;
+  WriteProc = Procedure (Address:LongInt;Data:Byte);
+
+Procedure DetectPCIBase;
+
+Var A: Byte;
+  X: LongInt;
+Begin
+  A := $10;
+  Repeat
+    X := GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,A);
+    If X And 7=4 Then A := A+4;
+    If X And 1=0 Then A := A+4;
+  Until (X And 1=1) Or (A>$28);
+  If A<=$28 Then PCIBase := X shr 2
+  Else PCIBase := $FFFF;
+End;
+
+Procedure DetectPCIMemBase;
+
+Var A: Byte;
+  X: LongInt;
+Begin
+  A := $10;
+  Repeat
+    X := GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,A);
+    If X And 1=1 Then A := A+4;
+  Until (X And 1=0) Or (A>$28);
+  If A<=$28 Then PCIMemBase := X shr 4
+  Else PCIMemBase := $FFFFFFFF;
+End;
+
+Procedure SetPCIFlashAccess(ReadFun:ReadFunc;WritePro:WriteProc);
+Begin
   DetectPCIBase;
-  Flash_Read:=ReadFun;
-  Flash_Write:=WritePro;
-  Flash_ReadBlock:=@Flash_PCI_ReadBlock;
-  Flash_WriteBlock:=@Flash_PCI_WriteBlock;
-  Flash_Compare:=@Flash_PCI_Compare;
-end;
+  Flash_Read := ReadFun;
+  Flash_Write := WritePro;
+  Flash_ReadBlock := @Flash_PCI_ReadBlock;
+  Flash_WriteBlock := @Flash_PCI_WriteBlock;
+  Flash_Compare := @Flash_PCI_Compare;
+End;
 
 {$F+}
-function Flash_PCI_Read_Winbond(Address:LongInt):Byte;
-var A:LongInt;
-begin
+Function Flash_PCI_Read_Winbond(Address:LongInt): Byte;
+
+Var A: LongInt;
+Begin
   OPortD(PCIBase+$28,Address);
-  A:=IPortD(PCIBase+$24);
-  OPortD(PCIBase+$24,A and $FFFFF7FF or $4000);
-  repeat
-    A:=IPortD(PCIBase+$24);
-  until A and $4000=0;
-  Flash_PCI_Read_Winbond:=Lo(A);
-end;
+  A := IPortD(PCIBase+$24);
+  OPortD(PCIBase+$24,A And $FFFFF7FF Or $4000);
+  Repeat
+    A := IPortD(PCIBase+$24);
+  Until A And $4000=0;
+  Flash_PCI_Read_Winbond := Lo(A);
+End;
 
-procedure Flash_PCI_Write_Winbond(Address:LongInt;Data:Byte);
-var A:LongInt;
-begin
+Procedure Flash_PCI_Write_Winbond(Address:LongInt;Data:Byte);
+
+Var A: LongInt;
+Begin
   OPortD(PCIBase+$28,Address);
-  A:=IPortD(PCIBase+$24);
-  OPortD(PCIBase+$24,A and $FFFFF700 or LongInt(Data) or $2000);
-  repeat
-    A:=IPortD(PCIBase+$24);
-  until A and $2000=0;
-end;
+  A := IPortD(PCIBase+$24);
+  OPortD(PCIBase+$24,A And $FFFFF700 Or LongInt(Data) or $2000);
+  Repeat
+    A := IPortD(PCIBase+$24);
+  Until A And $2000=0;
+End;
 
-function Flash_PCI_Read_3Com(Address:LongInt):Byte; {3C90xB/C}
-begin
+Function Flash_PCI_Read_3Com(Address:LongInt): Byte; {3C90xB/C}
+Begin
   OPortD(PCIBase+4,Address);
-  Flash_PCI_Read_3Com:=Port[PCIBase+8];
-end;
+  Flash_PCI_Read_3Com := Port[PCIBase+8];
+End;
 
-procedure Flash_PCI_Write_3Com(Address:LongInt;Data:Byte);
-begin
+Procedure Flash_PCI_Write_3Com(Address:LongInt;Data:Byte);
+Begin
   OPortD(PCIBase+4,Address);
-  Port[PCIBase+8]:=Data;
-end;
+  Port[PCIBase+8] := Data;
+End;
 
-function Flash_PCI_Read_Realtek(Address:LongInt):Byte;
-begin
-  OPortD(PCIBase+$D4,Address or $1A0000);
-  Flash_PCI_Read_Realtek:=IPortD(PCIBase+$D4) shr 24;
-end;
+Function Flash_PCI_Read_Realtek(Address:LongInt): Byte;
+Begin
+  OPortD(PCIBase+$D4,Address Or $1A0000);
+  Flash_PCI_Read_Realtek := IPortD(PCIBase+$D4) shr 24;
+End;
 
-procedure Flash_PCI_Write_Realtek(Address:LongInt;Data:Byte);
-begin
-  OPortD(PCIBase+$D4,Address or $160000 or LongInt(Data) shl 24);
-end;
+Procedure Flash_PCI_Write_Realtek(Address:LongInt;Data:Byte);
+Begin
+  OPortD(PCIBase+$D4,Address Or $160000 Or LongInt(Data) shl 24);
+End;
 
-function Flash_PCI_Read_Realtek1000(Address:LongInt):Byte;
-begin
-  OPortD(PCIBase+$30,Address or $1A0000);
-  Flash_PCI_Read_Realtek1000:=IPortD(PCIBase+$30) shr 24;
-end;
+Function Flash_PCI_Read_Realtek1000(Address:LongInt): Byte;
+Begin
+  OPortD(PCIBase+$30,Address Or $1A0000);
+  Flash_PCI_Read_Realtek1000 := IPortD(PCIBase+$30) shr 24;
+End;
 
-procedure Flash_PCI_Write_Realtek1000(Address:LongInt;Data:Byte);
-begin
-  OPortD(PCIBase+$30,Address or $160000 or LongInt(Data) shl 24);
-end;
+Procedure Flash_PCI_Write_Realtek1000(Address:LongInt;Data:Byte);
+Begin
+  OPortD(PCIBase+$30,Address Or $160000 Or LongInt(Data) shl 24);
+End;
 
-function Flash_PCI_Read_VIA(Address:LongInt):Byte;
-var A:Byte;
-begin
-  PortW[PCIBase+$8C]:=Address;
-  Port[PCIBase+$90]:=1;
-  repeat
-    A:=Port[PCIBase+$90];
-  until A and $80=$80;
-  Flash_PCI_Read_VIA:=Port[PCIBase+$91];
-end;
+Function Flash_PCI_Read_VIA(Address:LongInt): Byte;
 
-procedure Flash_PCI_Write_VIA(Address:LongInt;Data:Byte);
-var A:Byte;
-begin
-  PortW[PCIBase+$8C]:=Address;
-  Port[PCIBase+$8F]:=Data;
-  Port[PCIBase+$90]:=2;
-  repeat
-    A:=Port[PCIBase+$90];
-  until A and $80=$80;
-end;
+Var A: Byte;
+Begin
+  PortW[PCIBase+$8C] := Address;
+  Port[PCIBase+$90] := 1;
+  Repeat
+    A := Port[PCIBase+$90];
+  Until A And $80=$80;
+  Flash_PCI_Read_VIA := Port[PCIBase+$91];
+End;
 
-function Flash_PCI_Read_ADMtek(Address:LongInt):Byte;
-var A:LongInt;
-begin
-  A:=IPortD(PCIBase+$A0);
-  OPortD(PCIBase+$A0,A and $78000000 or (Address shl 8) or $8000000);
-  repeat
-    A:=IPortD(PCIBase+$A0);
-  until A and $8000000=0;
-  Flash_PCI_Read_ADMtek:=Lo(A);
-end;
+Procedure Flash_PCI_Write_VIA(Address:LongInt;Data:Byte);
 
-procedure Flash_PCI_Write_ADMtek(Address:LongInt;Data:Byte);
-var A:LongInt;
-begin
-  A:=IPortD(PCIBase+$A0);
-  OPortD(PCIBase+$A0,A and $78000000 or (Address shl 8) or LongInt(Data) or $4000000);
-  repeat
-    A:=IPortD(PCIBase+$A0);
-  until A and $4000000=0;
-end;
+Var A: Byte;
+Begin
+  PortW[PCIBase+$8C] := Address;
+  Port[PCIBase+$8F] := Data;
+  Port[PCIBase+$90] := 2;
+  Repeat
+    A := Port[PCIBase+$90];
+  Until A And $80=$80;
+End;
 
-function Flash_PCI_Read_Sundance(Address:LongInt):Byte;
-begin
+Function Flash_PCI_Read_ADMtek(Address:LongInt): Byte;
+
+Var A: LongInt;
+Begin
+  A := IPortD(PCIBase+$A0);
+  OPortD(PCIBase+$A0,A And $78000000 Or (Address shl 8) or $8000000);
+  Repeat
+    A := IPortD(PCIBase+$A0);
+  Until A And $8000000=0;
+  Flash_PCI_Read_ADMtek := Lo(A);
+End;
+
+Procedure Flash_PCI_Write_ADMtek(Address:LongInt;Data:Byte);
+
+Var A: LongInt;
+Begin
+  A := IPortD(PCIBase+$A0);
+  OPortD(PCIBase+$A0,A And $78000000 Or (Address shl 8) or LongInt(Data) or $
+  4000000);
+  Repeat
+    A := IPortD(PCIBase+$A0);
+  Until A And $4000000=0;
+End;
+
+Function Flash_PCI_Read_Sundance(Address:LongInt): Byte;
+Begin
   OPortD(PCIBase+$40,Address);
-  Flash_PCI_Read_Sundance:=Port[PCIBase+$44];
-end;
+  Flash_PCI_Read_Sundance := Port[PCIBase+$44];
+End;
 
-procedure Flash_PCI_Write_Sundance(Address:LongInt;Data:Byte);
-begin
+Procedure Flash_PCI_Write_Sundance(Address:LongInt;Data:Byte);
+Begin
   OPortD(PCIBase+$40,Address);
-  Port[PCIBase+$44]:=Data;
-end;
+  Port[PCIBase+$44] := Data;
+End;
 {$F-}
 
-procedure PCIROMEnable(Map: Boolean); {v1.29}
-begin
-  if PCIROMEnabled=Map then Exit;
-  CurrentPCICard:='';
-  if PCIROMBus<>0 then {Configure PCI-to-PCI bridge(s)}
-   begin
+Procedure PCIROMEnable(Map: Boolean); {v1.29}
+Begin
+  If PCIROMEnabled=Map Then Exit;
+  CurrentPCICard := '';
+  If PCIROMBus<>0 Then {Configure PCI-to-PCI bridge(s)}
+    Begin
 
-   end;
-  with PCIROMs[CurPCIROM] do
-   begin
-    case VenID of
-     $104A: {STMicroelectronics} {v1.31}
-      begin
-        CurrentPCICard:='STMicroelectronics';
-        case DevID of
-         $0981,
-         $2774: begin
-                  CurrentPCICard:=CurrentPCICard+' STE10/100(A)';
-                  SetPCIFlashAccess(@Flash_PCI_Read_ADMtek,@Flash_PCI_Write_ADMtek);
-                end;
-        end;
-      end;
-     $1050: {Winbond} {v1.31}
-      begin
-        CurrentPCICard:='Winbond';
-        case DevID of
-         $0840: begin
-                  CurrentPCICard:=CurrentPCICard+' W89C840AF';
-                  SetPCIFlashAccess(@Flash_PCI_Read_Winbond,@Flash_PCI_Write_Winbond);
-                end;
-        end;
-      end;
-     $10B7: {3Com}
-      begin
-        CurrentPCICard:='3Com';
-        case DevID of
-         $9001:
-          begin
-            CurrentPCICard:=CurrentPCICard+' EtherLink XL PCI Combo';
-            SetPCIFlashAccess(@Flash_PCI_Read_3Com,@Flash_PCI_Write_3Com);
-          end;
-        end;
-      end;
-     $10B8: {SMSC} {v1.31}
-      begin
-        CurrentPCICard:='SMSC';
-        case DevID of
-         $0006:
-          begin
-           CurrentPCICard:=CurrentPCICard+' LAN83C175 EPIC/C';
-           DetectPCIBase;
-           if Map then
-            begin
-              PCIReg:=IPortD(PCIBase+$10);
-              OPortD(PCIBase+$10,PCIReg or $100);
-            end
-           else OPortD(PCIBase+$10,PCIReg);
-          end;
-        end;
-      end;
-     $10EC: {Realtek} {v1.31}
-      begin
-        CurrentPCICard:='Realtek';
-        case DevID of
-         $8129: begin
-                 CurrentPCICard:=CurrentPCICard+' RTL8129/30/39';
-                 SetPCIFlashAccess(@Flash_PCI_Read_Realtek,@Flash_PCI_Write_Realtek);
-                end;
-         $8139: begin
-                 CurrentPCICard:=CurrentPCICard+' RTL8139 series';
-                 SetPCIFlashAccess(@Flash_PCI_Read_Realtek,@Flash_PCI_Write_Realtek);
-                end;
-         $8169: begin
-                 CurrentPCICard:=CurrentPCICard+' RTL8169 series';
-                 SetPCIFlashAccess(@Flash_PCI_Read_Realtek1000,@Flash_PCI_Write_Realtek1000);
-                end;
-        end;
-      end;
-     $1106: {VIA} {v1.31}
-      begin
-        CurrentPCICard:='VIA';
-        SetPCIFlashAccess(@Flash_PCI_Read_VIA,@Flash_PCI_Write_VIA);
-        case DevID of
-         $3065: CurrentPCICard:=CurrentPCICard+' VT6102';
-         $3106: CurrentPCICard:=CurrentPCICard+' VT6105M Rhine III';
-        end;
-      end;
-     $121A: {3Dfx}
-      begin
-        CurrentPCICard:='3Dfx';
-        case DevID of
-         $0003: {Banshee}
-          begin
-           CurrentPCICard:=CurrentPCICard+' Banshee';
-           if Map then
-            begin
-              PCIReg:=GetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14);
-              SetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14,PCIReg or $10);
-            end
-           else SetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14,PCIReg);
-          end;
-        end;
-      end;
-     $1317: {ADMtek} {v1.31}
-      begin
-        CurrentPCICard:='ADMtek';
-        SetPCIFlashAccess(@Flash_PCI_Read_ADMtek,@Flash_PCI_Write_ADMtek);
-        case DevID of
-         $0981: CurrentPCICard:=CurrentPCICard+' AL981 Comet';
-         $0985: CurrentPCICard:=CurrentPCICard+' AN983(B/BL) Centaur (B)';
-         $1985: CurrentPCICard:=CurrentPCICard+' AN985(B/BL) Centaur (B)';
-         $9511: CurrentPCICard:=CurrentPCICard+' ADM9511 Centaur II';
-         $9513,
-         $9514: CurrentPCICard:=CurrentPCICard+' ADM9513 Centaur II';
-        end;
-      end;
-     $13F0: {Sundance Technology}
-      begin
-        CurrentPCICard:='Sundance Technology';
-        case DevID of
-         $0201:
-          begin
-            CurrentPCICard:=CurrentPCICard+' ST201';
-            SetPCIFlashAccess(@Flash_PCI_Read_Sundance,@Flash_PCI_Write_Sundance);
-          end;
-        end;
-      end;
-     $9004: {Adaptec} {v1.31}
-      begin
-        CurrentPCICard:='Adaptec';
-        case DevID of
-         $6915:
-          begin
-            CurrentPCICard:=CurrentPCICard+' AIC-6915';
-            DetectPCIMemBase;
-            if PCIMemBase<>$FFFFFFFF then ROMBase:=PCIMemBase;
-          end;
-        end;
-      end;
-    end;
-   end;
-  if CurrentPCICard='' then CurrentPCICard:='PCI or AGP card';
-  PCIROMEnabled:=Map;
-end;
+    End;
+  With PCIROMs[CurPCIROM] Do
+    Begin
+      Case VenID Of 
+        $104A: {STMicroelectronics} {v1.31}
+               Begin
+                 CurrentPCICard := 'STMicroelectronics';
+                 Case DevID Of 
+                   $0981,
+                   $2774:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' STE10/100(A)';
+                            SetPCIFlashAccess(@Flash_PCI_Read_ADMtek,@
+                                              Flash_PCI_Write_ADMtek);
+                          End;
+                 End;
+               End;
+        $1050: {Winbond} {v1.31}
+               Begin
+                 CurrentPCICard := 'Winbond';
+                 Case DevID Of 
+                   $0840:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' W89C840AF';
+                            SetPCIFlashAccess(@Flash_PCI_Read_Winbond,@
+                                              Flash_PCI_Write_Winbond);
+                          End;
+                 End;
+               End;
+        $10B7: {3Com}
+               Begin
+                 CurrentPCICard := '3Com';
+                 Case DevID Of 
+                   $9001:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+
+                                              ' EtherLink XL PCI Combo';
+                            SetPCIFlashAccess(@Flash_PCI_Read_3Com,@
+                                              Flash_PCI_Write_3Com);
+                          End;
+                 End;
+               End;
+        $10B8: {SMSC} {v1.31}
+               Begin
+                 CurrentPCICard := 'SMSC';
+                 Case DevID Of 
+                   $0006:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' LAN83C175 EPIC/C'
+                            ;
+                            DetectPCIBase;
+                            If Map Then
+                              Begin
+                                PCIReg := IPortD(PCIBase+$10);
+                                OPortD(PCIBase+$10,PCIReg Or $100);
+                              End
+                            Else OPortD(PCIBase+$10,PCIReg);
+                          End;
+                 End;
+               End;
+        $10EC: {Realtek} {v1.31}
+               Begin
+                 CurrentPCICard := 'Realtek';
+                 Case DevID Of 
+                   $8129:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' RTL8129/30/39';
+                            SetPCIFlashAccess(@Flash_PCI_Read_Realtek,@
+                                              Flash_PCI_Write_Realtek);
+                          End;
+                   $8139:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' RTL8139 series';
+                            SetPCIFlashAccess(@Flash_PCI_Read_Realtek,@
+                                              Flash_PCI_Write_Realtek);
+                          End;
+                   $8169:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' RTL8169 series';
+                            SetPCIFlashAccess(@Flash_PCI_Read_Realtek1000,@
+                                              Flash_PCI_Write_Realtek1000);
+                          End;
+                 End;
+               End;
+        $1106: {VIA} {v1.31}
+               Begin
+                 CurrentPCICard := 'VIA';
+                 SetPCIFlashAccess(@Flash_PCI_Read_VIA,@Flash_PCI_Write_VIA);
+                 Case DevID Of 
+                   $3065: CurrentPCICard := CurrentPCICard+' VT6102';
+                   $3106: CurrentPCICard := CurrentPCICard+' VT6105M Rhine III';
+                 End;
+               End;
+        $121A: {3Dfx}
+               Begin
+                 CurrentPCICard := '3Dfx';
+                 Case DevID Of 
+                   $0003: {Banshee}
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' Banshee';
+                            If Map Then
+                              Begin
+                                PCIReg := GetPCIRegD(PCIROMBus,PCIROMDev,
+                                          PCIROMFun,$14);
+                                SetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14,
+                                           PCIReg Or $10);
+                              End
+                            Else SetPCIRegD(PCIROMBus,PCIROMDev,PCIROMFun,$14,
+                                            PCIReg);
+                          End;
+                 End;
+               End;
+        $1317: {ADMtek} {v1.31}
+               Begin
+                 CurrentPCICard := 'ADMtek';
+                 SetPCIFlashAccess(@Flash_PCI_Read_ADMtek,@
+                                   Flash_PCI_Write_ADMtek);
+                 Case DevID Of 
+                   $0981: CurrentPCICard := CurrentPCICard+' AL981 Comet';
+                   $0985: CurrentPCICard := CurrentPCICard+
+                                            ' AN983(B/BL) Centaur (B)';
+                   $1985: CurrentPCICard := CurrentPCICard+
+                                            ' AN985(B/BL) Centaur (B)';
+                   $9511: CurrentPCICard := CurrentPCICard+' ADM9511 Centaur II'
+                   ;
+                   $9513,
+                   $9514: CurrentPCICard := CurrentPCICard+' ADM9513 Centaur II'
+                   ;
+                 End;
+               End;
+        $13F0: {Sundance Technology}
+               Begin
+                 CurrentPCICard := 'Sundance Technology';
+                 Case DevID Of 
+                   $0201:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' ST201';
+                            SetPCIFlashAccess(@Flash_PCI_Read_Sundance,@
+                                              Flash_PCI_Write_Sundance);
+                          End;
+                 End;
+               End;
+        $9004: {Adaptec} {v1.31}
+               Begin
+                 CurrentPCICard := 'Adaptec';
+                 Case DevID Of 
+                   $6915:
+                          Begin
+                            CurrentPCICard := CurrentPCICard+' AIC-6915';
+                            DetectPCIMemBase;
+                            If PCIMemBase<>$FFFFFFFF Then ROMBase := PCIMemBase;
+                          End;
+                 End;
+               End;
+      End;
+    End;
+  If CurrentPCICard='' Then CurrentPCICard := 'PCI or AGP card';
+  PCIROMEnabled := Map;
+End;
 
-procedure Flash_PCI_ReadBlock(FlashAddr,MemAddr,Size:LongInt);
-var A:LongInt;
-    B:Byte;
-begin
-  for A:=0 to Size do
-   begin
-     B:=Flash_Read(FlashAddr+A);
-     asm
+Procedure Flash_PCI_ReadBlock(FlashAddr,MemAddr,Size:LongInt);
+
+Var A: LongInt;
+  B: Byte;
+Begin
+  For A:=0 To Size Do
+    Begin
+      B := Flash_Read(FlashAddr+A);
+      asm
       XOR    AX,AX
       MOV    ES,AX
       DB     66H
@@ -323,18 +361,19 @@ begin
       ADD    DI,WORD(A)
       MOV    AH,B
       DB     66H
-      MOV    ES:[DI],AH
-     end;
-   end;
-end;
+      MOV    ES: [DI],AH
+    End;
+End;
+End;
 
-procedure Flash_PCI_WriteBlock(FlashAddr,MemAddr,Size:LongInt);
-var A:LongInt;
-    B:Byte;
-begin
-  for A:=0 to Size do
-   begin
-     asm
+Procedure Flash_PCI_WriteBlock(FlashAddr,MemAddr,Size:LongInt);
+
+Var A: LongInt;
+  B: Byte;
+Begin
+  For A:=0 To Size Do
+    Begin
+      asm
       XOR    AX,AX
       MOV    ES,AX
       DB     66H
@@ -342,21 +381,22 @@ begin
       DB     66H
       ADD    DI,WORD(A)
       DB     66H
-      MOV    AH,ES:[DI]
-      MOV    B,AH
-     end;
-     Flash_Write(FlashAddr+A,B);
-   end;
-end;
+      MOV    AH,ES: [DI]
+                    MOV    B,AH
+    End;
+  Flash_Write(FlashAddr+A,B);
+End;
+End;
 
-function Flash_PCI_Compare(MemAddr,FlashAddr,Size:LongInt):Boolean;
-var A:LongInt;
-    B,C:Byte;
-begin
-  for A:=0 to Size do
-   begin
-     B:=Flash_Read(FlashAddr+A);
-     asm
+Function Flash_PCI_Compare(MemAddr,FlashAddr,Size:LongInt): Boolean;
+
+Var A: LongInt;
+  B,C: Byte;
+Begin
+  For A:=0 To Size Do
+    Begin
+      B := Flash_Read(FlashAddr+A);
+      asm
       XOR    AX,AX
       MOV    ES,AX
       DB     66H
@@ -364,13 +404,17 @@ begin
       DB     66H
       ADD    DI,WORD(A)
       DB     66H
-      MOV    AH,ES:[DI]
-      MOV    C,AH
-     end;
-     if B<>C then begin Flash_PCI_Compare:=False;Exit;end;
-   end;
-  Flash_PCI_Compare:=True;
-end;
+      MOV    AH,ES: [DI]
+                    MOV    C,AH
+    End;
+  If B<>C Then
+    Begin
+      Flash_PCI_Compare := False;
+      Exit;
+    End;
+End;
+Flash_PCI_Compare := True;
+End;
 
 {begin}
-end.
+End.

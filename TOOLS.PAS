@@ -336,6 +336,12 @@ Begin
   MOV   AH,04H {Global disable A20}
   CALL  DWORD [XMMRtn]
  End;
+ {Make cleanup safe when both MyExitProc and the chained XMS exit handler
+  call it.  FPC does not necessarily chain ExitProc exactly like Borland.}
+ XMSManager := False;
+ XMSHnd := 0;
+ XMSPos := 0;
+ XMSLeft := 0;
 End;
 
 Procedure XMSExitProc;

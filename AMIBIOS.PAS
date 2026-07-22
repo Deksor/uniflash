@@ -1,7 +1,6 @@
 
 Unit AMIBios; { Unit to use AMI's flash interface when exists }
 
-
 { This interface is used to help the flash utility to prepare the system
 for a BIOS upgrade. It can be found in all new AMI WinBIOSes. These functions
 are common to every chipset.

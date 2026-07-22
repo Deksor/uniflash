@@ -26,14 +26,12 @@ Begin
 { AddMsg(14, 'Foutieve bestandsgrootte - moet exact 4K zijn !'#7 );}
   AddMsg(15, 'Wilt u doorgaan (J/N)?' );
 
-
 { AddMsg(16, 'WAARSCHUWING: U ZAL ALLE ' );
  AddMsg(17, ' GEGEVENS VERLIEZEN. DOORGAAN [J,N]?' );}
   AddMsg(18, ' bestandsnaam : ' );
   AddMsg(19, 'Bootblock bestandsnaam: ' );
   AddMsg(20, 'OUDE BIOS TERUG FLASHEN NAAR FLASH ROM CHIP [J,N]?' );
   AddMsg(21,
-
         ' WAARSCHUWING: U ZAL ALLE BIOS INSTELLINGEN VERLIEZEN. DOORGAAN [J,N]?'
   );
   AddMsg(22, 'HEB ' );
@@ -44,7 +42,6 @@ Begin
   AddMsg(25, '-REBOOT         Reboot after flashing (use together with -E)' );
   {v1.28}
   AddMsg(26,
-
       'FOUT BIJ HET SCHRIJVEN NAAR CMOS - CMOS (GEDEELTELIJK) SCHRIJFBEVEILIGD.'
          #7 );
   AddMsg(27, 'OUDE CMOS GEGEVENS TERUGSCHRIJVEN [J,N]?' );
@@ -76,7 +73,6 @@ Begin
   AddMsg(47, 'Bestandsnaam: ' );
   AddMsg(48, '           Klaar.' );
   AddMsg(49,
-
      'BOOTBLOCK MISMATCH. FLASH INCLUDING BOOTBLOCK (HIGHLY RECOMMENDED) [Y,N]?'
   ); {v1.30}
   AddMsg(50, 'Niet genoeg vrij geheugen' );
@@ -104,7 +100,6 @@ Begin
   AddMsg(71, '              Optie ROM voor: ' );
   AddMsg(72, 'device op ' );
 
-
 { AddMsg(73, 'Schrijf ESCD blok (PnP gegevens) naar schijf' );
  AddMsg(74, 'Flash ESCD blok (PnP gegevens) naar Flash ROM' );
  AddMsg(75, 'Wis ESCD blok (PnP data)' );
@@ -127,7 +122,6 @@ Begin
 { AddMsg(92, 'Additionele BIOS informatie' );}
   AddMsg(93, 'Verlaat UNIFLASH' );
   AddMsg(94,
-
    'LAATSTE SCHRIJFOPERATIE NAAR FLASHROM WAS ONSUCCESVOL. TOCH VERLATEN [J/N]?'
          #7 );
   AddMsg(95, ' niet gelukt !'#7 );  {Last part of msg 7 & 8 !!!!}
@@ -137,7 +131,6 @@ Begin
   AddMsg(99, ' bytes zijn !'#7 );
   AddMsg(100, 'Redetect Flash ROM' ); {v1.23}
   AddMsg(101, 'CMOS submenu �' ); {v1.23}
-
 
 { AddMsg(100, 'BIOS Mfg: ' );
  AddMsg(101, '   BIOS Model: ' );
@@ -154,7 +147,6 @@ Begin
   AddMsg(110, 'This program can''t be run under Windows.' ); {v1.22}
   AddMsg(111, 'PCI bus not found or not responding.' ); {v1.22}
   AddMsg(112, 'c''t Flasher not found.'); {v1.32}
-
 
 (* AddMsg(112, 'Write ESCD (Plug & Play) data to file' ); {v1.23}
  AddMsg(113, 'Flash ESCD (Plug & Play) data from file to Flash ROM' ); {v1.23}

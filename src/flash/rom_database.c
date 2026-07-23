@@ -80,15 +80,13 @@ static bool behavior_is_valid(uf_flash_behavior_t behavior)
 static bool chip_geometry_is_valid(const uf_flash_chip_t *chip)
 {
     uf_rom_size_t total_size;
-    uint8_t index;
-
     if (chip->sector_region_count > UF_FLASH_MAX_SECTOR_REGIONS)
     {
         return false;
     }
 
     total_size = 0;
-    for (index = 0; index < chip->sector_region_count; ++index)
+    for (uint8_t index = 0; index < chip->sector_region_count; ++index)
     {
         const uf_flash_sector_region_t *region = &chip->sector_regions[index];
 
@@ -110,7 +108,7 @@ static bool chip_geometry_is_valid(const uf_flash_chip_t *chip)
             region->sector_size_bytes * (uf_rom_size_t)region->sector_count;
     }
 
-    for (index = chip->sector_region_count;
+    for (uint8_t index = chip->sector_region_count;
          index < UF_FLASH_MAX_SECTOR_REGIONS;
          ++index)
     {
@@ -124,9 +122,9 @@ static bool chip_geometry_is_valid(const uf_flash_chip_t *chip)
 
     if (chip->behavior == UF_FLASH_BEHAVIOR_SECTOR)
     {
-        return total_size == chip->capacity_bytes ? true : false;
+        return total_size == chip->capacity_bytes;
     }
-    return total_size == 0 ? true : false;
+    return total_size == 0;
 }
 
 static bool chip_is_valid(const uf_flash_chip_t *chip)
@@ -151,9 +149,7 @@ static bool chip_is_valid(const uf_flash_chip_t *chip)
 const uf_flash_manufacturer_t *uf_rom_find_manufacturer(
     uint8_t manufacturer_id)
 {
-    uint16_t index;
-
-    for (index = 0; index < uf_rom_manufacturer_count; ++index)
+    for (uint16_t index = 0; index < uf_rom_manufacturer_count; ++index)
     {
         if (
             uf_rom_manufacturers[index].manufacturer_id == manufacturer_id)
@@ -168,13 +164,11 @@ const uf_flash_chip_t *uf_rom_find_chip(
     const uf_flash_manufacturer_t *manufacturer,
     uint8_t device_id)
 {
-    uint16_t index;
-
     if (manufacturer == NULL)
     {
         return NULL;
     }
-    for (index = 0; index < manufacturer->chip_count; ++index)
+    for (uint16_t index = 0; index < manufacturer->chip_count; ++index)
     {
         if (manufacturer->chips[index].device_id == device_id)
         {
@@ -186,25 +180,19 @@ const uf_flash_chip_t *uf_rom_find_chip(
 
 bool uf_rom_database_validate(void)
 {
-    uint16_t manufacturer_index;
-
-    for (
-        manufacturer_index = 0;
-        manufacturer_index < uf_rom_manufacturer_count;
-        ++manufacturer_index)
+    for (uint16_t manufacturer_index = 0;
+         manufacturer_index < uf_rom_manufacturer_count;
+         ++manufacturer_index)
     {
         const uf_flash_manufacturer_t *manufacturer =
             &uf_rom_manufacturers[manufacturer_index];
-        uint16_t chip_index;
-        uint16_t previous_index;
-
         if (
             manufacturer->name == NULL || manufacturer->name[0] == '\0' || manufacturer->chips == NULL || manufacturer->chip_count == 0)
         {
             return false;
         }
 
-        for (previous_index = 0;
+        for (uint16_t previous_index = 0;
              previous_index < manufacturer_index;
              ++previous_index)
         {
@@ -215,14 +203,14 @@ bool uf_rom_database_validate(void)
             }
         }
 
-        for (chip_index = 0; chip_index < manufacturer->chip_count;
+        for (uint16_t chip_index = 0; chip_index < manufacturer->chip_count;
              ++chip_index)
         {
             if (!chip_is_valid(&manufacturer->chips[chip_index]))
             {
                 return false;
             }
-            for (previous_index = 0; previous_index < chip_index;
+            for (uint16_t previous_index = 0; previous_index < chip_index;
                  ++previous_index)
             {
                 if (

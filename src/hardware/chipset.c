@@ -227,9 +227,7 @@ static bool indexed_read8(
     uint8_t *value)
 {
     return (
-               hardware->out8(hardware->context, index_port, index) && hardware->in8(hardware->context, data_port, value))
-               ? true
-               : false;
+        hardware->out8(hardware->context, index_port, index) && hardware->in8(hardware->context, data_port, value));
 }
 
 static bool indexed_write8(
@@ -240,9 +238,7 @@ static bool indexed_write8(
     uint8_t value)
 {
     return (
-               hardware->out8(hardware->context, index_port, index) && hardware->out8(hardware->context, data_port, value))
-               ? true
-               : false;
+        hardware->out8(hardware->context, index_port, index) && hardware->out8(hardware->context, data_port, value));
 }
 
 static bool set_north_enabled(
@@ -366,20 +362,18 @@ static bool set_north_enabled(
                 UINT8_C(0x2B), value | UINT8_C(0x20));
         }
         return (
-                   indexed_write8(
-                       hardware, UINT16_C(0x22), UINT16_C(0x23),
-                       UINT8_C(0x12), (uint8_t)chipset->north_saved[0]) &&
-                   indexed_write8(
-                       hardware, UINT16_C(0x22), UINT16_C(0x23),
-                       UINT8_C(0x21), (uint8_t)chipset->north_saved[1]) &&
-                   indexed_write8(
-                       hardware, UINT16_C(0x22), UINT16_C(0x23),
-                       UINT8_C(0x2B), (uint8_t)chipset->north_saved[2]) &&
-                   indexed_write8(
-                       hardware, UINT16_C(0x22), UINT16_C(0x23),
-                       UINT8_C(0x03), UINT8_C(0)))
-                   ? true
-                   : false;
+            indexed_write8(
+                hardware, UINT16_C(0x22), UINT16_C(0x23),
+                UINT8_C(0x12), (uint8_t)chipset->north_saved[0]) &&
+            indexed_write8(
+                hardware, UINT16_C(0x22), UINT16_C(0x23),
+                UINT8_C(0x21), (uint8_t)chipset->north_saved[1]) &&
+            indexed_write8(
+                hardware, UINT16_C(0x22), UINT16_C(0x23),
+                UINT8_C(0x2B), (uint8_t)chipset->north_saved[2]) &&
+            indexed_write8(
+                hardware, UINT16_C(0x22), UINT16_C(0x23),
+                UINT8_C(0x03), UINT8_C(0)));
     case UF_CHIPSET_NORTH_CYPRESS:
         if (enabled)
         {
@@ -811,9 +805,8 @@ static bool lpc_unlock(uf_chipset_t *chipset)
     uint8_t sequence[] = {
         UINT8_C(0x87), UINT8_C(0x87), UINT8_C(0x87),
         UINT8_C(0x01), UINT8_C(0x55)};
-    uint8_t index;
 
-    for (index = 0; index < sizeof(sequence); ++index)
+    for (uint8_t index = 0; index < sizeof(sequence); ++index)
     {
         if (!hardware->out8(
                 hardware->context,
@@ -908,9 +901,7 @@ static const chipset_id_t *find_id(
     uint16_t vendor,
     uint16_t device)
 {
-    uint16_t index;
-
-    for (index = 0; index < count; ++index)
+    for (uint16_t index = 0; index < count; ++index)
     {
         if (
             ids[index].vendor == vendor && ids[index].device == device)
@@ -1209,9 +1200,7 @@ bool uf_chipset_detect(
         chipset->name = "Unknown PCI chipset";
     }
     return (
-               chipset->north_found || chipset->south_found)
-               ? true
-               : false;
+        chipset->north_found || chipset->south_found);
 }
 
 bool uf_chipset_rom_set_enabled(
@@ -1225,7 +1214,7 @@ bool uf_chipset_rom_set_enabled(
     if (
         chipset == NULL || chipset->pci.hardware == NULL || chipset->rom_enabled == enabled)
     {
-        return chipset != NULL ? true : false;
+        return chipset != NULL;
     }
     if (enabled)
     {

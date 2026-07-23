@@ -25,8 +25,6 @@ bool uf_image_store_capture(
     uf_flash_service_t *flash,
     uf_rom_size_t image_size_bytes)
 {
-    uf_rom_offset_t offset;
-    uint8_t value;
 
     if (
         store == NULL || flash == NULL || store->hardware == NULL || image_size_bytes == 0 || image_size_bytes > store->capacity_bytes)
@@ -34,8 +32,9 @@ bool uf_image_store_capture(
         return false;
     }
     store->image_size_bytes = 0;
-    for (offset = 0; offset < image_size_bytes; ++offset)
+    for (uf_rom_offset_t offset = 0; offset < image_size_bytes; ++offset)
     {
+        uint8_t value;
         if (
             !uf_flash_service_read_byte(flash, offset, &value) || !store->hardware->phys_write8(
                                                                       store->hardware->context,

@@ -96,8 +96,8 @@ static void gui_color(uint8_t foreground, uint8_t background)
 
 static void gui_move(uint8_t column, uint8_t row)
 {
-    uint8_t bios_column = (uint8_t)(column - 1);
-    uint8_t bios_row = (uint8_t)(row - 1);
+    uint8_t bios_column = column - 1;
+    uint8_t bios_row = row - 1;
 
     _asm {
         mov ah,02h
@@ -125,7 +125,7 @@ static void gui_put_char(char character)
     }
     if (gui_column < 80)
     {
-        gui_move((uint8_t)(gui_column + 1), gui_row);
+        gui_move(gui_column + 1, gui_row);
     }
 }
 
@@ -159,10 +159,8 @@ static void gui_write_at(uint8_t column, uint8_t row, const char *text)
 
 static void gui_clear_line(uint8_t row)
 {
-    uint8_t column;
-
     gui_move(1, row);
-    for (column = 0; column < 80; ++column)
+    for (uint8_t column = 0; column < 80; ++column)
     {
         gui_put_char(' ');
     }
@@ -288,7 +286,6 @@ static bool gui_prompt_filename(
     char *path,
     uint8_t capacity)
 {
-    uint8_t length = 0;
 
     gui_color(GUI_YELLOW, GUI_BLACK);
     gui_clear_line(20);
@@ -296,6 +293,8 @@ static bool gui_prompt_filename(
     gui_color(GUI_WHITE, GUI_BLACK);
     gui_cursor(true);
     path[0] = '\0';
+
+    uint8_t length = 0;
     for (;;)
     {
         int key = getch();
@@ -334,7 +333,7 @@ static bool gui_prompt_filename(
     }
     gui_cursor(false);
     gui_clear_line(20);
-    return length != 0 ? true : false;
+    return length != 0;
 }
 
 static void gui_show_operation_result(
@@ -512,9 +511,7 @@ static void gui_draw_item(
 
 static void gui_clear_menu_area(void)
 {
-    uint8_t row;
-
-    for (row = 10; row <= 21; ++row)
+    for (uint8_t row = 10; row <= 21; ++row)
     {
         gui_clear_line(row);
     }
@@ -527,12 +524,10 @@ static void gui_run_menu_items(
     bool main_menu)
 {
     uint8_t selected = 0;
-    uint8_t index;
     bool finished = false;
-
     while (!state->done && !finished)
     {
-        for (index = 0; index < count; ++index)
+        for (uint8_t index = 0; index < count; ++index)
         {
             gui_draw_item(&items[index], index == selected);
         }

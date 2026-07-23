@@ -13,42 +13,40 @@ static bool finali_select_bank(void *context, uint8_t bank)
         return false;
     }
     return (
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x22),
-                   UINT8_C(0x03)) &&
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x23),
-                   UINT8_C(0xC5)) &&
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x22),
-                   UINT8_C(0x2B)) &&
-               hardware->in8(
-                   hardware->context,
-                   UINT16_C(0x23),
-                   &value) &&
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x22),
-                   UINT8_C(0x2B)) &&
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x23),
-                   bank == 0
-                       ? value | UINT8_C(0x20)
-                       : value & UINT8_C(0xDF)) &&
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x22),
-                   UINT8_C(0x03)) &&
-               hardware->out8(
-                   hardware->context,
-                   UINT16_C(0x23),
-                   UINT8_C(0)))
-               ? true
-               : false;
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x22),
+            UINT8_C(0x03)) &&
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x23),
+            UINT8_C(0xC5)) &&
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x22),
+            UINT8_C(0x2B)) &&
+        hardware->in8(
+            hardware->context,
+            UINT16_C(0x23),
+            &value) &&
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x22),
+            UINT8_C(0x2B)) &&
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x23),
+            bank == 0
+                ? value | UINT8_C(0x20)
+                : value & UINT8_C(0xDF)) &&
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x22),
+            UINT8_C(0x03)) &&
+        hardware->out8(
+            hardware->context,
+            UINT16_C(0x23),
+            UINT8_C(0)));
 }
 
 static bool aladdin_shadow_control(
@@ -130,15 +128,13 @@ static bool set_flash_access(
 {
     runtime->flash_access = *access;
     return (
-               uf_flash_service_init(
-                   &runtime->flash,
-                   &runtime->flash_access,
-                   rom_base) &&
-               uf_flash_service_set_algorithms(
-                   &runtime->flash,
-                   &runtime->algorithms))
-               ? true
-               : false;
+        uf_flash_service_init(
+            &runtime->flash,
+            &runtime->flash_access,
+            rom_base) &&
+        uf_flash_service_set_algorithms(
+            &runtime->flash,
+            &runtime->algorithms));
 }
 
 bool uf_runtime_set_rom_enabled(

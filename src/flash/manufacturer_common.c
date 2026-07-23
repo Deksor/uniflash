@@ -50,9 +50,7 @@ static bool update_locks(
     uint8_t and_mask,
     uint8_t or_mask)
 {
-    uint8_t index;
-
-    for (index = 0; index < count; ++index)
+    for (uint8_t index = 0; index < count; ++index)
     {
         if (
             !uf_flash_update_phys_byte(

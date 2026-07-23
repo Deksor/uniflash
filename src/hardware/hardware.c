@@ -3,9 +3,7 @@
 bool uf_hardware_is_valid(const uf_hardware_t *hardware)
 {
     return (
-               hardware != NULL && hardware->in8 != NULL && hardware->in16 != NULL && hardware->in32 != NULL && hardware->out8 != NULL && hardware->out16 != NULL && hardware->out32 != NULL && hardware->phys_read8 != NULL && hardware->phys_write8 != NULL && hardware->delay_us != NULL)
-               ? true
-               : false;
+        hardware != NULL && hardware->in8 != NULL && hardware->in16 != NULL && hardware->in32 != NULL && hardware->out8 != NULL && hardware->out16 != NULL && hardware->out32 != NULL && hardware->phys_read8 != NULL && hardware->phys_write8 != NULL && hardware->delay_us != NULL);
 }
 
 bool uf_hw_phys_read_block(
@@ -15,14 +13,12 @@ bool uf_hw_phys_read_block(
     uf_rom_size_t size_bytes)
 {
     uint8_t *bytes = destination;
-    uf_rom_size_t offset;
-
     if (
         !uf_hardware_is_valid(hardware) || (destination == NULL && size_bytes != 0) || source > UINT32_MAX - size_bytes)
     {
         return false;
     }
-    for (offset = 0; offset < size_bytes; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size_bytes; ++offset)
     {
         if (
             !hardware->phys_read8(
@@ -43,14 +39,12 @@ bool uf_hw_phys_write_block(
     uf_rom_size_t size_bytes)
 {
     const uint8_t *bytes = source;
-    uf_rom_size_t offset;
-
     if (
         !uf_hardware_is_valid(hardware) || (source == NULL && size_bytes != 0) || destination > UINT32_MAX - size_bytes)
     {
         return false;
     }
-    for (offset = 0; offset < size_bytes; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size_bytes; ++offset)
     {
         if (
             !hardware->phys_write8(
@@ -72,8 +66,6 @@ bool uf_hw_phys_compare_block(
     bool *equal)
 {
     const uint8_t *bytes = source;
-    uf_rom_size_t offset;
-
     if (equal == NULL)
     {
         return false;
@@ -84,7 +76,7 @@ bool uf_hw_phys_compare_block(
     {
         return false;
     }
-    for (offset = 0; offset < size_bytes; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size_bytes; ++offset)
     {
         uint8_t value;
 

@@ -7,8 +7,6 @@ static bool read_chunk(
     uint8_t *buffer,
     uint16_t size)
 {
-    uint16_t index;
-
     if (store != NULL && store->image_size_bytes != 0)
     {
         return uf_image_store_read(store, offset, buffer, size);
@@ -17,7 +15,7 @@ static bool read_chunk(
     {
         return uf_flash_service_read_block(flash, offset, buffer, size);
     }
-    for (index = 0; index < size; ++index)
+    for (uint16_t index = 0; index < size; ++index)
     {
         if (!uf_flash_service_read_byte(
                 flash, offset + index, &buffer[index]))
@@ -71,18 +69,17 @@ uf_read_result_t uf_read_workflow_dump_range(
     uint8_t *buffer,
     uint16_t buffer_size)
 {
-    FILE *file;
-    uf_rom_offset_t offset = 0;
     if (
         flash == NULL || size_bytes == 0 || path == NULL || path[0] == '\0' || buffer == NULL || buffer_size == 0 || image_offset > UINT32_MAX - size_bytes || (store != NULL && (image_offset > store->image_size_bytes || size_bytes > store->image_size_bytes - image_offset)))
     {
         return UF_READ_RESULT_INVALID_ARGUMENT;
     }
-    file = fopen(path, "wb");
+    FILE *file = fopen(path, "wb");
     if (file == NULL)
     {
         return UF_READ_RESULT_FILE_OPEN;
     }
+    uf_rom_offset_t offset = 0;
     while (offset < size_bytes)
     {
         uf_rom_size_t remaining = size_bytes - offset;
@@ -118,9 +115,6 @@ uf_read_result_t uf_read_workflow_compare(
     uint8_t *buffer,
     uint16_t buffer_size)
 {
-    FILE *file;
-    long file_size;
-    uf_rom_offset_t offset = 0;
     uf_read_result_t validation = validate_arguments(
         flash, store, image_size_bytes, path, buffer, buffer_size);
 
@@ -128,11 +122,12 @@ uf_read_result_t uf_read_workflow_compare(
     {
         return validation;
     }
-    file = fopen(path, "rb");
+    FILE *file = fopen(path, "rb");
     if (file == NULL)
     {
         return UF_READ_RESULT_FILE_OPEN;
     }
+    long file_size;
     if (
         fseek(file, 0, SEEK_END) != 0 || (file_size = ftell(file)) < 0 || fseek(file, 0, SEEK_SET) != 0)
     {
@@ -144,20 +139,20 @@ uf_read_result_t uf_read_workflow_compare(
         fclose(file);
         return UF_READ_RESULT_FILE_SIZE;
     }
+    uf_rom_offset_t offset = 0;
     while (offset < image_size_bytes)
     {
         uf_rom_size_t remaining = image_size_bytes - offset;
         uint16_t chunk = remaining < buffer_size
                              ? (uint16_t)remaining
                              : buffer_size;
-        uint16_t index;
 
         if (fread(buffer, 1, chunk, file) != chunk)
         {
             fclose(file);
             return UF_READ_RESULT_FILE_IO;
         }
-        for (index = 0; index < chunk; ++index)
+        for (uint16_t index = 0; index < chunk; ++index)
         {
             uint8_t value;
             if (

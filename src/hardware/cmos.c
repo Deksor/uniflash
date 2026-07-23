@@ -9,12 +9,10 @@ static bool indexed_read(
     uint8_t *value)
 {
     return (
-               hardware->out8(hardware->context, index_port, index) && hardware->in8(
-                                                                           hardware->context,
-                                                                           (uf_io_port_t)(index_port + 1),
-                                                                           value))
-               ? true
-               : false;
+        hardware->out8(hardware->context, index_port, index) && hardware->in8(
+                                                                    hardware->context,
+                                                                    (uf_io_port_t)(index_port + 1),
+                                                                    value));
 }
 
 static bool indexed_write(
@@ -24,12 +22,10 @@ static bool indexed_write(
     uint8_t value)
 {
     return (
-               hardware->out8(hardware->context, index_port, index) && hardware->out8(
-                                                                           hardware->context,
-                                                                           (uf_io_port_t)(index_port + 1),
-                                                                           value))
-               ? true
-               : false;
+        hardware->out8(hardware->context, index_port, index) && hardware->out8(
+                                                                    hardware->context,
+                                                                    (uf_io_port_t)(index_port + 1),
+                                                                    value));
 }
 
 bool uf_cmos_detect_last_index(
@@ -115,7 +111,6 @@ bool uf_cmos_read(
 {
     uint16_t required;
     uint16_t output = 0;
-    uint16_t index;
     uint16_t standard_last = last_index;
 
     if (
@@ -132,10 +127,10 @@ bool uf_cmos_read(
     {
         standard_last = UINT16_C(0x7F);
     }
-    for (
-        index = UF_CMOS_FIRST_SAVED_INDEX;
-        index <= standard_last;
-        ++index)
+    for (uint16_t
+             index = UF_CMOS_FIRST_SAVED_INDEX;
+         index <= standard_last;
+         ++index)
     {
         if (!indexed_read(
                 hardware, UINT16_C(0x70), (uint8_t)index, &data[output]))
@@ -146,7 +141,7 @@ bool uf_cmos_read(
     }
     if (last_index > UINT8_C(0x7F))
     {
-        for (index = 0x80; index <= last_index; ++index)
+        for (uint16_t index = 0x80; index <= last_index; ++index)
         {
             if (!indexed_read(
                     hardware,
@@ -170,23 +165,18 @@ bool uf_cmos_save_file(
 {
     uint8_t data[UF_CMOS_MAX_SAVED_BYTES];
     uint16_t size_bytes;
-    FILE *file;
-    bool written;
-    bool closed;
 
     if (
         path == NULL || path[0] == '\0' || !uf_cmos_read(hardware, last_index, data, sizeof(data), &size_bytes))
     {
         return false;
     }
-    file = fopen(path, "wb");
+    FILE *file = fopen(path, "wb");
     if (file == NULL)
     {
         return false;
     }
-    written = fwrite(data, 1, size_bytes, file) == size_bytes
-                  ? true
-                  : false;
-    closed = fclose(file) == 0 ? true : false;
-    return written && closed ? true : false;
+    bool written = fwrite(data, 1, size_bytes, file) == size_bytes;
+    bool closed = fclose(file) == 0;
+    return written && closed;
 }

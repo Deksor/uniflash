@@ -117,9 +117,7 @@ bool uf_flash_service_range_is_valid(
     {
         return false;
     }
-    return size_bytes <= service->chip->capacity_bytes - address
-               ? true
-               : false;
+    return size_bytes <= service->chip->capacity_bytes - address;
 }
 
 bool uf_flash_service_read_byte(
@@ -243,7 +241,7 @@ bool uf_flash_id_has_odd_parity(uint8_t manufacturer_id)
         parity ^= (uint8_t)(manufacturer_id & UINT8_C(1));
         manufacturer_id >>= 1;
     }
-    return parity != 0 ? true : false;
+    return parity != 0;
 }
 
 static bool send_id_command(
@@ -370,9 +368,7 @@ bool uf_flash_service_probe_id(
 
     result->valid = ((
                          result->manufacturer_id != result->initial_manufacturer_id || result->device_id != result->initial_device_id) &&
-                     uf_flash_id_has_odd_parity(result->manufacturer_id))
-                        ? true
-                        : false;
+                     uf_flash_id_has_odd_parity(result->manufacturer_id));
     return true;
 }
 
@@ -450,17 +446,14 @@ static bool select_rom_window(
 
 bool uf_flash_service_detect(uf_flash_service_t *service)
 {
-    uf_flash_id_result_t result;
-    uf_phys_addr_t fixed_rom_base;
-    uf_flash_id_method_t method;
-    uint8_t minimum_exponent;
-    uint8_t maximum_exponent;
-    uint8_t exponent;
-
     if (service == NULL || service->access.select_window == NULL)
     {
         return false;
     }
+
+    uf_phys_addr_t fixed_rom_base;
+    uint8_t minimum_exponent;
+    uint8_t maximum_exponent;
 
     fixed_rom_base = service->rom_base;
     if (fixed_rom_base == 0)
@@ -474,11 +467,13 @@ bool uf_flash_service_detect(uf_flash_service_t *service)
         maximum_exponent = 0;
     }
 
-    for (method = UF_FLASH_ID_METHOD_LEGACY;
+    uf_flash_id_result_t result;
+
+    for (uf_flash_id_method_t method = UF_FLASH_ID_METHOD_LEGACY;
          method <= UF_FLASH_ID_METHOD_STANDARD;
          ++method)
     {
-        for (exponent = minimum_exponent;
+        for (uint8_t exponent = minimum_exponent;
              exponent <= maximum_exponent;
              ++exponent)
         {
@@ -516,8 +511,6 @@ bool uf_flash_service_program(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uf_flash_program_fn program;
-
     if (
         service == NULL || service->chip == NULL || service->algorithms == NULL || !uf_flash_service_range_is_valid(service, position, (uf_rom_size_t)service->chip->page_size_bytes))
     {
@@ -528,7 +521,7 @@ bool uf_flash_service_program(
         return false;
     }
 
-    program = service->algorithms->program[service->chip->program_algorithm];
+    uf_flash_program_fn program = service->algorithms->program[service->chip->program_algorithm];
     if (program == NULL)
     {
         service->error = UF_FLASH_ERROR_PROGRAM;
@@ -551,8 +544,6 @@ bool uf_flash_service_erase(
     uf_flash_service_t *service,
     uf_rom_offset_t sector_address)
 {
-    uf_flash_erase_fn erase;
-
     if (
         service == NULL || service->chip == NULL || service->algorithms == NULL || service->chip->erase_algorithm == UF_FLASH_ERASE_NONE || !uf_flash_service_range_is_valid(service, sector_address, 1))
     {
@@ -563,7 +554,7 @@ bool uf_flash_service_erase(
         return false;
     }
 
-    erase = service->algorithms->erase[service->chip->erase_algorithm];
+    uf_flash_erase_fn erase = service->algorithms->erase[service->chip->erase_algorithm];
     if (erase == NULL)
     {
         service->error = UF_FLASH_ERROR_ERASE;

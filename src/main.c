@@ -73,7 +73,7 @@ static bool option_is(const char *argument, const char *name)
         ++argument;
         ++name;
     }
-    return *argument == '\0' && *name == '\0' ? true : false;
+    return *argument == '\0' && *name == '\0';
 }
 
 static void print_help(void)
@@ -101,21 +101,17 @@ static void print_help(void)
 static bool argument_is_option(const char *argument)
 {
     return (
-               argument != NULL && (argument[0] == '-' || argument[0] == '/'))
-               ? true
-               : false;
+        argument != NULL && (argument[0] == '-' || argument[0] == '/'));
 }
 
 static bool parse_decimal_byte(const char *text, uint8_t *value)
 {
-    char *end;
-    unsigned long parsed;
-
     if (text == NULL || text[0] == '\0' || value == NULL)
     {
         return false;
     }
-    parsed = strtoul(text, &end, 10);
+    char *end;
+    unsigned long parsed = strtoul(text, &end, 10);
     if (*end != '\0' || parsed > UINT8_MAX)
     {
         return false;
@@ -128,20 +124,18 @@ static bool parse_hex_address(
     const char *text,
     uf_phys_addr_t *address)
 {
-    char *end;
-    unsigned long value;
-
     if (text == NULL || text[0] == '\0' || address == NULL)
     {
         return false;
     }
-    value = strtoul(text, &end, 16);
+    char *end;
+    unsigned long value = strtoul(text, &end, 16);
     if (*end != '\0')
     {
         return false;
     }
     *address = (uf_phys_addr_t)value;
-    return (unsigned long)*address == value ? true : false;
+    return (unsigned long)*address == value;
 }
 
 static bool parse_options(
@@ -340,19 +334,15 @@ static bool parse_options(
 
 static void print_chip_list(void)
 {
-    uint16_t manufacturer_index;
-
     puts("  List of supported flash chips");
     puts("  -----------------------------");
-    for (
-        manufacturer_index = 0;
-        manufacturer_index < uf_rom_manufacturer_count;
-        ++manufacturer_index)
+    for (uint16_t manufacturer_index = 0;
+         manufacturer_index < uf_rom_manufacturer_count;
+         ++manufacturer_index)
     {
         const uf_flash_manufacturer_t *manufacturer =
             &uf_rom_manufacturers[manufacturer_index];
-        uint16_t chip_index;
-        for (chip_index = 0;
+        for (uint16_t chip_index = 0;
              chip_index < manufacturer->chip_count;
              ++chip_index)
         {
@@ -381,7 +371,6 @@ static bool select_flash_target(
     const uf_cli_options_t *options)
 {
     uf_pci_rom_list_t list;
-    uint8_t index;
 
     if (options->target == UF_CLI_TARGET_SYSTEM)
     {
@@ -403,7 +392,7 @@ static bool select_flash_target(
         unsigned long selected;
 
         puts("PCI devices with expansion ROMs:");
-        for (index = 0; index < list.count; ++index)
+        for (uint8_t index = 0; index < list.count; ++index)
         {
             const uf_pci_rom_device_t *device = &list.devices[index];
             printf(
@@ -433,13 +422,11 @@ static bool select_flash_target(
             return false;
         }
         return (
-                   uf_runtime_use_pci_rom(
-                       runtime, &list.devices[selected - 1]) &&
-                   uf_runtime_set_rom_enabled(runtime, true))
-                   ? true
-                   : false;
+            uf_runtime_use_pci_rom(
+                runtime, &list.devices[selected - 1]) &&
+            uf_runtime_set_rom_enabled(runtime, true));
     }
-    for (index = 0; index < list.count; ++index)
+    for (uint8_t index = 0; index < list.count; ++index)
     {
         const uf_pci_address_t *address =
             &list.devices[index].pci_device.address;
@@ -447,9 +434,7 @@ static bool select_flash_target(
             address->bus == options->pci_address.bus && address->device == options->pci_address.device && address->function == options->pci_address.function)
         {
             return (
-                       uf_runtime_use_pci_rom(runtime, &list.devices[index]) && uf_runtime_set_rom_enabled(runtime, true))
-                       ? true
-                       : false;
+                uf_runtime_use_pci_rom(runtime, &list.devices[index]) && uf_runtime_set_rom_enabled(runtime, true));
         }
     }
     return false;

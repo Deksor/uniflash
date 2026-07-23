@@ -21,7 +21,7 @@ rm -f \
 
 cd "$project_root"
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -fo="$build_dir/MEMMODEL.OBJ" \
     tests/toolchain/memory-model.c
 

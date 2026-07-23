@@ -6,12 +6,10 @@ static bool source_byte(
     uint8_t *value)
 {
     return (
-               service->access.read_source_byte != NULL && service->access.read_source_byte(
-                                                               service->access.context,
-                                                               address,
-                                                               value))
-               ? true
-               : false;
+        service->access.read_source_byte != NULL && service->access.read_source_byte(
+                                                        service->access.context,
+                                                        address,
+                                                        value));
 }
 
 static bool erase_bulk(
@@ -58,8 +56,6 @@ static bool program_byte(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL || service->access.read_source_byte == NULL)
     {
@@ -69,7 +65,7 @@ static bool program_byte(
         }
         return false;
     }
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint16_t timeout = UINT16_C(10);
         uint8_t value;
@@ -113,9 +109,7 @@ static bool write_page(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
 
@@ -136,7 +130,6 @@ static bool program_page(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint8_t attempt;
     uint8_t expected;
     uint8_t status = 0;
 
@@ -150,7 +143,7 @@ static bool program_page(
         return false;
     }
     expected &= UINT8_C(0x80);
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
         uint16_t timeout = UINT16_C(100);
 

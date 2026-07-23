@@ -28,9 +28,7 @@ static bool read_source_byte(
 static bool intel_reset(struct uf_flash_service *service)
 {
     return (
-               uf_flash_service_write_byte(service, 0, UINT8_C(0xFF)) && uf_flash_service_write_byte(service, 0, UINT8_C(0xFF)))
-               ? true
-               : false;
+        uf_flash_service_write_byte(service, 0, UINT8_C(0xFF)) && uf_flash_service_write_byte(service, 0, UINT8_C(0xFF)));
 }
 
 bool uf_flash_program_generic_page(
@@ -38,8 +36,6 @@ bool uf_flash_program_generic_page(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint8_t attempt;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -50,9 +46,8 @@ bool uf_flash_program_generic_page(
         return false;
     }
 
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
-        uint16_t offset;
         uint16_t timeout = UINT16_C(1000);
         uint8_t expected;
         uint8_t status = 0;
@@ -62,7 +57,7 @@ bool uf_flash_program_generic_page(
             service->error = UF_FLASH_ERROR_PROGRAM;
             return false;
         }
-        for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+        for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
         {
             uint8_t value;
 
@@ -126,9 +121,7 @@ bool uf_flash_program_generic_page(
         }
         if ((status & UINT8_C(0x80)) == expected)
         {
-            return service->error == UF_FLASH_ERROR_NONE
-                       ? true
-                       : false;
+            return service->error == UF_FLASH_ERROR_NONE;
         }
     }
 
@@ -141,8 +134,6 @@ bool uf_flash_program_intel_sector(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -153,7 +144,7 @@ bool uf_flash_program_intel_sector(
         return false;
     }
 
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
         uint8_t attempt;
@@ -241,7 +232,7 @@ bool uf_flash_program_intel_sector(
         service->error = UF_FLASH_ERROR_PROGRAM;
         return false;
     }
-    return service->error == UF_FLASH_ERROR_NONE ? true : false;
+    return service->error == UF_FLASH_ERROR_NONE;
 }
 
 static bool erase_intel_sector_with_command(
@@ -358,8 +349,6 @@ bool uf_flash_program_amd_sector(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -370,7 +359,7 @@ bool uf_flash_program_amd_sector(
         return false;
     }
 
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
         uint8_t attempt;
@@ -451,7 +440,6 @@ bool uf_flash_erase_amd_sector(
     struct uf_flash_service *service,
     uf_rom_offset_t sector_address)
 {
-    uint8_t attempt;
 
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
@@ -463,7 +451,7 @@ bool uf_flash_erase_amd_sector(
         return false;
     }
 
-    for (attempt = 0;
+    for (uint8_t attempt = 0;
          attempt < UF_AMD_ERASE_MAX_ATTEMPTS;
          ++attempt)
     {
@@ -534,8 +522,6 @@ bool uf_flash_erase_amd_bulk(
     struct uf_flash_service *service,
     uf_rom_offset_t status_address)
 {
-    uint8_t attempt;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -546,7 +532,7 @@ bool uf_flash_erase_amd_bulk(
         return false;
     }
 
-    for (attempt = 0; attempt < UF_AMD_ERASE_MAX_ATTEMPTS; ++attempt)
+    for (uint8_t attempt = 0; attempt < UF_AMD_ERASE_MAX_ATTEMPTS; ++attempt)
     {
         uint16_t timeout;
         uint8_t status;
@@ -689,8 +675,6 @@ bool uf_flash_program_amd_embedded(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -701,7 +685,7 @@ bool uf_flash_program_amd_embedded(
         return false;
     }
 
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
         uint8_t attempt;
@@ -793,7 +777,7 @@ bool uf_flash_program_amd_embedded(
         service->error = UF_FLASH_ERROR_PROGRAM;
         return false;
     }
-    return service->error == UF_FLASH_ERROR_NONE ? true : false;
+    return service->error == UF_FLASH_ERROR_NONE;
 }
 
 bool uf_flash_program_amd_flash(
@@ -801,8 +785,6 @@ bool uf_flash_program_amd_flash(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -813,10 +795,9 @@ bool uf_flash_program_amd_flash(
         return false;
     }
 
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
-        uint8_t attempt;
         uint8_t status = 0;
 
         if (
@@ -832,6 +813,7 @@ bool uf_flash_program_amd_flash(
             continue;
         }
 
+        uint8_t attempt;
         for (attempt = 0; attempt < 25; ++attempt)
         {
             if (
@@ -890,7 +872,6 @@ bool uf_flash_erase_amd_flash(
     struct uf_flash_service *service,
     uf_rom_offset_t ignored_address)
 {
-    uint16_t attempt;
     uint8_t status = 0;
 
     (void)ignored_address;
@@ -904,10 +885,8 @@ bool uf_flash_erase_amd_flash(
         return false;
     }
 
-    for (attempt = 0; attempt < UINT16_C(1000); ++attempt)
+    for (uint16_t attempt = 0; attempt < UINT16_C(1000); ++attempt)
     {
-        uf_rom_offset_t address;
-
         if (
             !uf_flash_service_write_byte(service, 0, UINT8_C(0x20)) || !uf_flash_service_write_byte(service, 0, UINT8_C(0x20)) || !service->access.delay_us(service->access.context, UINT32_C(10000)))
         {
@@ -915,7 +894,7 @@ bool uf_flash_erase_amd_flash(
             return false;
         }
 
-        for (address = 0;
+        for (uf_rom_offset_t address = 0;
              address < service->chip->capacity_bytes;
              ++address)
         {

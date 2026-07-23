@@ -110,9 +110,7 @@ static bool address_is_in_top_64k(
     const struct uf_flash_service *service,
     uf_rom_offset_t address)
 {
-    return address >= service->chip->capacity_bytes - UINT32_C(0x10000)
-               ? true
-               : false;
+    return address >= service->chip->capacity_bytes - UINT32_C(0x10000);
 }
 
 bool uf_flash_program_sharp_sector(
@@ -120,7 +118,6 @@ bool uf_flash_program_sharp_sector(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    bool transport_ok;
     bool operation_ok = false;
 
     if (
@@ -133,7 +130,7 @@ bool uf_flash_program_sharp_sector(
         return false;
     }
 
-    transport_ok = set_protection(
+    bool transport_ok = set_protection(
         service,
         UINT8_C(0xDB),
         UF_FLASH_ERROR_PROGRAM);
@@ -159,9 +156,7 @@ bool uf_flash_program_sharp_sector(
         return false;
     }
     return (
-               transport_ok && operation_ok && service->error == UF_FLASH_ERROR_NONE)
-               ? true
-               : false;
+        transport_ok && operation_ok && service->error == UF_FLASH_ERROR_NONE);
 }
 
 bool uf_flash_erase_sharp_sector(
@@ -206,9 +201,7 @@ bool uf_flash_erase_sharp_sector(
         return false;
     }
     return (
-               transport_ok && operation_ok && service->error == UF_FLASH_ERROR_NONE)
-               ? true
-               : false;
+        transport_ok && operation_ok && service->error == UF_FLASH_ERROR_NONE);
 }
 
 bool uf_flash_register_sharp_algorithms(

@@ -6,12 +6,10 @@ static bool source_byte(
     uint8_t *value)
 {
     return (
-               service->access.read_source_byte != NULL && service->access.read_source_byte(
-                                                               service->access.context,
-                                                               address,
-                                                               value))
-               ? true
-               : false;
+        service->access.read_source_byte != NULL && service->access.read_source_byte(
+                                                        service->access.context,
+                                                        address,
+                                                        value));
 }
 
 static bool write_source_page(
@@ -19,9 +17,7 @@ static bool write_source_page(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
 
@@ -55,8 +51,6 @@ static bool program_sector(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL || service->access.read_source_byte == NULL)
     {
@@ -66,10 +60,9 @@ static bool program_sector(
         }
         return false;
     }
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
-        uint8_t attempt;
         uint8_t status = 0;
 
         if (!source_byte(service, source_address + offset, &value))
@@ -77,7 +70,7 @@ static bool program_sector(
             service->error = UF_FLASH_ERROR_PROGRAM;
             return false;
         }
-        for (attempt = 0; attempt < 4; ++attempt)
+        for (uint8_t attempt = 0; attempt < 4; ++attempt)
         {
             uint8_t timeout = UINT8_C(40);
 
@@ -160,7 +153,6 @@ static bool erase_sector(
     struct uf_flash_service *service,
     uf_rom_offset_t sector_address)
 {
-    uint8_t attempt;
     uint8_t status = 0;
 
     if (
@@ -172,7 +164,7 @@ static bool erase_sector(
         }
         return false;
     }
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
         uint16_t timeout = UINT16_C(50000);
 
@@ -257,7 +249,6 @@ static bool program_sector_page(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint8_t attempt;
     uint8_t status = 0;
 
     if (
@@ -269,7 +260,7 @@ static bool program_sector_page(
         }
         return false;
     }
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
         uint16_t timeout = UINT16_C(5000);
 
@@ -329,7 +320,6 @@ static bool erase_status_polled(
     uf_rom_offset_t status_address,
     bool bulk)
 {
-    uint8_t attempt;
     uint8_t status = 0;
 
     if (
@@ -341,7 +331,7 @@ static bool erase_status_polled(
         }
         return false;
     }
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
         uint16_t timeout = UINT16_C(10000);
 

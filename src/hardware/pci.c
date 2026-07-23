@@ -30,16 +30,14 @@ bool uf_pci_read32(
         return false;
     }
     return (
-               pci->hardware->out32(
-                   pci->hardware->context,
-                   UF_PCI_CONFIG_ADDRESS_PORT,
-                   uf_pci_mechanism1_address(address, reg)) &&
-               pci->hardware->in32(
-                   pci->hardware->context,
-                   UF_PCI_CONFIG_DATA_PORT,
-                   value))
-               ? true
-               : false;
+        pci->hardware->out32(
+            pci->hardware->context,
+            UF_PCI_CONFIG_ADDRESS_PORT,
+            uf_pci_mechanism1_address(address, reg)) &&
+        pci->hardware->in32(
+            pci->hardware->context,
+            UF_PCI_CONFIG_DATA_PORT,
+            value));
 }
 
 bool uf_pci_write32(
@@ -53,16 +51,14 @@ bool uf_pci_write32(
         return false;
     }
     return (
-               pci->hardware->out32(
-                   pci->hardware->context,
-                   UF_PCI_CONFIG_ADDRESS_PORT,
-                   uf_pci_mechanism1_address(address, reg)) &&
-               pci->hardware->out32(
-                   pci->hardware->context,
-                   UF_PCI_CONFIG_DATA_PORT,
-                   value))
-               ? true
-               : false;
+        pci->hardware->out32(
+            pci->hardware->context,
+            UF_PCI_CONFIG_ADDRESS_PORT,
+            uf_pci_mechanism1_address(address, reg)) &&
+        pci->hardware->out32(
+            pci->hardware->context,
+            UF_PCI_CONFIG_DATA_PORT,
+            value));
 }
 
 bool uf_pci_read16(
@@ -127,26 +123,20 @@ bool uf_pci_enumerate(
     uf_pci_visit_fn visit,
     void *context)
 {
-    uint16_t bus_number;
-
     if (pci == NULL || visit == NULL)
     {
         return false;
     }
-    for (bus_number = 0; bus_number <= UINT8_MAX; ++bus_number)
+    for (uint16_t bus_number = 0; bus_number <= UINT8_MAX; ++bus_number)
     {
-        uint8_t device_number;
-
-        for (device_number = 0; device_number < 32; ++device_number)
+        for (uint8_t device_number = 0; device_number < 32; ++device_number)
         {
-            uf_pci_address_t address;
-            uf_pci_function_info_t function_zero;
-            uint8_t function_count;
-            uint8_t function_number;
 
+            uf_pci_address_t address;
             address.bus = (uint8_t)bus_number;
             address.device = device_number;
             address.function = 0;
+            uf_pci_function_info_t function_zero;
             if (!uf_pci_probe(pci, address, &function_zero))
             {
                 continue;
@@ -155,11 +145,11 @@ bool uf_pci_enumerate(
             {
                 return true;
             }
-            function_count = (function_zero.header_type & UINT8_C(0x80)) != 0 ? UINT8_C(8) : UINT8_C(1);
-            for (
-                function_number = 1;
-                function_number < function_count;
-                ++function_number)
+            uint8_t function_count = (function_zero.header_type & UINT8_C(0x80)) != 0 ? UINT8_C(8) : UINT8_C(1);
+            for (uint8_t
+                     function_number = 1;
+                 function_number < function_count;
+                 ++function_number)
             {
                 uf_pci_function_info_t device;
 

@@ -297,9 +297,7 @@ bool uf_dos_hardware_init(uf_hardware_t *hardware)
         return false;
     }
     return (
-               dos_flat_real_on() && uf_dos_hardware_init_io(hardware))
-               ? true
-               : false;
+        dos_flat_real_on() && uf_dos_hardware_init_io(hardware));
 }
 
 #else

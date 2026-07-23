@@ -103,9 +103,7 @@ static bool read_block(
 {
     uf_system_flash_backend_t *backend = context;
     uint8_t *bytes = destination;
-    uf_rom_size_t offset;
-
-    for (offset = 0; offset < size_bytes; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size_bytes; ++offset)
     {
         if (!read_byte(backend, flash_address + offset, &bytes[offset]))
         {
@@ -123,9 +121,7 @@ static bool write_block(
 {
     uf_system_flash_backend_t *backend = context;
     const uint8_t *bytes = source;
-    uf_rom_size_t offset;
-
-    for (offset = 0; offset < size_bytes; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size_bytes; ++offset)
     {
         if (!write_byte(backend, flash_address + offset, bytes[offset]))
         {
@@ -144,14 +140,12 @@ static bool compare_block(
 {
     uf_system_flash_backend_t *backend = context;
     const uint8_t *bytes = source;
-    uf_rom_size_t offset;
-
     if (equal == NULL)
     {
         return false;
     }
     *equal = false;
-    for (offset = 0; offset < size_bytes; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size_bytes; ++offset)
     {
         uint8_t value;
 

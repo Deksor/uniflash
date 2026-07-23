@@ -19,8 +19,6 @@ static bool probe_rom_size(
     uint32_t saved_bar = 0;
     uint32_t stuck_zero;
     uint32_t stuck_one;
-    uint32_t image;
-    uint8_t bit;
     bool result = false;
     bool command_saved = false;
     bool bar_saved = false;
@@ -59,7 +57,8 @@ static bool probe_rom_size(
     {
         goto restore;
     }
-    image = stuck_zero ^ stuck_one;
+    uint32_t image = stuck_zero ^ stuck_one;
+    uint8_t bit;
     for (bit = 1; bit < 32; ++bit)
     {
         if ((image & (UINT32_C(1) << bit)) != 0)
@@ -134,9 +133,7 @@ static bool find_io_base(
     uf_pci_address_t address,
     uf_io_port_t *base)
 {
-    uint8_t reg;
-
-    for (reg = UINT8_C(0x10); reg <= UINT8_C(0x28); reg += 4)
+    for (uint8_t reg = UINT8_C(0x10); reg <= UINT8_C(0x28); reg += 4)
     {
         uint32_t value;
 
@@ -162,9 +159,7 @@ static bool find_memory_base(
     uf_pci_address_t address,
     uf_phys_addr_t *base)
 {
-    uint8_t reg;
-
-    for (reg = UINT8_C(0x10); reg <= UINT8_C(0x28); reg += 4)
+    for (uint8_t reg = UINT8_C(0x10); reg <= UINT8_C(0x28); reg += 4)
     {
         uint32_t value;
 
@@ -283,7 +278,7 @@ static bool poll32_clear(
         }
         --timeout;
     } while ((*value & mask) != 0 && timeout > 0);
-    return timeout > 0 ? true : false;
+    return timeout > 0;
 }
 
 static bool indirect_read(
@@ -457,7 +452,7 @@ static bool indirect_write(
             }
             --data;
         } while ((status & UINT8_C(0x80)) == 0 && data > 0);
-        return data > 0 ? true : false;
+        return data > 0;
     case UF_PCI_FLASH_ADMTEK:
         return hardware->in32(
                    hardware->context, backend->io_base + UINT16_C(0xA0), &data) &&
@@ -495,8 +490,7 @@ static bool access_read_block(
     uf_rom_size_t size)
 {
     uint8_t *bytes = destination;
-    uf_rom_size_t offset;
-    for (offset = 0; offset < size; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size; ++offset)
     {
         if (!indirect_read(context, address + offset, &bytes[offset]))
         {
@@ -511,8 +505,7 @@ static bool access_write_block(
     uf_rom_size_t size)
 {
     const uint8_t *bytes = source;
-    uf_rom_size_t offset;
-    for (offset = 0; offset < size; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size; ++offset)
     {
         if (!indirect_write(context, address + offset, bytes[offset]))
         {
@@ -527,13 +520,12 @@ static bool access_compare(
     uf_rom_size_t size, bool *equal)
 {
     const uint8_t *bytes = source;
-    uf_rom_size_t offset;
     if (equal == NULL)
     {
         return false;
     }
     *equal = false;
-    for (offset = 0; offset < size; ++offset)
+    for (uf_rom_size_t offset = 0; offset < size; ++offset)
     {
         uint8_t value;
         if (!indirect_read(context, address + offset, &value))
@@ -625,7 +617,7 @@ bool uf_pci_rom_backend_set_enabled(
     if (
         backend == NULL || backend->hardware == NULL || backend->enabled == enabled)
     {
-        return backend != NULL ? true : false;
+        return backend != NULL;
     }
     address = backend->device.pci_device.address;
     if (enabled)

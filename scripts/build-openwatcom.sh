@@ -47,175 +47,175 @@ rm -f \
 
 cd "$project_root"
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/main.obj" \
     src/main.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/flashsvc.obj" \
     src/flash/flash_service.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/genalgo.obj" \
     src/flash/generic_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/intelalgo.obj" \
     src/flash/intel_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/sharpalgo.obj" \
     src/flash/sharp_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/mancommon.obj" \
     src/flash/manufacturer_common.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/pmcalgo.obj" \
     src/flash/pmc_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/wbalgo.obj" \
     src/flash/winbond_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/mxalgo.obj" \
     src/flash/macronix_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/atalgo.obj" \
     src/flash/atmel_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/sstalgo.obj" \
     src/flash/sst_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/stalgo.obj" \
     src/flash/st_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/allalgo.obj" \
     src/flash/all_algorithms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/hardware.obj" \
     src/hardware/hardware.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/doshw.obj" \
     src/hardware/dos_hardware.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/cmos.obj" \
     src/hardware/cmos.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/pci.obj" \
     src/hardware/pci.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/flashback.obj" \
     src/hardware/flash_backend.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/chipset.obj" \
     src/hardware/chipset.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/ctflash.obj" \
     src/hardware/ct_flasher.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/pcirom.obj" \
     src/hardware/pci_rom.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/runtime.obj" \
     src/hardware/runtime.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/dosxms.obj" \
     src/hardware/dos_xms.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/imgstore.obj" \
     src/app/image_store.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/readflow.obj" \
     src/app/read_workflow.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/language.obj" \
     src/app/language.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/menu.obj" \
     src/app/menu.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/dosgui.obj" \
     src/app/dos_gui.c
 
-wcc -q -bt=dos -3 -mh -d2 -od -wx \
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
     -fo="$build_dir/romdb.obj" \

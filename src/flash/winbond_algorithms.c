@@ -4,8 +4,6 @@ bool uf_flash_erase_winbond_sector(
     struct uf_flash_service *service,
     uf_rom_offset_t sector_address)
 {
-    uint8_t attempt;
-
     if (
         service == NULL || service->chip == NULL || service->access.delay_us == NULL)
     {
@@ -16,12 +14,11 @@ bool uf_flash_erase_winbond_sector(
         return false;
     }
 
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
-        uint16_t timeout = UINT16_C(25000);
+
         uint8_t previous;
         uint8_t current;
-
         if (
             !uf_flash_service_command(service, UINT8_C(0x80)) || !uf_flash_service_write_byte(service, UF_FLASH_COMMAND_ADDRESS_1, UF_FLASH_COMMAND_UNLOCK_1) || !uf_flash_service_write_byte(service, UF_FLASH_COMMAND_ADDRESS_2, UF_FLASH_COMMAND_UNLOCK_2) || !uf_flash_service_write_byte(service, sector_address, UINT8_C(0x50)) || !uf_flash_service_read_byte(service, sector_address, &previous))
         {
@@ -29,6 +26,7 @@ bool uf_flash_erase_winbond_sector(
             return false;
         }
 
+        uint16_t timeout = UINT16_C(25000);
         while (timeout > 0)
         {
             if (

@@ -43,7 +43,7 @@ static bool query_largest_block(
         mov largest,ax
     }
     *size_kib = largest;
-    return largest != 0 ? true : false;
+    return largest != 0;
 }
 
 static bool allocate_block(
@@ -62,7 +62,7 @@ static bool allocate_block(
         mov allocated_handle,dx
     }
     *handle = allocated_handle;
-    return result == 1 ? true : false;
+    return result == 1;
 }
 
 static bool lock_block(
@@ -84,7 +84,7 @@ static bool lock_block(
     }
     *linear_base =
         ((uint32_t)address_high << 16) | (uint32_t)address_low;
-    return result == 1 ? true : false;
+    return result == 1;
 }
 
 static bool xms_simple_call(
@@ -100,7 +100,7 @@ static bool xms_simple_call(
         call dword ptr entry_point
         mov result,ax
     }
-    return result == 1 ? true : false;
+    return result == 1;
 }
 
 bool uf_xms_init(uf_xms_t *xms)

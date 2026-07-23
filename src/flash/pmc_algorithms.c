@@ -6,8 +6,6 @@ static bool pmc_program(
     uf_phys_addr_t source_address,
     bool use_32k_lock)
 {
-    uf_phys_addr_t lock_address;
-
     if (service == NULL || service->chip == NULL)
     {
         if (service != NULL)
@@ -16,9 +14,9 @@ static bool pmc_program(
         }
         return false;
     }
-    lock_address = use_32k_lock
-                       ? uf_flash_fwh_32k_lock_address(service, position)
-                       : uf_flash_fwh_64k_lock_address(service, position);
+    uf_phys_addr_t lock_address = use_32k_lock
+                                      ? uf_flash_fwh_32k_lock_address(service, position)
+                                      : uf_flash_fwh_64k_lock_address(service, position);
     return uf_flash_run_protected_program(
         service,
         position,
@@ -34,8 +32,6 @@ static bool pmc_erase(
     uf_rom_offset_t sector_address,
     bool use_32k_lock)
 {
-    uf_phys_addr_t lock_address;
-
     if (service == NULL || service->chip == NULL)
     {
         if (service != NULL)
@@ -44,9 +40,9 @@ static bool pmc_erase(
         }
         return false;
     }
-    lock_address = use_32k_lock
-                       ? uf_flash_fwh_32k_lock_address(service, sector_address)
-                       : uf_flash_fwh_64k_lock_address(service, sector_address);
+    uf_phys_addr_t lock_address = use_32k_lock
+                                      ? uf_flash_fwh_32k_lock_address(service, sector_address)
+                                      : uf_flash_fwh_64k_lock_address(service, sector_address);
     return uf_flash_run_protected_erase(
         service,
         sector_address,

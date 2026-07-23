@@ -6,9 +6,7 @@ static uint8_t st_lock_addresses(
     uint8_t variant,
     uf_phys_addr_t *locks)
 {
-    uf_phys_addr_t base;
     uint8_t count = UINT8_C(1);
-    uint8_t index;
 
     if (variant == 2)
     {
@@ -31,7 +29,7 @@ static uint8_t st_lock_addresses(
         return count;
     }
 
-    base = uf_flash_fwh_64k_lock_address(service, address);
+    uf_phys_addr_t base = uf_flash_fwh_64k_lock_address(service, address);
     locks[0] = base;
     if (variant == 1)
     {
@@ -41,7 +39,7 @@ static uint8_t st_lock_addresses(
         (variant == 3 && (address < UINT32_C(0x10000) || address >= service->chip->capacity_bytes - UINT32_C(0x20000))) || (variant == 4 && (address < UINT32_C(0x20000) || address >= service->chip->capacity_bytes - UINT32_C(0x10000))))
     {
         count = UINT8_C(16);
-        for (index = 1; index < count; ++index)
+        for (uint8_t index = 1; index < count; ++index)
         {
             locks[index] = base + (uf_phys_addr_t)index * UINT32_C(0x1000);
         }

@@ -6,12 +6,10 @@ static bool source_byte(
     uint8_t *value)
 {
     return (
-               service->access.read_source_byte != NULL && service->access.read_source_byte(
-                                                               service->access.context,
-                                                               address,
-                                                               value))
-               ? true
-               : false;
+        service->access.read_source_byte != NULL && service->access.read_source_byte(
+                                                        service->access.context,
+                                                        address,
+                                                        value));
 }
 
 static bool protection_sequence(
@@ -22,9 +20,8 @@ static bool protection_sequence(
         UINT32_C(0x1823), UINT32_C(0x1820), UINT32_C(0x1822),
         UINT32_C(0x0418), UINT32_C(0x041B), UINT32_C(0x0419)};
     uint8_t ignored;
-    uint8_t index;
 
-    for (index = 0; index < sizeof(prefix) / sizeof(prefix[0]); ++index)
+    for (uint8_t index = 0; index < sizeof(prefix) / sizeof(prefix[0]); ++index)
     {
         if (!uf_flash_service_read_byte(service, prefix[index], &ignored))
         {
@@ -42,8 +39,6 @@ static bool program_sector(
     uf_rom_offset_t position,
     uf_phys_addr_t source_address)
 {
-    uint16_t offset;
-    uint16_t timeout = UINT16_C(500);
     uint8_t status = 0;
     bool ok = false;
 
@@ -65,6 +60,7 @@ static bool program_sector(
         service->error = UF_FLASH_ERROR_ERASE;
         goto restore;
     }
+    uint16_t timeout = UINT16_C(500);
     do
     {
         if (
@@ -87,7 +83,7 @@ static bool program_sector(
         (void)uf_flash_service_write_byte(service, 0, UINT8_C(0xFF));
         goto restore;
     }
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         if (
             !uf_flash_service_read_byte(
@@ -101,7 +97,7 @@ static bool program_sector(
             goto restore;
         }
     }
-    for (offset = 0; offset < service->chip->page_size_bytes; ++offset)
+    for (uint16_t offset = 0; offset < service->chip->page_size_bytes; ++offset)
     {
         uint8_t value;
         uint8_t attempt;
@@ -188,10 +184,9 @@ static bool erase_sector_20(
     struct uf_flash_service *service,
     uf_rom_offset_t position)
 {
-    uint8_t attempt;
     uint8_t status = 0;
 
-    for (attempt = 0; attempt < 4; ++attempt)
+    for (uint8_t attempt = 0; attempt < 4; ++attempt)
     {
         uint16_t timeout = UINT16_C(15);
 
@@ -295,8 +290,6 @@ static bool protected_program(
     uf_phys_addr_t source_address,
     bool fwh2)
 {
-    uf_phys_addr_t lock;
-
     if (service == NULL || service->chip == NULL)
     {
         if (service != NULL)
@@ -305,9 +298,9 @@ static bool protected_program(
         }
         return false;
     }
-    lock = fwh2
-               ? uf_flash_fwh_32k_lock_address(service, position)
-               : uf_flash_fwh_64k_lock_address(service, position);
+    uf_phys_addr_t lock = fwh2
+                              ? uf_flash_fwh_32k_lock_address(service, position)
+                              : uf_flash_fwh_64k_lock_address(service, position);
     return uf_flash_run_protected_program(
         service,
         position,
@@ -323,8 +316,6 @@ static bool protected_erase(
     uf_rom_offset_t address,
     bool fwh2)
 {
-    uf_phys_addr_t lock;
-
     if (service == NULL || service->chip == NULL)
     {
         if (service != NULL)
@@ -333,9 +324,9 @@ static bool protected_erase(
         }
         return false;
     }
-    lock = fwh2
-               ? uf_flash_fwh_32k_lock_address(service, address)
-               : uf_flash_fwh_64k_lock_address(service, address);
+    uf_phys_addr_t lock = fwh2
+                              ? uf_flash_fwh_32k_lock_address(service, address)
+                              : uf_flash_fwh_64k_lock_address(service, address);
     return uf_flash_run_protected_erase(
         service,
         address,

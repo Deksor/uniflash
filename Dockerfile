@@ -17,6 +17,7 @@ RUN apt-get update \
         curl \
         file \
         make \
+        pci.ids \
         zip \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*

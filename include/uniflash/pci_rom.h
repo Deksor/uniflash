@@ -61,5 +61,8 @@ bool uf_pci_rom_backend_make_access(
     uf_flash_access_t *access);
 const char *uf_pci_rom_device_name(
     const uf_pci_rom_device_t *device);
+const char *uf_pci_rom_device_name_from_ids(
+    const uf_pci_rom_device_t *device,
+    const char *path);
 
 #endif

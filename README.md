@@ -59,6 +59,14 @@ make release
 
 The release archive and SHA-256 checksum are written under `dist/`.
 
+`PCI.IDS` is optional at runtime. When it is present in the current directory
+(normally beside `UNIFLASH.EXE`), UniFlash scans it directly from disk to
+display current PCI vendor and device names without loading the database into
+DOS memory. The build strips comments, classes, and subsystem records because
+they are unused, reducing the file enough to share a 1.44 MB floppy with the
+executable. `PCI.IDS` may still be omitted; the built-in names for supported
+PCI flash devices are then used as a fallback.
+
 ## DOS usage
 
 Running `UNIFLASH` opens the 80×25 text-mode GUI. ROM-base detection is

@@ -167,6 +167,7 @@ clean:
 		build/msdos-c/menu.obj \
 		build/msdos-c/dosgui.obj \
 		build/msdos-c/romdb.obj \
+		build/msdos-c/PCI.IDS \
 		build/msdos-c/UNIFLASH.EXE \
 		build/msdos-c/uniflash.map \
 		build/host/rom_database_test \

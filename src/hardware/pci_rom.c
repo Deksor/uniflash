@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 #include "uniflash/pci_rom.h"
@@ -716,7 +717,8 @@ enable_failed:
     return false;
 }
 
-const char *uf_pci_rom_device_name(const uf_pci_rom_device_t *device)
+static const char *fallback_device_name(
+    const uf_pci_rom_device_t *device)
 {
     if (device == NULL)
     {
@@ -749,4 +751,128 @@ const char *uf_pci_rom_device_name(const uf_pci_rom_device_t *device)
     if (vendor == 0x9004 && id == 0x6915)
         return "Adaptec AIC-6915";
     return "PCI or AGP card";
+}
+
+static int hex_digit_value(char digit)
+{
+    if (digit >= '0' && digit <= '9')
+    {
+        return digit - '0';
+    }
+    if (digit >= 'a' && digit <= 'f')
+    {
+        return digit - 'a' + 10;
+    }
+    if (digit >= 'A' && digit <= 'F')
+    {
+        return digit - 'A' + 10;
+    }
+    return -1;
+}
+
+static bool parse_pci_id(const char *text, uint16_t *id)
+{
+    uint16_t value = 0;
+
+    for (uint8_t index = 0; index < 4; ++index)
+    {
+        int digit = hex_digit_value(text[index]);
+        if (digit < 0)
+        {
+            return false;
+        }
+        value = (uint16_t)((value << 4) | (uint16_t)digit);
+    }
+    if (text[4] != ' ' && text[4] != '\t')
+    {
+        return false;
+    }
+    *id = value;
+    return true;
+}
+
+static void copy_pci_name(
+    char *destination,
+    size_t capacity,
+    const char *source)
+{
+    while (*source == ' ' || *source == '\t')
+    {
+        ++source;
+    }
+    size_t length = strcspn(source, "\r\n");
+    if (length >= capacity)
+    {
+        length = capacity - 1;
+    }
+    memcpy(destination, source, length);
+    destination[length] = '\0';
+}
+
+const char *uf_pci_rom_device_name_from_ids(
+    const uf_pci_rom_device_t *device,
+    const char *path)
+{
+    static char line[256];
+    static char vendor_name[80];
+    static char device_name[128];
+    static char combined_name[208];
+
+    if (device == NULL || path == NULL)
+    {
+        return fallback_device_name(device);
+    }
+    FILE *file = fopen(path, "rt");
+    if (file == NULL)
+    {
+        return fallback_device_name(device);
+    }
+
+    bool matching_vendor = false;
+    vendor_name[0] = '\0';
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        uint16_t id;
+
+        if (line[0] != '\t')
+        {
+            if (!parse_pci_id(line, &id))
+            {
+                continue;
+            }
+            if (matching_vendor)
+            {
+                break;
+            }
+            matching_vendor = id == device->pci_device.vendor_id;
+            if (matching_vendor)
+            {
+                copy_pci_name(vendor_name, sizeof(vendor_name), line + 4);
+            }
+            continue;
+        }
+        if (
+            matching_vendor && line[1] != '\t' &&
+            parse_pci_id(line + 1, &id) &&
+            id == device->pci_device.device_id)
+        {
+            copy_pci_name(device_name, sizeof(device_name), line + 5);
+            fclose(file);
+            if (vendor_name[0] == '\0')
+            {
+                return device_name;
+            }
+            snprintf(
+                combined_name, sizeof(combined_name),
+                "%s %s", vendor_name, device_name);
+            return combined_name;
+        }
+    }
+    fclose(file);
+    return fallback_device_name(device);
+}
+
+const char *uf_pci_rom_device_name(const uf_pci_rom_device_t *device)
+{
+    return uf_pci_rom_device_name_from_ids(device, "PCI.IDS");
 }

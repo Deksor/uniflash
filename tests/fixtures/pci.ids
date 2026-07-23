@@ -1,0 +1,6 @@
+# Minimal pci.ids fixture
+10b7  3Com Corporation
+	9001  3C900 10Mbps Combo [Boomerang]
+	9050  3C905 100BaseTX [Boomerang]
+10ec  Realtek Semiconductor Co., Ltd.
+	8139  RTL-8100/8101L/8139 PCI Fast Ethernet Adapter

@@ -357,6 +357,29 @@ static void test_3com_pci_flash_access(void)
     assert(get_config(&mock, address, UINT8_C(0x30)) == UINT32_C(0));
 }
 
+static void test_pci_ids_names(void)
+{
+    uf_pci_rom_device_t device;
+
+    memset(&device, 0, sizeof(device));
+    device.pci_device.vendor_id = 0x10B7;
+    device.pci_device.device_id = 0x9001;
+    assert(strcmp(
+        uf_pci_rom_device_name_from_ids(
+            &device, "tests/fixtures/pci.ids"),
+        "3Com Corporation 3C900 10Mbps Combo [Boomerang]") == 0);
+    assert(strcmp(
+        uf_pci_rom_device_name_from_ids(
+            &device, "tests/fixtures/missing-pci.ids"),
+        "3Com EtherLink XL") == 0);
+
+    device.pci_device.device_id = 0xFFFF;
+    assert(strcmp(
+        uf_pci_rom_device_name_from_ids(
+            &device, "tests/fixtures/pci.ids"),
+        "PCI or AGP card") == 0);
+}
+
 int main(void)
 {
     test_pci_address();
@@ -364,6 +387,7 @@ int main(void)
     test_intel_chipset_enable_restore();
     test_ct_flasher_window();
     test_3com_pci_flash_access();
+    test_pci_ids_names();
     puts("hardware tests passed");
     return 0;
 }

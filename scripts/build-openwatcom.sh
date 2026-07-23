@@ -42,6 +42,7 @@ rm -f \
     "$build_dir/menu.obj" \
     "$build_dir/dosgui.obj" \
     "$build_dir/romdb.obj" \
+    "$build_dir/PCI.IDS" \
     "$build_dir/UNIFLASH.EXE" \
     "$build_dir/uniflash.map"
 
@@ -257,6 +258,15 @@ wcl -q -bt=dos -lr -3 -mh -k16384 -d2 -od -wx \
 if [ ! -s "$build_dir/UNIFLASH.EXE" ]; then
     echo "The UniFlash C executable was not created" >&2
     exit 1
+fi
+
+if [ -s /usr/share/misc/pci.ids ]; then
+    # UniFlash only consumes top-level vendor and one-tab device records.
+    # Omitting comments, classes, and subsystem records keeps PCI.IDS small
+    # enough to share a 1.44 MB floppy with UNIFLASH.EXE.
+    grep -E \
+        '^[[:xdigit:]]{4}  |^[[:space:]][[:xdigit:]]{4}  ' \
+        /usr/share/misc/pci.ids > "$build_dir/PCI.IDS"
 fi
 
 file "$build_dir/UNIFLASH.EXE"

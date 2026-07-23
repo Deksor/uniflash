@@ -25,6 +25,9 @@ rm -f "$archive" "$checksum"
 mkdir -p "$stage_dir" "$dist_dir"
 
 cp "$executable" "$stage_dir/UNIFLASH.EXE"
+if [ -s "$project_root/build/msdos-c/PCI.IDS" ]; then
+    cp "$project_root/build/msdos-c/PCI.IDS" "$stage_dir/PCI.IDS"
+fi
 cp "$project_root/README.md" "$stage_dir/README.md"
 cp "$project_root/LICENSE.TXT" "$stage_dir/LICENSE.TXT"
 cp "$project_root/CHANGELOG.md" "$stage_dir/CHANGELOG.md"

@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define UF_STATIC_ASSERT(name, expression) \
     typedef char uf_static_assert_##name[(expression) ? 1 : -1]
@@ -20,16 +21,10 @@ typedef uint16_t uf_io_port_t;
 typedef uint16_t uf_pci_device_id_t;
 typedef uint16_t uf_pci_vendor_id_t;
 
-typedef uint8_t uf_bool_t;
 typedef uint8_t uf_pci_bus_t;
 typedef uint8_t uf_pci_device_t;
 typedef uint8_t uf_pci_function_t;
 typedef uint8_t uf_pci_register_t;
-
-enum {
-    UF_FALSE = 0,
-    UF_TRUE = 1
-};
 
 UF_STATIC_ASSERT(char_is_8_bits, CHAR_BIT == 8);
 UF_STATIC_ASSERT(uint8_is_1_byte, sizeof(uint8_t) == 1);
@@ -63,8 +58,7 @@ UF_STATIC_ASSERT(dos16_size_t_is_2_bytes, sizeof(size_t) == 2);
 UF_STATIC_ASSERT(dos16_data_pointer_is_4_bytes, sizeof(void *) == 4);
 UF_STATIC_ASSERT(
     dos16_function_pointer_is_4_bytes,
-    sizeof(void (*)(void)) == 4
-);
+    sizeof(void (*)(void)) == 4);
 
 #endif
 

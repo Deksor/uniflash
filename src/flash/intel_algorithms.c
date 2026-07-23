@@ -2,106 +2,102 @@
 
 uf_phys_addr_t uf_flash_intel_lock_address(
     const struct uf_flash_service *service,
-    uf_rom_offset_t operation_address
-)
+    uf_rom_offset_t operation_address)
 {
-    if (service == NULL || service->chip == NULL) {
+    if (service == NULL || service->chip == NULL)
+    {
         return 0;
     }
     return (
-        operation_address & UINT32_C(0xFFFF0000)
-    ) + UINT32_C(0xFFC00002) - service->chip->capacity_bytes;
+               operation_address & UINT32_C(0xFFFF0000)) +
+           UINT32_C(0xFFC00002) - service->chip->capacity_bytes;
 }
 
-static uf_bool_t set_write_lock(
+static bool set_write_lock(
     struct uf_flash_service *service,
     uf_rom_offset_t operation_address,
-    uf_bool_t locked
-)
+    bool locked)
 {
-    if (service->access.set_write_lock == NULL) {
-        return UF_FALSE;
+    if (service->access.set_write_lock == NULL)
+    {
+        return false;
     }
     return service->access.set_write_lock(
         service->access.context,
         uf_flash_intel_lock_address(service, operation_address),
-        locked
-    );
+        locked);
 }
 
-uf_bool_t uf_flash_program_intel_sector_u(
+bool uf_flash_program_intel_sector_u(
     struct uf_flash_service *service,
     uf_rom_offset_t position,
-    uf_phys_addr_t source_address
-)
+    uf_phys_addr_t source_address)
 {
     uf_flash_error_t operation_error;
-    uf_bool_t result;
+    bool result;
 
     if (
-        service == NULL
-        || service->chip == NULL
-        || !set_write_lock(service, position, UF_FALSE)
-    ) {
-        if (service != NULL) {
+        service == NULL || service->chip == NULL || !set_write_lock(service, position, false))
+    {
+        if (service != NULL)
+        {
             service->error = UF_FLASH_ERROR_PROGRAM;
         }
-        return UF_FALSE;
+        return false;
     }
 
     result = uf_flash_program_intel_sector(
         service,
         position,
-        source_address
-    );
+        source_address);
     operation_error = service->error;
-    if (!set_write_lock(service, position, UF_TRUE)) {
+    if (!set_write_lock(service, position, true))
+    {
         service->error = UF_FLASH_ERROR_PROGRAM;
-        return UF_FALSE;
+        return false;
     }
     service->error = operation_error;
     return result;
 }
 
-uf_bool_t uf_flash_erase_intel_sector_protected_u(
+bool uf_flash_erase_intel_sector_protected_u(
     struct uf_flash_service *service,
-    uf_rom_offset_t sector_address
-)
+    uf_rom_offset_t sector_address)
 {
     uf_flash_error_t operation_error;
-    uf_bool_t result;
+    bool result;
 
     if (
-        service == NULL
-        || service->chip == NULL
-        || !set_write_lock(service, sector_address, UF_FALSE)
-    ) {
-        if (service != NULL) {
+        service == NULL || service->chip == NULL || !set_write_lock(service, sector_address, false))
+    {
+        if (service != NULL)
+        {
             service->error = UF_FLASH_ERROR_ERASE;
         }
-        return UF_FALSE;
+        return false;
     }
 
     result = uf_flash_erase_intel_sector_u(service, sector_address);
     operation_error = service->error;
-    if (!set_write_lock(service, sector_address, UF_TRUE)) {
+    if (!set_write_lock(service, sector_address, true))
+    {
         service->error = UF_FLASH_ERROR_ERASE;
-        return UF_FALSE;
+        return false;
     }
     service->error = operation_error;
     return result;
 }
 
-uf_bool_t uf_flash_register_intel_algorithms(
-    uf_flash_algorithm_registry_t *registry
-)
+bool uf_flash_register_intel_algorithms(
+    uf_flash_algorithm_registry_t *registry)
 {
-    if (!uf_flash_algorithm_registry_is_valid(registry)) {
-        return UF_FALSE;
+    if (!uf_flash_algorithm_registry_is_valid(registry))
+    {
+        return false;
     }
     registry->program[UF_FLASH_PROGRAM_INTEL_SECTOR_U] =
         uf_flash_program_intel_sector_u;
     registry->erase[UF_FLASH_ERASE_INTEL_SECTOR_U] =
         uf_flash_erase_intel_sector_protected_u;
-    return UF_TRUE;
+    return true;
 }

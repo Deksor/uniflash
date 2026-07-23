@@ -3,8 +3,7 @@
 
 #include "uniflash/manufacturer_common.h"
 
-uf_bool_t uf_flash_register_st_algorithms(
-    uf_flash_algorithm_registry_t *registry
-);
+bool uf_flash_register_st_algorithms(
+    uf_flash_algorithm_registry_t *registry);
 
 #endif

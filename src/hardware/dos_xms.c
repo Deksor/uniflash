@@ -4,7 +4,7 @@
 
 #if defined(UF_TARGET_DOS16)
 
-static uf_bool_t find_xms_entry(uint32_t *entry_point)
+static bool find_xms_entry(uint32_t *entry_point)
 {
     uint16_t available = 0;
     uint16_t entry_offset = 0;
@@ -22,55 +22,53 @@ static uf_bool_t find_xms_entry(uint32_t *entry_point)
         mov entry_segment,es
     no_xms_entry:
     }
-    if (!available) {
-        return UF_FALSE;
+    if (!available)
+    {
+        return false;
     }
     *entry_point =
         ((uint32_t)entry_segment << 16) | (uint32_t)entry_offset;
-    return UF_TRUE;
+    return true;
 }
 
-static uf_bool_t query_largest_block(
+static bool query_largest_block(
     uint32_t entry_point,
-    uint16_t *size_kib
-)
+    uint16_t *size_kib)
 {
     uint16_t largest = 0;
 
     _asm {
-        mov ah,08h                 /* Query free extended memory */
+        mov ah,08h /* Query free extended memory */
         call dword ptr entry_point
         mov largest,ax
     }
     *size_kib = largest;
-    return largest != 0 ? UF_TRUE : UF_FALSE;
+    return largest != 0 ? true : false;
 }
 
-static uf_bool_t allocate_block(
+static bool allocate_block(
     uint32_t entry_point,
     uint16_t size_kib,
-    uint16_t *handle
-)
+    uint16_t *handle)
 {
     uint16_t result = 0;
     uint16_t allocated_handle = 0;
 
     _asm {
         mov dx,size_kib
-        mov ah,09h                 /* Allocate extended-memory block */
+        mov ah,09h /* Allocate extended-memory block */
         call dword ptr entry_point
         mov result,ax
         mov allocated_handle,dx
     }
     *handle = allocated_handle;
-    return result == 1 ? UF_TRUE : UF_FALSE;
+    return result == 1 ? true : false;
 }
 
-static uf_bool_t lock_block(
+static bool lock_block(
     uint32_t entry_point,
     uint16_t handle,
-    uf_phys_addr_t *linear_base
-)
+    uf_phys_addr_t *linear_base)
 {
     uint16_t result = 0;
     uint16_t address_low = 0;
@@ -78,7 +76,7 @@ static uf_bool_t lock_block(
 
     _asm {
         mov dx,handle
-        mov ah,0ch                 /* Lock extended-memory block */
+        mov ah,0ch /* Lock extended-memory block */
         call dword ptr entry_point
         mov result,ax
         mov address_low,bx
@@ -86,14 +84,13 @@ static uf_bool_t lock_block(
     }
     *linear_base =
         ((uint32_t)address_high << 16) | (uint32_t)address_low;
-    return result == 1 ? UF_TRUE : UF_FALSE;
+    return result == 1 ? true : false;
 }
 
-static uf_bool_t xms_simple_call(
+static bool xms_simple_call(
     uint32_t entry_point,
     uint16_t handle,
-    uint8_t function
-)
+    uint8_t function)
 {
     uint16_t result = 0;
 
@@ -103,67 +100,65 @@ static uf_bool_t xms_simple_call(
         call dword ptr entry_point
         mov result,ax
     }
-    return result == 1 ? UF_TRUE : UF_FALSE;
+    return result == 1 ? true : false;
 }
 
-uf_bool_t uf_xms_init(uf_xms_t *xms)
+bool uf_xms_init(uf_xms_t *xms)
 {
     uint16_t size_kib;
 
-    if (xms == NULL) {
-        return UF_FALSE;
+    if (xms == NULL)
+    {
+        return false;
     }
     memset(xms, 0, sizeof(*xms));
     if (
-        !find_xms_entry(&xms->entry_point)
-        || !query_largest_block(xms->entry_point, &size_kib)
-        || !allocate_block(xms->entry_point, size_kib, &xms->handle)
-    ) {
+        !find_xms_entry(&xms->entry_point) || !query_largest_block(xms->entry_point, &size_kib) || !allocate_block(xms->entry_point, size_kib, &xms->handle))
+    {
         memset(xms, 0, sizeof(*xms));
-        return UF_FALSE;
+        return false;
     }
-    xms->allocated = UF_TRUE;
+    xms->allocated = true;
     if (!lock_block(
-        xms->entry_point, xms->handle, &xms->linear_base
-    )) {
+            xms->entry_point, xms->handle, &xms->linear_base))
+    {
         (void)xms_simple_call(xms->entry_point, xms->handle, 0x0A);
         memset(xms, 0, sizeof(*xms));
-        return UF_FALSE;
+        return false;
     }
-    xms->locked = UF_TRUE;
-    if (!xms_simple_call(xms->entry_point, 0, 0x03)) {
+    xms->locked = true;
+    if (!xms_simple_call(xms->entry_point, 0, 0x03))
+    {
         (void)uf_xms_shutdown(xms);
-        return UF_FALSE;
+        return false;
     }
-    xms->a20_enabled = UF_TRUE;
+    xms->a20_enabled = true;
     xms->size_bytes = (uf_rom_size_t)size_kib << 10;
-    return UF_TRUE;
+    return true;
 }
 
-uf_bool_t uf_xms_shutdown(uf_xms_t *xms)
+bool uf_xms_shutdown(uf_xms_t *xms)
 {
-    uf_bool_t result = UF_TRUE;
+    bool result = true;
 
-    if (xms == NULL) {
-        return UF_FALSE;
+    if (xms == NULL)
+    {
+        return false;
     }
     if (
-        xms->locked
-        && !xms_simple_call(xms->entry_point, xms->handle, 0x0D)
-    ) {
-        result = UF_FALSE;
+        xms->locked && !xms_simple_call(xms->entry_point, xms->handle, 0x0D))
+    {
+        result = false;
     }
     if (
-        xms->allocated
-        && !xms_simple_call(xms->entry_point, xms->handle, 0x0A)
-    ) {
-        result = UF_FALSE;
+        xms->allocated && !xms_simple_call(xms->entry_point, xms->handle, 0x0A))
+    {
+        result = false;
     }
     if (
-        xms->a20_enabled
-        && !xms_simple_call(xms->entry_point, 0, 0x04)
-    ) {
-        result = UF_FALSE;
+        xms->a20_enabled && !xms_simple_call(xms->entry_point, 0, 0x04))
+    {
+        result = false;
     }
     memset(xms, 0, sizeof(*xms));
     return result;
@@ -171,21 +166,23 @@ uf_bool_t uf_xms_shutdown(uf_xms_t *xms)
 
 #else
 
-uf_bool_t uf_xms_init(uf_xms_t *xms)
+bool uf_xms_init(uf_xms_t *xms)
 {
-    if (xms != NULL) {
+    if (xms != NULL)
+    {
         memset(xms, 0, sizeof(*xms));
     }
-    return UF_FALSE;
+    return false;
 }
 
-uf_bool_t uf_xms_shutdown(uf_xms_t *xms)
+bool uf_xms_shutdown(uf_xms_t *xms)
 {
-    if (xms == NULL) {
-        return UF_FALSE;
+    if (xms == NULL)
+    {
+        return false;
     }
     memset(xms, 0, sizeof(*xms));
-    return UF_TRUE;
+    return true;
 }
 
 #endif

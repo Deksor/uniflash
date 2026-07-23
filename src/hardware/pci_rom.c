@@ -612,14 +612,12 @@ bool uf_pci_rom_backend_set_enabled(
     uf_pci_rom_backend_t *backend,
     bool enabled)
 {
-    uf_pci_address_t address;
-
     if (
         backend == NULL || backend->hardware == NULL || backend->enabled == enabled)
     {
         return backend != NULL;
     }
-    address = backend->device.pci_device.address;
+    uf_pci_address_t address = backend->device.pci_device.address;
     if (enabled)
     {
         if (!uf_pci_read32(
@@ -720,15 +718,12 @@ enable_failed:
 
 const char *uf_pci_rom_device_name(const uf_pci_rom_device_t *device)
 {
-    uint16_t vendor;
-    uint16_t id;
-
     if (device == NULL)
     {
         return "PCI or AGP card";
     }
-    vendor = device->pci_device.vendor_id;
-    id = device->pci_device.device_id;
+    uint16_t vendor = device->pci_device.vendor_id;
+    uint16_t id = device->pci_device.device_id;
     if (vendor == 0x104A && (id == 0x0981 || id == 0x2774))
         return "STMicroelectronics STE10/100";
     if (vendor == 0x1050 && id == 0x0840)

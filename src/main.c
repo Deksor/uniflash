@@ -389,14 +389,19 @@ static bool select_flash_target(
     {
         char selection[8];
         char *end;
-        unsigned long selected;
 
         puts("PCI devices with expansion ROMs:");
+        if (list.count == 0)
+        {
+            return false;
+        }
+        puts("    B D F   VEN  DEV  NAME");
         for (uint8_t index = 0; index < list.count; ++index)
         {
             const uf_pci_rom_device_t *device = &list.devices[index];
             printf(
-                "  %u %u %u - %04X:%04X %s (%luK max)\r\n",
+                "%02X  %u %u %u - %04X:%04X %s (%luK max)\r\n",
+                (unsigned int)index + 1,
                 (unsigned int)device->pci_device.address.bus,
                 (unsigned int)device->pci_device.address.device,
                 (unsigned int)device->pci_device.address.function,
@@ -405,17 +410,13 @@ static bool select_flash_target(
                 uf_pci_rom_device_name(device),
                 (unsigned long)(device->maximum_size >> 10));
         }
-        if (list.count == 0)
-        {
-            return false;
-        }
         printf("Select device (1-%u, 0 to cancel): ",
                (unsigned int)list.count);
         if (fgets(selection, sizeof(selection), stdin) == NULL)
         {
             return false;
         }
-        selected = strtoul(selection, &end, 10);
+        unsigned long selected = strtoul(selection, &end, 10);
         if (
             selected == 0 || selected > list.count || (*end != '\0' && *end != '\r' && *end != '\n'))
         {

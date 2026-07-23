@@ -1,0 +1,157 @@
+/*
+ * Catalyst is an officially licensed second source for Intel flash chips.
+ * Most chips below are essentially equivalent to their Intel counterparts,
+ * apart from the manufacturer ID.
+ *
+ * Ported from the comments in CATALYST.PAS.
+ */
+UF_ROM_BEGIN(catalyst, 0x31, "Catalyst")
+
+UF_ROM_CHIP(
+    0x84, "CAT28F150T/12V", UF_KIB(192), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_INTEL_SECTOR, UF_FLASH_ERASE_INTEL_SECTOR,
+    4,
+    1, UF_KIB(64),
+    1, UF_KIB(96),
+    2, UF_KIB(8),
+    1, UF_KIB(16),
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0x85, "CAT28F150B/12V", UF_KIB(192), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_INTEL_SECTOR, UF_FLASH_ERASE_INTEL_SECTOR,
+    4,
+    1, UF_KIB(16),
+    2, UF_KIB(8),
+    1, UF_KIB(96),
+    1, UF_KIB(64),
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0x94, "CAT28F001T/12V", UF_KIB(128), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_INTEL_SECTOR, UF_FLASH_ERASE_INTEL_SECTOR,
+    3,
+    1, UF_KIB(112),
+    2, UF_KIB(4),
+    1, UF_KIB(8),
+    0, 0,
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0x95, "CAT28F001B/12V", UF_KIB(128), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_INTEL_SECTOR, UF_FLASH_ERASE_INTEL_SECTOR,
+    3,
+    1, UF_KIB(8),
+    2, UF_KIB(4),
+    1, UF_KIB(112),
+    0, 0,
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0xB0, "CAT29F(N)002T/5V", UF_KIB(256), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_AMD_SECTOR, UF_FLASH_ERASE_AMD_SECTOR,
+    4,
+    3, UF_KIB(64),
+    1, UF_KIB(32),
+    2, UF_KIB(8),
+    1, UF_KIB(16),
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0x34, "CAT29F(N)002B/5V", UF_KIB(256), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_AMD_SECTOR, UF_FLASH_ERASE_AMD_SECTOR,
+    4,
+    1, UF_KIB(16),
+    2, UF_KIB(8),
+    1, UF_KIB(32),
+    3, UF_KIB(64),
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0x7C, "CAT28F002T/12V", UF_KIB(256), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_INTEL_SECTOR, UF_FLASH_ERASE_INTEL_SECTOR,
+    4,
+    1, UF_KIB(128),
+    1, UF_KIB(96),
+    2, UF_KIB(8),
+    1, UF_KIB(16),
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0x7D, "CAT28F002B/12V", UF_KIB(256), 128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_INTEL_SECTOR, UF_FLASH_ERASE_INTEL_SECTOR,
+    4,
+    1, UF_KIB(16),
+    2, UF_KIB(8),
+    1, UF_KIB(96),
+    1, UF_KIB(128),
+    0, 0
+)
+
+/* Added in Pascal version 1.21. */
+UF_ROM_CHIP(
+    0xB4, "CAT28F010/12V", UF_KIB(128), 128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH, UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+)
+
+/*
+ * Added in Pascal version 1.29.
+ * Original warning: "ALIGN" (emphasized with exclamation marks).
+ */
+UF_ROM_CHIP(
+    0xB1, "CAT28F015T/12V", UF_KIB(192), 128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH, UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+)
+
+/*
+ * Added in Pascal version 1.29.
+ * Original warning: "ALIGN" (emphasized with exclamation marks).
+ */
+UF_ROM_CHIP(
+    0xB2, "CAT28F015B/12V", UF_KIB(192), 128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH, UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+)
+
+/* Added in Pascal version 1.21. */
+UF_ROM_CHIP(
+    0xBD, "CAT28F020/12V", UF_KIB(256), 128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH, UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+)
+
+/* Added in Pascal version 1.21. */
+UF_ROM_CHIP(
+    0xB8, "CAT28F512/12V", UF_KIB(64), 128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH, UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+)
+
+UF_ROM_END()

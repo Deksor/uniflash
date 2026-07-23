@@ -1,0 +1,9 @@
+#ifndef UNIFLASH_VERSION_H
+#define UNIFLASH_VERSION_H
+
+#define UF_VERSION_MAJOR 2
+#define UF_VERSION_MINOR 0
+#define UF_VERSION_STRING "2.00"
+#define UF_PRODUCT_NAME "UniFlash"
+
+#endif

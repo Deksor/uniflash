@@ -1,50 +1,114 @@
-Released in 1997 and updated until 2005, this is the original source code to the Uniflash project, by Pascal Van Leeuwen, Galkowski Adam and Ondrej Zary (aka Rainbow Software) now released on github.
+# UniFlash 2.00
 
-You can find their respective websites on archive.org here
+UniFlash is a DOS utility for identifying, reading, and programming flash
+ROMs on PC motherboards and expansion cards. Version 2.00 is an ongoing C
+port of the original Pascal program, built for 16-bit DOS with Open Watcom 2.
 
-- http://ourworld.compuserve.com/homepages/pvanleeuwen/techforum.htm
-- https://web.archive.org/web/20070820105814/http://www.uniflash.org/
+The C port currently provides hardware detection, flash identification,
+ROM and boot-block backups, file comparison, CMOS backup, CT-Flasher access,
+and supported PCI expansion-ROM access. Destructive programming features are
+deliberately unavailable from the GUI and command line until their complete
+workflow has been ported and validated on physical hardware.
 
-I, Deksor chose to host it on github, making sure that this program is not forgotten. I now went further and I am creating a modern dev environment around freepascal to keep contributing to this program and help others make their pull requests.
+> **Warning**
+>
+> UniFlash performs direct chipset, PCI, I/O-port, and physical-memory
+> access. Use it only on supported DOS hardware and keep an independent
+> recovery method available. Even read-only identification may send command
+> sequences to a flash device.
 
-I am not sure yet if I want to become a new maintainer of uniflash (I can't even really read pascal code ...), but I'm sure this will help someone.
+## Historical releases
 
-## Modern DOS cross-build environment
+The last build published by Ondrej Zary, UniFlash 1.40, is available from
+the [1.40 GitHub release](https://github.com/Deksor/uniflash/releases/tag/1.40).
 
-This tree targets real DOS on 386-class hardware, not a modern host runtime. `UNIFLASH.PAS` uses Borland-style directives such as `{$M ...}` and `{$G+}`, the `Dos` and `Crt` units, and low-level flat-real-mode code. A plain Debian `fpc` install is not enough because it only ships the native Linux compiler.
+The original Turbo Pascal sources, their later Free Pascal build environment,
+and the historical documentation are preserved in
+[`legacy/pascal/`](legacy/pascal/README.md).
 
-The workspace now includes a reproducible container workflow that builds and installs the Free Pascal real-mode DOS cross compiler from the packaged FPC sources, configured for 386 code generation.
+## Requirements
 
-### What is in the repo now
+- Docker with support for `linux/amd64` containers
+- GNU Make
+- A C99 host compiler for the host-side tests
+- `zip` and `sha256sum` for release packaging
 
-- `Dockerfile` installs a modern Debian-based toolchain and bootstraps `ppcross8086`.
-- `scripts/bootstrap-fpc-cross.sh` builds the real-mode DOS cross compiler and installs its RTL/packages under `/opt/fpc-cross`.
-- `Makefile` provides a single command for compiling `UNIFLASH.PAS` to DOS.
+The container pins an Open Watcom 2 snapshot and verifies its checksum. The
+DOS build uses 386 instructions, the huge memory model, a 16 KiB stack, and
+the Open Watcom DOS runtime.
 
-### Build inside the container
-
-Build the image:
+## Build and test
 
 ```sh
-docker build -t uniflash-dev .
+make test
+make toolchain-smoke
+make build
 ```
 
-Run a shell in the project:
+The DOS executable is written to:
+
+```text
+build/msdos-c/UNIFLASH.EXE
+```
+
+Run the complete release validation and create a ZIP archive with:
 
 ```sh
-docker run --rm -it -v "$PWD":/workspaces/uniflash -w /workspaces/uniflash uniflash-dev
+make release
 ```
 
-Compile UniFlash for DOS:
+The release archive and SHA-256 checksum are written under `dist/`.
 
-```sh
-make
+## DOS usage
+
+Running `UNIFLASH` opens the 80×25 text-mode GUI. ROM-base detection is
+automatic unless `-BASE` is supplied.
+
+Common non-destructive commands:
+
+```text
+UNIFLASH
+UNIFLASH -BASE FFFE0000
+UNIFLASH -INFO
+UNIFLASH -DUMP BACKUP.BIN
+UNIFLASH -SAVE BACKUP.BIN -QUIT
+UNIFLASH -COMPARE BACKUP.BIN
+UNIFLASH -BOOTBLOCK BOOT.BIN
+UNIFLASH -CMOSS CMOS.BIN
+UNIFLASH -CHIPLIST
+UNIFLASH /0
+UNIFLASH /1 -MONO
+UNIFLASH -INFO -FORCE xxxx
+UNIFLASH -INFO -CTFLASH [hex-port]
+UNIFLASH -DUMP CARD.BIN -PCIROM [bus device function]
 ```
 
-The expected output path is `build/msdos/UNIFLASH.EXE`.
+With no PCI bus/device/function triple, `-PCIROM` displays an interactive
+list of cards with expansion ROMs.
 
-### Notes
+The CMOS backup retains the original file format: CMOS indexes `0Eh` through
+the detected end of CMOS are saved. CMOS-size probing restores the values it
+temporarily changes.
 
-- The compiler mode is set to Turbo Pascal compatibility with `-Mtp`.
-- FPC names the real-mode DOS backend `i8086-msdos`, but the build is pinned to a 386-class CPU with `-Cp386 -Op386`.
-- That keeps the executable in the DOS real-mode model that UniFlash expects, instead of moving it to a 32-bit extender target such as `go32v2`.
+## Project layout
+
+```text
+data/languages/   Compiled language definitions
+data/roms/        Declarative flash-ROM database
+include/uniflash/ Public C interfaces
+src/app/          CLI, GUI, language, and file workflows
+src/flash/        Flash detection and algorithms
+src/hardware/     DOS, chipset, CMOS, PCI, and XMS access
+tests/host/       Hardware-independent regression tests
+tests/toolchain/  Open Watcom DOS/16 model checks
+legacy/pascal/    Preserved original implementation
+```
+
+## Status
+
+Version 2.00 should be treated as a hardware-tested preview. The GUI and
+non-destructive functions have been exercised on real DOS hardware, but the
+full chipset/card matrix has not been tested. See [TODO.md](TODO.md) for the
+remaining port and release work.
+
+UniFlash is distributed under the terms in [LICENSE.TXT](LICENSE.TXT).

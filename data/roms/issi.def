@@ -1,0 +1,35 @@
+UF_ROM_BEGIN(issi, 0xD5, "ISSI")
+
+UF_ROM_CHIP(
+    0xB4,
+    "IS28F010/12V",
+    UF_KIB(128),
+    128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH,
+    UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0xBD,
+    "IS28F020/12V",
+    UF_KIB(256),
+    128,
+    UF_FLASH_BEHAVIOR_BULK_ERASE_WITH_BLANKING,
+    UF_FLASH_PROGRAM_AMD_FLASH,
+    UF_FLASH_ERASE_AMD_FLASH,
+    0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0
+)
+
+UF_ROM_END()

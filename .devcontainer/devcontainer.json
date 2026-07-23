@@ -1,5 +1,5 @@
 {
-    "name": "Pascal Development",
+    "name": "UniFlash C / Open Watcom 2",
     "build": {
         "dockerfile": "../Dockerfile",
         "context": ".."
@@ -10,22 +10,20 @@
             "ppa": "false"
         }
     },
-    "containerEnv": {},
     "customizations": {
         "vscode": {
             "settings": {
-                "pascal.formatter.engine": "ptop",
-                "pascal.formatter.enginePath": "/usr/bin/ptop",
-                "[pascal]": {
-                    "editor.defaultFormatter": "alefragnani.pascal-formatter"
-                },
-                "[objectpascal]": {
-                    "editor.defaultFormatter": "alefragnani.pascal-formatter"
+                "C_Cpp.default.includePath": [
+                    "${workspaceFolder}/include",
+                    "${workspaceFolder}"
+                ],
+                "files.associations": {
+                    "*.def": "c"
                 }
             },
             "extensions": [
-                "alefragnani.pascal-formatter",
-                "alefragnani.pascal"
+                "ms-vscode.cpptools",
+                "ms-vscode.makefile-tools"
             ]
         }
     }

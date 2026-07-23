@@ -1,3 +1,26 @@
-*.a
-*.ppu
+# Build and release output
 build/
+dist/
+
+# C, Pascal, linker, and disassembler output
+*.a
+*.o
+*.obj
+*.OBJ
+*.ppu
+*.exe
+*.EXE
+*.map
+*.MAP
+*.lst
+*.LST
+
+# Runtime output and hardware dumps
+*.bin
+*.BIN
+*.rom
+*.ROM
+*.log
+*.LOG
+CMOS*.dat
+CMOS*.DAT

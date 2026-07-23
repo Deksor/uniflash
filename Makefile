@@ -1,106 +1,192 @@
-FPC_VERSION ?= 3.2.2
-FPC_SRC ?= /usr/share/fpcsrc/$(FPC_VERSION)
-FPC_CROSS ?= /opt/fpc-cross/bin/ppcross8086
-FPC_CROSS_CFG ?= /etc/fpc-cross-386-dos.cfg
+DOCKER ?= docker
+HOST_CC ?= cc
+VERSION ?= 2.00
+OW_IMAGE ?= uniflash-openwatcom:2026-07-13
+OW_PLATFORM ?= linux/amd64
+WORKSPACE := /workspaces/uniflash
 
-ifeq ($(wildcard $(FPC_SRC)/rtl/msdos/prt0s.asm),)
-ifneq ($(wildcard /opt/fpcbuild-$(FPC_VERSION)/fpcsrc/rtl/msdos/prt0s.asm),)
-FPC_SRC := /opt/fpcbuild-$(FPC_VERSION)/fpcsrc
-endif
-endif
+.DEFAULT_GOAL := build
 
-ifeq ($(wildcard $(FPC_SRC)/rtl/msdos/prt0s.asm),)
-ifneq ($(wildcard /tmp/fpc-source-$(FPC_VERSION)/rtl/msdos/prt0s.asm),)
-FPC_SRC := /tmp/fpc-source-$(FPC_VERSION)
-endif
-endif
-
-ifeq ($(wildcard $(FPC_CROSS)),)
-ifneq ($(wildcard /tmp/fpc-source-$(FPC_VERSION)/compiler/ppcross8086),)
-FPC_CROSS := /tmp/fpc-source-$(FPC_VERSION)/compiler/ppcross8086
-endif
-endif
-
-PROGRAM ?= UNIFLASH.PAS
-OUTDIR ?= build/msdos
-UNITDIR ?= $(OUTDIR)/units
-OUTPUT ?= UNIFLASH.exe
-
-# Memory model options: Tiny, Small, Medium, Compact, Large, Huge
-MODEL ?= Huge
-
-MSDOS_RTL_DIR := $(FPC_SRC)/rtl/msdos
-
-ifeq ($(MODEL),Small)
-STARTUP_OBJ := prt0s.o
-else ifeq ($(MODEL),Large)
-STARTUP_OBJ := prt0l.o
-else ifeq ($(MODEL),Huge)
-STARTUP_OBJ := prt0h.o
-else
-$(error Unsupported MODEL '$(MODEL)'. Use Small, Large, or Huge.)
-endif
-
-STARTUP_ASM := $(MSDOS_RTL_DIR)/$(STARTUP_OBJ:.o=.asm)
-STARTUP_BIN := $(MSDOS_RTL_DIR)/$(STARTUP_OBJ)
-
-CFG_FLAG :=
-ifneq ($(wildcard $(FPC_CROSS_CFG)),)
-CFG_FLAG := @$(FPC_CROSS_CFG)
-endif
-
-PATH_FLAGS := \
-	-Fu$(FPC_SRC)/rtl/msdos \
-	-Fu$(FPC_SRC)/rtl/inc \
-	-Fu$(FPC_SRC)/rtl/i8086 \
-	-Fu$(FPC_SRC)/rtl/objpas \
-	-Fu$(FPC_SRC)/packages/rtl-console/src/msdos \
-	-Fu$(FPC_SRC)/packages/rtl-console/src/inc \
-	-Fi$(FPC_SRC)/rtl/msdos \
-	-Fi$(FPC_SRC)/rtl/inc \
-	-Fi$(FPC_SRC)/rtl/i8086 \
-	-Fi$(FPC_SRC)/rtl/common \
-	-Fi$(FPC_SRC)/rtl/objpas \
-	-Fi$(FPC_SRC)/packages/rtl-console/src/msdos \
-	-Fi$(FPC_SRC)/packages/rtl-console/src/inc
-
-FPCFLAGS := $(CFG_FLAG) -B -Sg -Tmsdos -Pi8086 -Cp80386 -Op80386 -Wm$(MODEL) -Fu. $(PATH_FLAGS) -FU$(UNITDIR) -FE$(OUTDIR) -Fl$(MSDOS_RTL_DIR) -o$(OUTPUT)
-
-.PHONY: all build bootstrap check startup clean distclean info
+.PHONY: all env build test toolchain-smoke check release clean distclean \
+	c-env c-build c-rom-data-test c-flash-service-test \
+	c-manufacturer-algorithms-test \
+	c-hardware-test \
+	c-read-workflow-test \
+	c-language-test \
+	c-cmos-test \
+	c-host-test c-toolchain-smoke c-clean
 
 all: build
 
-build: check startup | $(OUTDIR) $(UNITDIR)
-	$(FPC_CROSS) $(FPCFLAGS) $(PROGRAM)
+env:
+	$(DOCKER) build --platform "$(OW_PLATFORM)" \
+		-f Dockerfile \
+		-t "$(OW_IMAGE)" .
 
-bootstrap:
-	bootstrap-fpc-cross
+build: env
+	$(DOCKER) run --rm --platform "$(OW_PLATFORM)" \
+		-v "$(CURDIR):$(WORKSPACE)" \
+		-w "$(WORKSPACE)" \
+		"$(OW_IMAGE)" \
+		sh scripts/build-openwatcom.sh "$(WORKSPACE)"
 
-check:
-	@test -x "$(FPC_CROSS)"
-	@test -f "$(STARTUP_ASM)"
-	@command -v nasm >/dev/null
+c-rom-data-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/flash/rom_database.c \
+		tests/host/rom_database_test.c \
+		-o build/host/rom_database_test
+	./build/host/rom_database_test
 
-startup: $(STARTUP_BIN)
+c-flash-service-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/flash/rom_database.c \
+		src/flash/flash_service.c \
+		src/flash/generic_algorithms.c \
+		src/flash/intel_algorithms.c \
+		src/flash/sharp_algorithms.c \
+		tests/host/flash_service_test.c \
+		-o build/host/flash_service_test
+	./build/host/flash_service_test
 
-$(STARTUP_BIN): $(STARTUP_ASM)
-	cd "$(MSDOS_RTL_DIR)" && nasm -f obj -o "$(STARTUP_OBJ)" "$(STARTUP_OBJ:.o=.asm)"
+c-manufacturer-algorithms-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/flash/rom_database.c \
+		src/flash/flash_service.c \
+		src/flash/generic_algorithms.c \
+		src/flash/intel_algorithms.c \
+		src/flash/sharp_algorithms.c \
+		src/flash/manufacturer_common.c \
+		src/flash/pmc_algorithms.c \
+		src/flash/winbond_algorithms.c \
+		src/flash/macronix_algorithms.c \
+		src/flash/atmel_algorithms.c \
+		src/flash/sst_algorithms.c \
+		src/flash/st_algorithms.c \
+		src/flash/all_algorithms.c \
+		tests/host/manufacturer_algorithms_test.c \
+		-o build/host/manufacturer_algorithms_test
+	./build/host/manufacturer_algorithms_test
 
-$(OUTDIR):
-	mkdir -p "$@"
+c-hardware-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/hardware/hardware.c \
+		src/hardware/pci.c \
+		src/hardware/flash_backend.c \
+		src/hardware/chipset.c \
+		src/hardware/ct_flasher.c \
+		src/hardware/pci_rom.c \
+		tests/host/hardware_test.c \
+		-o build/host/hardware_test
+	./build/host/hardware_test
 
-$(UNITDIR):
-	mkdir -p "$@"
+c-read-workflow-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/hardware/hardware.c \
+		src/flash/rom_database.c \
+		src/flash/flash_service.c \
+		src/app/image_store.c \
+		src/app/read_workflow.c \
+		tests/host/read_workflow_test.c \
+		-o build/host/read_workflow_test
+	./build/host/read_workflow_test
+
+c-language-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/app/language.c \
+		src/app/menu.c \
+		tests/host/language_test.c \
+		-o build/host/language_test
+	./build/host/language_test
+
+c-cmos-test:
+	mkdir -p build/host
+	$(HOST_CC) -std=c99 -Wall -Wextra -Werror \
+		-I. -Iinclude \
+		src/hardware/hardware.c \
+		src/hardware/cmos.c \
+		tests/host/cmos_test.c \
+		-o build/host/cmos_test
+	./build/host/cmos_test
+
+test: c-rom-data-test c-flash-service-test \
+	c-manufacturer-algorithms-test c-hardware-test \
+	c-read-workflow-test c-language-test c-cmos-test
+
+toolchain-smoke: env
+	$(DOCKER) run --rm --platform "$(OW_PLATFORM)" \
+		-v "$(CURDIR):$(WORKSPACE)" \
+		-w "$(WORKSPACE)" \
+		"$(OW_IMAGE)" \
+		verify-openwatcom "$(WORKSPACE)"
+
+check: test toolchain-smoke build
+
+release: check
+	sh scripts/package-release.sh "$(VERSION)"
 
 clean:
-	rm -rf "$(OUTDIR)"
+	rm -f \
+		build/msdos-c/main.obj \
+		build/msdos-c/flashsvc.obj \
+		build/msdos-c/genalgo.obj \
+		build/msdos-c/intelalgo.obj \
+		build/msdos-c/sharpalgo.obj \
+		build/msdos-c/mancommon.obj \
+		build/msdos-c/pmcalgo.obj \
+		build/msdos-c/wbalgo.obj \
+		build/msdos-c/mxalgo.obj \
+		build/msdos-c/atalgo.obj \
+		build/msdos-c/sstalgo.obj \
+		build/msdos-c/stalgo.obj \
+		build/msdos-c/allalgo.obj \
+		build/msdos-c/hardware.obj \
+		build/msdos-c/doshw.obj \
+		build/msdos-c/cmos.obj \
+		build/msdos-c/pci.obj \
+		build/msdos-c/flashback.obj \
+		build/msdos-c/chipset.obj \
+		build/msdos-c/ctflash.obj \
+		build/msdos-c/pcirom.obj \
+		build/msdos-c/runtime.obj \
+		build/msdos-c/dosxms.obj \
+		build/msdos-c/imgstore.obj \
+		build/msdos-c/readflow.obj \
+		build/msdos-c/language.obj \
+		build/msdos-c/menu.obj \
+		build/msdos-c/dosgui.obj \
+		build/msdos-c/romdb.obj \
+		build/msdos-c/UNIFLASH.EXE \
+		build/msdos-c/uniflash.map \
+		build/host/rom_database_test \
+		build/host/flash_service_test \
+		build/host/manufacturer_algorithms_test \
+		build/host/hardware_test \
+		build/host/read_workflow_test \
+		build/host/language_test \
+		build/host/cmos_test \
+		build/c-smoke/MEMMODEL.OBJ \
+		build/c-smoke/SMOKE.EXE \
+		build/c-smoke/SMOKE.OBJ \
+		build/c-smoke/smoke.map \
+		build/c-smoke/smoke.lst
 
 distclean: clean
-	rm -f *.a *.ppu *.o UNIFLASH.exe
+	rm -rf build/release dist
 
-info:
-	@echo "FPC_CROSS=$(FPC_CROSS)"
-	@echo "FPC_CROSS_CFG=$(FPC_CROSS_CFG)"
-	@echo "FPC_SRC=$(FPC_SRC)"
-	@echo "MODEL=$(MODEL)"
-	@echo "STARTUP_OBJ=$(STARTUP_BIN)"
+c-env: env
+c-build: build
+c-host-test: test
+c-toolchain-smoke: toolchain-smoke
+c-clean: clean

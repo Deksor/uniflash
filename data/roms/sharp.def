@@ -1,0 +1,55 @@
+/*
+ * The referenced Sharp program and erase algorithm IDs are unresolved until
+ * the hardware routines in SHARP.PAS are ported in a separate step.
+ */
+UF_ROM_BEGIN(sharp, 0xB0, "SHARP")
+
+UF_ROM_CHIP(
+    0xC9,
+    "LHF00L02/6/7/3.3V (LPC)",
+    UF_KIB(1024),
+    128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_SHARP_SECTOR,
+    UF_FLASH_ERASE_SHARP_SECTOR,
+    2,
+    15, UF_KIB(64),
+    8, UF_KIB(8),
+    0, 0,
+    0, 0,
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0xCF,
+    "LHF00L03/4/5/3.3V (FWH)",
+    UF_KIB(1024),
+    128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_SHARP_SECTOR,
+    UF_FLASH_ERASE_SHARP_SECTOR,
+    2,
+    15, UF_KIB(64),
+    8, UF_KIB(8),
+    0, 0,
+    0, 0,
+    0, 0
+)
+
+UF_ROM_CHIP(
+    0xCA,
+    "LHF00L01/3.3V (LPC)",
+    UF_KIB(2048),
+    128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_SHARP_SECTOR,
+    UF_FLASH_ERASE_SHARP_SECTOR,
+    3,
+    16, UF_KIB(4),
+    30, UF_KIB(64),
+    8, UF_KIB(8),
+    0, 0,
+    0, 0
+)
+
+UF_ROM_END()

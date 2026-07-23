@@ -1,0 +1,23 @@
+/*
+ * Compile-time ROM catalog. Add one include here after translating and
+ * checking a manufacturer's Pascal data.
+ */
+#include "data/roms/ti.def"
+#include "data/roms/issi.def"
+#include "data/roms/imt.def"
+#include "data/roms/sharp.def"
+#include "data/roms/alliance.def"
+#include "data/roms/fujitsu.def"
+#include "data/roms/mosel.def"
+#include "data/roms/hyundai.def"
+#include "data/roms/catalyst.def"
+#include "data/roms/winbond.def"
+#include "data/roms/eon.def"
+#include "data/roms/pmc.def"
+#include "data/roms/amic.def"
+#include "data/roms/intel.def"
+#include "data/roms/sst.def"
+#include "data/roms/atmel.def"
+#include "data/roms/st.def"
+#include "data/roms/macronix.def"
+#include "data/roms/amd.def"

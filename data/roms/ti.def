@@ -1,0 +1,19 @@
+UF_ROM_BEGIN(ti, 0x97, "Texas Instruments")
+
+UF_ROM_CHIP(
+    0x94,
+    "TMS29xF040 (3.3/2.7V)",
+    UF_KIB(512),
+    128,
+    UF_FLASH_BEHAVIOR_SECTOR,
+    UF_FLASH_PROGRAM_AMD_SECTOR,
+    UF_FLASH_ERASE_AMD_SECTOR,
+    1,
+    8, UF_KIB(64),
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0
+)
+
+UF_ROM_END()

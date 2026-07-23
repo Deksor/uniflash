@@ -1,0 +1,11 @@
+.git
+.gitignore
+build
+dist
+legacy/pascal/build
+*.bin
+*.BIN
+*.rom
+*.ROM
+*.log
+*.LOG

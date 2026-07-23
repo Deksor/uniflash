@@ -1,0 +1,808 @@
+#include <string.h>
+
+#include "uniflash/pci_rom.h"
+
+#define UF_PCI_FLASH_POLL_LIMIT UINT32_C(1000000)
+
+typedef struct scan_context {
+    uf_pci_rom_list_t *list;
+    const uf_pci_interface_t *pci;
+} scan_context_t;
+
+static uf_bool_t probe_rom_size(
+    const uf_pci_interface_t *pci,
+    const uf_pci_function_info_t *device,
+    uf_rom_size_t *size
+)
+{
+    uint32_t saved_command = 0;
+    uint32_t saved_bar = 0;
+    uint32_t stuck_zero;
+    uint32_t stuck_one;
+    uint32_t image;
+    uint8_t bit;
+    uf_bool_t result = UF_FALSE;
+    uf_bool_t command_saved = UF_FALSE;
+    uf_bool_t bar_saved = UF_FALSE;
+    uf_bool_t interrupts_disabled = UF_FALSE;
+
+    if (
+        pci->hardware->interrupts_disable != NULL
+        && pci->hardware->interrupts_restore != NULL
+    ) {
+        interrupts_disabled = pci->hardware->interrupts_disable(
+            pci->hardware->context
+        );
+    }
+    if (!uf_pci_read32(
+        pci, device->address, UINT8_C(0x04), &saved_command
+    )) {
+        goto restore;
+    }
+    command_saved = UF_TRUE;
+    if (!uf_pci_read32(
+        pci, device->address, UINT8_C(0x30), &saved_bar
+    )) {
+        goto restore;
+    }
+    bar_saved = UF_TRUE;
+    if (
+        !uf_pci_write32(
+            pci, device->address, UINT8_C(0x04),
+            saved_command | UINT32_C(0x02)
+        )
+        || !uf_pci_write32(
+            pci, device->address, UINT8_C(0x30), UINT32_MAX
+        )
+        || !uf_pci_read32(
+            pci, device->address, UINT8_C(0x30), &stuck_zero
+        )
+        || !uf_pci_write32(
+            pci, device->address, UINT8_C(0x30), UINT32_C(1)
+        )
+        || !uf_pci_read32(
+            pci, device->address, UINT8_C(0x30), &stuck_one
+        )
+    ) {
+        goto restore;
+    }
+    image = stuck_zero ^ stuck_one;
+    for (bit = 1; bit < 32; ++bit) {
+        if ((image & (UINT32_C(1) << bit)) != 0) {
+            break;
+        }
+    }
+    if (
+        bit < 32
+        && image == (UINT32_MAX << bit)
+    ) {
+        *size = UINT32_C(1) << bit;
+        result = UF_TRUE;
+    }
+
+restore:
+    if (bar_saved) {
+        (void)uf_pci_write32(
+            pci, device->address, UINT8_C(0x30), saved_bar
+        );
+    }
+    if (command_saved) {
+        (void)uf_pci_write32(
+            pci, device->address, UINT8_C(0x04), saved_command
+        );
+    }
+    if (interrupts_disabled) {
+        (void)pci->hardware->interrupts_restore(
+            pci->hardware->context
+        );
+    }
+    return result;
+}
+
+static uf_bool_t scan_visit(
+    void *context,
+    const uf_pci_function_info_t *device
+)
+{
+    scan_context_t *scan = context;
+    uf_rom_size_t size;
+
+    if (
+        scan->list->count < UF_PCI_ROM_MAX_DEVICES
+        && probe_rom_size(scan->pci, device, &size)
+    ) {
+        uf_pci_rom_device_t *rom =
+            &scan->list->devices[scan->list->count++];
+        rom->pci_device = *device;
+        rom->maximum_size = size;
+    }
+    return UF_TRUE;
+}
+
+uf_bool_t uf_pci_rom_scan(
+    uf_pci_rom_list_t *list,
+    const uf_hardware_t *hardware
+)
+{
+    uf_pci_interface_t pci;
+    scan_context_t scan;
+
+    if (
+        list == NULL
+        || !uf_pci_bus_init(&pci, hardware)
+    ) {
+        return UF_FALSE;
+    }
+    memset(list, 0, sizeof(*list));
+    scan.list = list;
+    scan.pci = &pci;
+    return uf_pci_enumerate(&pci, scan_visit, &scan);
+}
+
+static uf_bool_t find_io_base(
+    const uf_pci_interface_t *pci,
+    uf_pci_address_t address,
+    uf_io_port_t *base
+)
+{
+    uint8_t reg;
+
+    for (reg = UINT8_C(0x10); reg <= UINT8_C(0x28); reg += 4) {
+        uint32_t value;
+
+        if (!uf_pci_read32(pci, address, reg, &value)) {
+            return UF_FALSE;
+        }
+        if ((value & UINT32_C(1)) != 0) {
+            *base = (uf_io_port_t)(value & UINT32_C(0xFFFC));
+            return UF_TRUE;
+        }
+        if ((value & UINT32_C(7)) == UINT32_C(4)) {
+            reg += 4;
+        }
+    }
+    return UF_FALSE;
+}
+
+static uf_bool_t find_memory_base(
+    const uf_pci_interface_t *pci,
+    uf_pci_address_t address,
+    uf_phys_addr_t *base
+)
+{
+    uint8_t reg;
+
+    for (reg = UINT8_C(0x10); reg <= UINT8_C(0x28); reg += 4) {
+        uint32_t value;
+
+        if (!uf_pci_read32(pci, address, reg, &value)) {
+            return UF_FALSE;
+        }
+        if ((value & UINT32_C(1)) == 0) {
+            *base = value & UINT32_C(0xFFFFFFF0);
+            return UF_TRUE;
+        }
+    }
+    return UF_FALSE;
+}
+
+static uf_pci_flash_kind_t card_kind(uint16_t vendor, uint16_t device)
+{
+    if (vendor == 0x104A && (device == 0x0981 || device == 0x2774)) {
+        return UF_PCI_FLASH_ADMTEK;
+    }
+    if (vendor == 0x1050 && device == 0x0840) {
+        return UF_PCI_FLASH_WINBOND;
+    }
+    if (vendor == 0x10B7 && device == 0x9001) {
+        return UF_PCI_FLASH_3COM;
+    }
+    if (vendor == 0x10EC && (device == 0x8129 || device == 0x8139)) {
+        return UF_PCI_FLASH_REALTEK;
+    }
+    if (vendor == 0x10EC && device == 0x8169) {
+        return UF_PCI_FLASH_REALTEK_1000;
+    }
+    if (vendor == 0x1106 && (device == 0x3065 || device == 0x3106)) {
+        return UF_PCI_FLASH_VIA;
+    }
+    if (vendor == 0x1317) {
+        switch (device) {
+        case 0x0981:
+        case 0x0985:
+        case 0x1985:
+        case 0x9511:
+        case 0x9513:
+        case 0x9514:
+            return UF_PCI_FLASH_ADMTEK;
+        }
+    }
+    if (vendor == 0x13F0 && device == 0x0201) {
+        return UF_PCI_FLASH_SUNDANCE;
+    }
+    return UF_PCI_FLASH_MEMORY;
+}
+
+uf_bool_t uf_pci_rom_backend_init(
+    uf_pci_rom_backend_t *backend,
+    const uf_hardware_t *hardware,
+    const uf_pci_rom_device_t *device
+)
+{
+    uf_bool_t needs_io;
+
+    if (
+        backend == NULL
+        || device == NULL
+    ) {
+        return UF_FALSE;
+    }
+    memset(backend, 0, sizeof(*backend));
+    if (!uf_pci_bus_init(&backend->pci, hardware)) {
+        return UF_FALSE;
+    }
+    backend->hardware = hardware;
+    backend->device = *device;
+    backend->kind = card_kind(
+        device->pci_device.vendor_id,
+        device->pci_device.device_id
+    );
+    needs_io = backend->kind != UF_PCI_FLASH_MEMORY
+        || (
+            device->pci_device.vendor_id == 0x10B8
+            && device->pci_device.device_id == 0x0006
+        );
+    if (
+        needs_io
+        && !find_io_base(
+            &backend->pci,
+            device->pci_device.address,
+            &backend->io_base
+        )
+    ) {
+        return UF_FALSE;
+    }
+    if (
+        backend->kind == UF_PCI_FLASH_MEMORY
+        && device->pci_device.vendor_id == 0x9004
+        && device->pci_device.device_id == 0x6915
+        && !find_memory_base(
+            &backend->pci,
+            device->pci_device.address,
+            &backend->memory_base
+        )
+    ) {
+        return UF_FALSE;
+    }
+    return UF_TRUE;
+}
+
+static uf_bool_t poll32_clear(
+    uf_pci_rom_backend_t *backend,
+    uf_io_port_t port,
+    uint32_t mask,
+    uint32_t *value
+)
+{
+    uint32_t timeout = UF_PCI_FLASH_POLL_LIMIT;
+
+    do {
+        if (!backend->hardware->in32(
+            backend->hardware->context, port, value
+        )) {
+            return UF_FALSE;
+        }
+        --timeout;
+    } while ((*value & mask) != 0 && timeout > 0);
+    return timeout > 0 ? UF_TRUE : UF_FALSE;
+}
+
+static uf_bool_t indirect_read(
+    uf_pci_rom_backend_t *backend,
+    uf_rom_offset_t address,
+    uint8_t *value
+)
+{
+    const uf_hardware_t *hardware = backend->hardware;
+    uint32_t data;
+    uint8_t status;
+
+    switch (backend->kind) {
+    case UF_PCI_FLASH_WINBOND:
+        if (
+            !hardware->out32(
+                hardware->context, backend->io_base + UINT16_C(0x28),
+                address
+            )
+            || !hardware->in32(
+                hardware->context, backend->io_base + UINT16_C(0x24),
+                &data
+            )
+            || !hardware->out32(
+                hardware->context, backend->io_base + UINT16_C(0x24),
+                (data & UINT32_C(0xFFFFF7FF)) | UINT32_C(0x4000)
+            )
+            || !poll32_clear(
+                backend, backend->io_base + UINT16_C(0x24),
+                UINT32_C(0x4000), &data
+            )
+        ) {
+            return UF_FALSE;
+        }
+        *value = (uint8_t)data;
+        return UF_TRUE;
+    case UF_PCI_FLASH_3COM:
+        return hardware->out32(
+            hardware->context, backend->io_base + 4, address
+        ) && hardware->in8(
+            hardware->context, backend->io_base + 8, value
+        );
+    case UF_PCI_FLASH_REALTEK:
+    case UF_PCI_FLASH_REALTEK_1000: {
+        uf_io_port_t port = backend->io_base
+            + (backend->kind == UF_PCI_FLASH_REALTEK
+                ? UINT16_C(0xD4) : UINT16_C(0x30));
+        if (
+            !hardware->out32(
+                hardware->context, port,
+                address | UINT32_C(0x1A0000)
+            )
+            || !hardware->in32(hardware->context, port, &data)
+        ) {
+            return UF_FALSE;
+        }
+        *value = (uint8_t)(data >> 24);
+        return UF_TRUE;
+    }
+    case UF_PCI_FLASH_VIA:
+        if (
+            !hardware->out16(
+                hardware->context, backend->io_base + UINT16_C(0x8C),
+                (uint16_t)address
+            )
+            || !hardware->out8(
+                hardware->context, backend->io_base + UINT16_C(0x90),
+                UINT8_C(1)
+            )
+        ) {
+            return UF_FALSE;
+        }
+        data = UF_PCI_FLASH_POLL_LIMIT;
+        do {
+            if (!hardware->in8(
+                hardware->context,
+                backend->io_base + UINT16_C(0x90),
+                &status
+            )) {
+                return UF_FALSE;
+            }
+            --data;
+        } while ((status & UINT8_C(0x80)) == 0 && data > 0);
+        return data > 0 && hardware->in8(
+            hardware->context,
+            backend->io_base + UINT16_C(0x91),
+            value
+        );
+    case UF_PCI_FLASH_ADMTEK:
+        if (
+            !hardware->in32(
+                hardware->context, backend->io_base + UINT16_C(0xA0),
+                &data
+            )
+            || !hardware->out32(
+                hardware->context, backend->io_base + UINT16_C(0xA0),
+                (data & UINT32_C(0x78000000))
+                    | (address << 8) | UINT32_C(0x08000000)
+            )
+            || !poll32_clear(
+                backend, backend->io_base + UINT16_C(0xA0),
+                UINT32_C(0x08000000), &data
+            )
+        ) {
+            return UF_FALSE;
+        }
+        *value = (uint8_t)data;
+        return UF_TRUE;
+    case UF_PCI_FLASH_SUNDANCE:
+        return hardware->out32(
+            hardware->context, backend->io_base + UINT16_C(0x40), address
+        ) && hardware->in8(
+            hardware->context, backend->io_base + UINT16_C(0x44), value
+        );
+    default:
+        return backend->hardware->phys_read8(
+            backend->hardware->context,
+            backend->memory_base + address,
+            value
+        );
+    }
+}
+
+static uf_bool_t indirect_write(
+    uf_pci_rom_backend_t *backend,
+    uf_rom_offset_t address,
+    uint8_t value
+)
+{
+    const uf_hardware_t *hardware = backend->hardware;
+    uint32_t data;
+    uint8_t status;
+
+    switch (backend->kind) {
+    case UF_PCI_FLASH_WINBOND:
+        return hardware->out32(
+            hardware->context, backend->io_base + UINT16_C(0x28), address
+        ) && hardware->in32(
+            hardware->context, backend->io_base + UINT16_C(0x24), &data
+        ) && hardware->out32(
+            hardware->context, backend->io_base + UINT16_C(0x24),
+            (data & UINT32_C(0xFFFFF700))
+                | value | UINT32_C(0x2000)
+        ) && poll32_clear(
+            backend, backend->io_base + UINT16_C(0x24),
+            UINT32_C(0x2000), &data
+        );
+    case UF_PCI_FLASH_3COM:
+        return hardware->out32(
+            hardware->context, backend->io_base + 4, address
+        ) && hardware->out8(
+            hardware->context, backend->io_base + 8, value
+        );
+    case UF_PCI_FLASH_REALTEK:
+    case UF_PCI_FLASH_REALTEK_1000: {
+        uf_io_port_t port = backend->io_base
+            + (backend->kind == UF_PCI_FLASH_REALTEK
+                ? UINT16_C(0xD4) : UINT16_C(0x30));
+        return hardware->out32(
+            hardware->context, port,
+            address | UINT32_C(0x160000)
+                | ((uint32_t)value << 24)
+        );
+    }
+    case UF_PCI_FLASH_VIA:
+        if (
+            !hardware->out16(
+                hardware->context, backend->io_base + UINT16_C(0x8C),
+                (uint16_t)address
+            )
+            || !hardware->out8(
+                hardware->context, backend->io_base + UINT16_C(0x8F),
+                value
+            )
+            || !hardware->out8(
+                hardware->context, backend->io_base + UINT16_C(0x90),
+                UINT8_C(2)
+            )
+        ) {
+            return UF_FALSE;
+        }
+        data = UF_PCI_FLASH_POLL_LIMIT;
+        do {
+            if (!hardware->in8(
+                hardware->context,
+                backend->io_base + UINT16_C(0x90),
+                &status
+            )) {
+                return UF_FALSE;
+            }
+            --data;
+        } while ((status & UINT8_C(0x80)) == 0 && data > 0);
+        return data > 0 ? UF_TRUE : UF_FALSE;
+    case UF_PCI_FLASH_ADMTEK:
+        return hardware->in32(
+            hardware->context, backend->io_base + UINT16_C(0xA0), &data
+        ) && hardware->out32(
+            hardware->context, backend->io_base + UINT16_C(0xA0),
+            (data & UINT32_C(0x78000000))
+                | (address << 8) | value | UINT32_C(0x04000000)
+        ) && poll32_clear(
+            backend, backend->io_base + UINT16_C(0xA0),
+            UINT32_C(0x04000000), &data
+        );
+    case UF_PCI_FLASH_SUNDANCE:
+        return hardware->out32(
+            hardware->context, backend->io_base + UINT16_C(0x40), address
+        ) && hardware->out8(
+            hardware->context, backend->io_base + UINT16_C(0x44), value
+        );
+    default:
+        return backend->hardware->phys_write8(
+            backend->hardware->context,
+            backend->memory_base + address,
+            value
+        );
+    }
+}
+
+static uf_bool_t access_read(void *context, uf_rom_offset_t address, uint8_t *value)
+{
+    return indirect_read(context, address, value);
+}
+
+static uf_bool_t access_write(void *context, uf_rom_offset_t address, uint8_t value)
+{
+    return indirect_write(context, address, value);
+}
+
+static uf_bool_t access_read_block(
+    void *context, uf_rom_offset_t address, void *destination,
+    uf_rom_size_t size
+)
+{
+    uint8_t *bytes = destination;
+    uf_rom_size_t offset;
+    for (offset = 0; offset < size; ++offset) {
+        if (!indirect_read(context, address + offset, &bytes[offset])) {
+            return UF_FALSE;
+        }
+    }
+    return UF_TRUE;
+}
+
+static uf_bool_t access_write_block(
+    void *context, const void *source, uf_rom_offset_t address,
+    uf_rom_size_t size
+)
+{
+    const uint8_t *bytes = source;
+    uf_rom_size_t offset;
+    for (offset = 0; offset < size; ++offset) {
+        if (!indirect_write(context, address + offset, bytes[offset])) {
+            return UF_FALSE;
+        }
+    }
+    return UF_TRUE;
+}
+
+static uf_bool_t access_compare(
+    void *context, const void *source, uf_rom_offset_t address,
+    uf_rom_size_t size, uf_bool_t *equal
+)
+{
+    const uint8_t *bytes = source;
+    uf_rom_size_t offset;
+    if (equal == NULL) {
+        return UF_FALSE;
+    }
+    *equal = UF_FALSE;
+    for (offset = 0; offset < size; ++offset) {
+        uint8_t value;
+        if (!indirect_read(context, address + offset, &value)) {
+            return UF_FALSE;
+        }
+        if (value != bytes[offset]) {
+            return UF_TRUE;
+        }
+    }
+    *equal = UF_TRUE;
+    return UF_TRUE;
+}
+
+static uf_bool_t access_delay(void *context, uint32_t microseconds)
+{
+    uf_pci_rom_backend_t *backend = context;
+    return backend->hardware->delay_us(
+        backend->hardware->context, microseconds
+    );
+}
+
+static uf_bool_t access_source(
+    void *context, uf_phys_addr_t address, uint8_t *value
+)
+{
+    uf_pci_rom_backend_t *backend = context;
+    return backend->hardware->phys_read8(
+        backend->hardware->context, address, value
+    );
+}
+
+static uf_bool_t access_select(void *context, uf_phys_addr_t base)
+{
+    uf_pci_rom_backend_t *backend = context;
+    backend->memory_base = base;
+    return UF_TRUE;
+}
+
+static uf_bool_t access_update_phys(
+    void *context, uf_phys_addr_t address, uint8_t and_mask,
+    uint8_t or_mask
+)
+{
+    uf_pci_rom_backend_t *backend = context;
+    uint8_t value;
+    return backend->hardware->phys_read8(
+        backend->hardware->context, address, &value
+    ) && backend->hardware->phys_write8(
+        backend->hardware->context, address,
+        (value & and_mask) | or_mask
+    );
+}
+
+static uf_bool_t access_lock(
+    void *context, uf_phys_addr_t address, uf_bool_t locked
+)
+{
+    return access_update_phys(
+        context, address,
+        locked ? UINT8_C(0xFF) : UINT8_C(0xF8),
+        locked ? UINT8_C(1) : UINT8_C(0)
+    );
+}
+
+uf_bool_t uf_pci_rom_backend_make_access(
+    uf_pci_rom_backend_t *backend,
+    uf_flash_access_t *access
+)
+{
+    if (backend == NULL || access == NULL || backend->hardware == NULL) {
+        return UF_FALSE;
+    }
+    memset(access, 0, sizeof(*access));
+    access->context = backend;
+    access->read_byte = access_read;
+    access->write_byte = access_write;
+    access->read_block = access_read_block;
+    access->write_block = access_write_block;
+    access->compare_block = access_compare;
+    access->delay_us = access_delay;
+    access->select_window = access_select;
+    access->read_source_byte = access_source;
+    access->set_write_lock = access_lock;
+    access->update_phys_byte = access_update_phys;
+    return UF_TRUE;
+}
+
+uf_bool_t uf_pci_rom_backend_set_enabled(
+    uf_pci_rom_backend_t *backend,
+    uf_bool_t enabled
+)
+{
+    uf_pci_address_t address;
+
+    if (
+        backend == NULL
+        || backend->hardware == NULL
+        || backend->enabled == enabled
+    ) {
+        return backend != NULL ? UF_TRUE : UF_FALSE;
+    }
+    address = backend->device.pci_device.address;
+    if (enabled) {
+        if (!uf_pci_read32(
+            &backend->pci, address, UINT8_C(0x04),
+            &backend->saved_command
+        )) {
+            return UF_FALSE;
+        }
+        if (!uf_pci_read32(
+            &backend->pci, address, UINT8_C(0x30),
+            &backend->saved_rom_bar
+        )) {
+            return UF_FALSE;
+        }
+        if (
+            !uf_pci_write32(
+                &backend->pci, address, UINT8_C(0x04),
+                backend->saved_command | UINT32_C(0x02)
+            )
+            || !uf_pci_write32(
+                &backend->pci, address, UINT8_C(0x30),
+                UINT32_C(0x80000001)
+            )
+        ) {
+            goto enable_failed;
+        }
+        if (
+            backend->device.pci_device.vendor_id != 0x9004
+            || backend->device.pci_device.device_id != 0x6915
+        ) {
+            backend->memory_base = UINT32_C(0x80000000);
+        }
+        if (
+            backend->device.pci_device.vendor_id == 0x10B8
+            && backend->device.pci_device.device_id == 0x0006
+        ) {
+            if (!backend->hardware->in32(
+                backend->hardware->context,
+                backend->io_base + UINT16_C(0x10),
+                &backend->saved_card_register
+            ) || !backend->hardware->out32(
+                backend->hardware->context,
+                backend->io_base + UINT16_C(0x10),
+                backend->saved_card_register | UINT32_C(0x100)
+            )) {
+                goto enable_failed;
+            }
+        }
+        if (
+            backend->device.pci_device.vendor_id == 0x121A
+            && backend->device.pci_device.device_id == 0x0003
+        ) {
+            if (!uf_pci_read32(
+                &backend->pci, address, UINT8_C(0x14),
+                &backend->saved_card_register
+            ) || !uf_pci_write32(
+                &backend->pci, address, UINT8_C(0x14),
+                backend->saved_card_register | UINT32_C(0x10)
+            )) {
+                goto enable_failed;
+            }
+        }
+    } else {
+        if (
+            backend->device.pci_device.vendor_id == 0x10B8
+            && backend->device.pci_device.device_id == 0x0006
+            && !backend->hardware->out32(
+                backend->hardware->context,
+                backend->io_base + UINT16_C(0x10),
+                backend->saved_card_register
+            )
+        ) {
+            return UF_FALSE;
+        }
+        if (
+            backend->device.pci_device.vendor_id == 0x121A
+            && backend->device.pci_device.device_id == 0x0003
+            && !uf_pci_write32(
+                &backend->pci, address, UINT8_C(0x14),
+                backend->saved_card_register
+            )
+        ) {
+            return UF_FALSE;
+        }
+        if (
+            !uf_pci_write32(
+                &backend->pci, address, UINT8_C(0x30),
+                backend->saved_rom_bar
+            )
+            || !uf_pci_write32(
+                &backend->pci, address, UINT8_C(0x04),
+                backend->saved_command
+            )
+        ) {
+            return UF_FALSE;
+        }
+    }
+    backend->enabled = enabled;
+    return UF_TRUE;
+
+enable_failed:
+    (void)uf_pci_write32(
+        &backend->pci,
+        address,
+        UINT8_C(0x30),
+        backend->saved_rom_bar
+    );
+    (void)uf_pci_write32(
+        &backend->pci,
+        address,
+        UINT8_C(0x04),
+        backend->saved_command
+    );
+    return UF_FALSE;
+}
+
+const char *uf_pci_rom_device_name(const uf_pci_rom_device_t *device)
+{
+    uint16_t vendor;
+    uint16_t id;
+
+    if (device == NULL) {
+        return "PCI or AGP card";
+    }
+    vendor = device->pci_device.vendor_id;
+    id = device->pci_device.device_id;
+    if (vendor == 0x104A && (id == 0x0981 || id == 0x2774)) return "STMicroelectronics STE10/100";
+    if (vendor == 0x1050 && id == 0x0840) return "Winbond W89C840AF";
+    if (vendor == 0x10B7 && id == 0x9001) return "3Com EtherLink XL";
+    if (vendor == 0x10B8 && id == 0x0006) return "SMSC LAN83C175";
+    if (vendor == 0x10EC && (id == 0x8129 || id == 0x8139)) return "Realtek RTL8129/8139";
+    if (vendor == 0x10EC && id == 0x8169) return "Realtek RTL8169";
+    if (vendor == 0x1106 && id == 0x3065) return "VIA VT6102";
+    if (vendor == 0x1106 && id == 0x3106) return "VIA VT6105M";
+    if (vendor == 0x121A && id == 0x0003) return "3Dfx Banshee";
+    if (vendor == 0x1317) return "ADMtek Ethernet";
+    if (vendor == 0x13F0 && id == 0x0201) return "Sundance ST201";
+    if (vendor == 0x9004 && id == 0x6915) return "Adaptec AIC-6915";
+    return "PCI or AGP card";
+}

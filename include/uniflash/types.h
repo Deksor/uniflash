@@ -2,12 +2,11 @@
 #define UNIFLASH_TYPES_H
 
 #include <limits.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
-#define UF_STATIC_ASSERT(name, expression) \
-    typedef char uf_static_assert_##name[(expression) ? 1 : -1]
+#define UF_STATIC_ASSERT(name, expression) typedef char uf_static_assert_##name[(expression) ? 1 : -1]
 
 /*
  * Hardware-facing values use explicit widths. In particular, size_t is only
@@ -56,9 +55,7 @@ UF_STATIC_ASSERT(dos16_int_is_2_bytes, sizeof(int) == 2);
 UF_STATIC_ASSERT(dos16_long_is_4_bytes, sizeof(long) == 4);
 UF_STATIC_ASSERT(dos16_size_t_is_2_bytes, sizeof(size_t) == 2);
 UF_STATIC_ASSERT(dos16_data_pointer_is_4_bytes, sizeof(void *) == 4);
-UF_STATIC_ASSERT(
-    dos16_function_pointer_is_4_bytes,
-    sizeof(void (*)(void)) == 4);
+UF_STATIC_ASSERT(dos16_function_pointer_is_4_bytes, sizeof(void (*)(void)) == 4);
 
 #endif
 

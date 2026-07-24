@@ -8,109 +8,85 @@
 #define TEST_IMAGE_SIZE 70000U
 #define TEST_PHYS_SIZE 140000U
 
-typedef struct test_context
-{
+typedef struct test_context {
     uint8_t physical[TEST_PHYS_SIZE];
 } test_context_t;
 
-static bool unused_in8(void *context, uf_io_port_t port, uint8_t *value)
-{
+static bool unused_in8(void *context, uf_io_port_t port, uint8_t *value) {
     (void)context;
     (void)port;
     *value = 0;
     return true;
 }
 
-static bool unused_in16(
-    void *context, uf_io_port_t port, uint16_t *value)
-{
+static bool unused_in16(void *context, uf_io_port_t port, uint16_t *value) {
     (void)context;
     (void)port;
     *value = 0;
     return true;
 }
 
-static bool unused_in32(
-    void *context, uf_io_port_t port, uint32_t *value)
-{
+static bool unused_in32(void *context, uf_io_port_t port, uint32_t *value) {
     (void)context;
     (void)port;
     *value = 0;
     return true;
 }
 
-static bool unused_out8(
-    void *context, uf_io_port_t port, uint8_t value)
-{
+static bool unused_out8(void *context, uf_io_port_t port, uint8_t value) {
     (void)context;
     (void)port;
     (void)value;
     return true;
 }
 
-static bool unused_out16(
-    void *context, uf_io_port_t port, uint16_t value)
-{
+static bool unused_out16(void *context, uf_io_port_t port, uint16_t value) {
     (void)context;
     (void)port;
     (void)value;
     return true;
 }
 
-static bool unused_out32(
-    void *context, uf_io_port_t port, uint32_t value)
-{
+static bool unused_out32(void *context, uf_io_port_t port, uint32_t value) {
     (void)context;
     (void)port;
     (void)value;
     return true;
 }
 
-static bool phys_read(
-    void *context, uf_phys_addr_t address, uint8_t *value)
-{
+static bool phys_read(void *context, uf_phys_addr_t address, uint8_t *value) {
     test_context_t *test = context;
-    if (address >= TEST_PHYS_SIZE)
-    {
+    if (address >= TEST_PHYS_SIZE) {
         return false;
     }
     *value = test->physical[address];
     return true;
 }
 
-static bool phys_write(
-    void *context, uf_phys_addr_t address, uint8_t value)
-{
+static bool phys_write(void *context, uf_phys_addr_t address, uint8_t value) {
     test_context_t *test = context;
-    if (address >= TEST_PHYS_SIZE)
-    {
+    if (address >= TEST_PHYS_SIZE) {
         return false;
     }
     test->physical[address] = value;
     return true;
 }
 
-static bool delay_us(void *context, uint32_t microseconds)
-{
+static bool delay_us(void *context, uint32_t microseconds) {
     (void)context;
     (void)microseconds;
     return true;
 }
 
-static bool flash_read(
-    void *context, uf_rom_offset_t address, uint8_t *value)
-{
+static bool flash_read(void *context, uf_rom_offset_t address, uint8_t *value) {
     return phys_read(context, address, value);
 }
 
-static bool flash_write(
-    void *context, uf_rom_offset_t address, uint8_t value)
-{
+static bool flash_write(void *context, uf_rom_offset_t address, uint8_t value) {
     return phys_write(context, address, value);
 }
 
-int main(void)
-{
+int main(void) {
     static test_context_t test;
     uf_hardware_t hardware;
     uf_flash_access_t access;
@@ -136,30 +112,25 @@ int main(void)
     access.context = &test;
     access.read_byte = flash_read;
     access.write_byte = flash_write;
-    for (index = 0; index < TEST_IMAGE_SIZE; ++index)
-    {
+    for (index = 0; index < TEST_IMAGE_SIZE; ++index) {
         test.physical[index] = (uint8_t)(index * 37U);
     }
     assert(uf_flash_service_init(&flash, &access, 0));
-    assert(uf_image_store_init(
-        &store, &hardware, TEST_IMAGE_SIZE, TEST_IMAGE_SIZE));
+    assert(uf_image_store_init(&store, &hardware, TEST_IMAGE_SIZE, TEST_IMAGE_SIZE));
     assert(uf_image_store_capture(&store, &flash, TEST_IMAGE_SIZE));
-    assert(uf_read_workflow_dump(
-               &flash,
+    assert(uf_read_workflow_dump(&flash,
                &store,
                TEST_IMAGE_SIZE,
                "build/host/read-workflow.bin",
                buffer,
                sizeof(buffer)) == UF_READ_RESULT_OK);
-    assert(uf_read_workflow_compare(
-               &flash,
+    assert(uf_read_workflow_compare(&flash,
                &store,
                TEST_IMAGE_SIZE,
                "build/host/read-workflow.bin",
                buffer,
                sizeof(buffer)) == UF_READ_RESULT_OK);
-    assert(uf_read_workflow_dump_range(
-               &flash,
+    assert(uf_read_workflow_dump_range(&flash,
                &store,
                TEST_IMAGE_SIZE - 8192,
                8192,
@@ -178,8 +149,7 @@ int main(void)
     assert(fseek(file, 35000L, SEEK_SET) == 0);
     assert(fputc(0xA5, file) != EOF);
     assert(fclose(file) == 0);
-    assert(uf_read_workflow_compare(
-               &flash,
+    assert(uf_read_workflow_compare(&flash,
                &store,
                TEST_IMAGE_SIZE,
                "build/host/read-workflow.bin",
@@ -187,15 +157,13 @@ int main(void)
                sizeof(buffer)) == UF_READ_RESULT_DIFFERENT);
     assert(remove("build/host/read-workflow.bin") == 0);
 
-    assert(uf_read_workflow_dump(
-               &flash,
+    assert(uf_read_workflow_dump(&flash,
                NULL,
                TEST_IMAGE_SIZE,
                "build/host/read-workflow-stream.bin",
                buffer,
                sizeof(buffer)) == UF_READ_RESULT_OK);
-    assert(uf_read_workflow_compare(
-               &flash,
+    assert(uf_read_workflow_compare(&flash,
                NULL,
                TEST_IMAGE_SIZE,
                "build/host/read-workflow-stream.bin",

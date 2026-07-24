@@ -2,8 +2,7 @@
 
 #include "uniflash/chipset.h"
 
-typedef struct chipset_id
-{
+typedef struct chipset_id {
     uint16_t vendor;
     uint16_t device;
     const char *name;
@@ -11,13 +10,10 @@ typedef struct chipset_id
     bool detect_lpc;
 } chipset_id_t;
 
-#define CHIP(vendor_value, device_value, text, method_value) \
-    {vendor_value, device_value, text, method_value, false}
-#define CHIP_LPC(vendor_value, device_value, text, method_value) \
-    {vendor_value, device_value, text, method_value, true}
+#define CHIP(vendor_value, device_value, text, method_value) {vendor_value, device_value, text, method_value, false}
+#define CHIP_LPC(vendor_value, device_value, text, method_value) {vendor_value, device_value, text, method_value, true}
 
-static const chipset_id_t north_ids[] = {
-    CHIP(0x8086, 0x04A3, "Intel 82433LX/NX", 0),
+static const chipset_id_t north_ids[] = {CHIP(0x8086, 0x04A3, "Intel 82433LX/NX", 0),
     CHIP(0x8086, 0x122D, "Intel 82437FX", 0),
     CHIP(0x8086, 0x1235, "Intel 82437MX", 0),
     CHIP(0x8086, 0x1237, "Intel 82441FX", 0),
@@ -132,8 +128,7 @@ static const chipset_id_t north_ids[] = {
     CHIP(0x10DE, 0x01A4, "NVIDIA IGP", 0),
     CHIP(0x10DE, 0x01E0, "NVIDIA IGP2", 0)};
 
-static const chipset_id_t south_ids[] = {
-    CHIP(0x8086, 0x0484, "Intel SIO", 0x0104),
+static const chipset_id_t south_ids[] = {CHIP(0x8086, 0x0484, "Intel SIO", 0x0104),
     CHIP(0x8086, 0x122E, "Intel PIIX", 0x0101),
     CHIP(0x8086, 0x1234, "Intel MPIIX", 0x0100),
     CHIP(0x8086, 0x7000, "Intel PIIX3", 0x0101),
@@ -191,8 +186,7 @@ static const chipset_id_t south_ids[] = {
     CHIP(0x10DE, 0x01B2, "NVIDIA MCP", 0x1600),
     CHIP(0x10DE, 0x0060, "NVIDIA MCP2", 0x1600)};
 
-enum
-{
+enum {
     UF_CHIPSET_METHOD_NONE = 0,
     UF_CHIPSET_NORTH_VIA_OLD = 0x0100,
     UF_CHIPSET_NORTH_SIS_496 = 0x0200,
@@ -201,346 +195,193 @@ enum
     UF_CHIPSET_NORTH_CYPRESS = 0x0400
 };
 
-static bool pci_read(
-    const uf_chipset_t *chipset,
-    const uf_pci_function_info_t *device,
-    uint8_t reg,
-    uint32_t *value)
-{
+static bool pci_read(const uf_chipset_t *chipset, const uf_pci_function_info_t *device, uint8_t reg, uint32_t *value) {
     return uf_pci_read32(&chipset->pci, device->address, reg, value);
 }
 
-static bool pci_write(
-    const uf_chipset_t *chipset,
-    const uf_pci_function_info_t *device,
-    uint8_t reg,
-    uint32_t value)
-{
+static bool pci_write(const uf_chipset_t *chipset, const uf_pci_function_info_t *device, uint8_t reg, uint32_t value) {
     return uf_pci_write32(&chipset->pci, device->address, reg, value);
 }
 
-static bool indexed_read8(
-    const uf_hardware_t *hardware,
+static bool indexed_read8(const uf_hardware_t *hardware,
     uf_io_port_t index_port,
     uf_io_port_t data_port,
     uint8_t index,
-    uint8_t *value)
-{
-    return (
-        hardware->out8(hardware->context, index_port, index) && hardware->in8(hardware->context, data_port, value));
+    uint8_t *value) {
+    return (hardware->out8(hardware->context, index_port, index) && hardware->in8(hardware->context, data_port, value));
 }
 
-static bool indexed_write8(
-    const uf_hardware_t *hardware,
+static bool indexed_write8(const uf_hardware_t *hardware,
     uf_io_port_t index_port,
     uf_io_port_t data_port,
     uint8_t index,
-    uint8_t value)
-{
+    uint8_t value) {
     return (
         hardware->out8(hardware->context, index_port, index) && hardware->out8(hardware->context, data_port, value));
 }
 
-static bool set_north_enabled(
-    uf_chipset_t *chipset,
-    bool enabled)
-{
+static bool set_north_enabled(uf_chipset_t *chipset, bool enabled) {
     const uf_hardware_t *hardware = chipset->pci.hardware;
     uint8_t value;
 
-    switch (chipset->north_method)
-    {
+    switch (chipset->north_method) {
     case UF_CHIPSET_METHOD_NONE:
         return true;
     case UF_CHIPSET_NORTH_VIA_OLD:
-        if (enabled)
-        {
-            if (
-                !indexed_read8(
-                    hardware,
-                    UINT16_C(0xA8),
-                    UINT16_C(0xA9),
-                    UINT8_C(0x11),
-                    &value))
-            {
+        if (enabled) {
+            if (!indexed_read8(hardware, UINT16_C(0xA8), UINT16_C(0xA9), UINT8_C(0x11), &value)) {
                 return false;
             }
             chipset->north_saved[0] = value;
             value |= UINT8_C(0x40);
-        }
-        else
-        {
+        } else {
             value = (uint8_t)chipset->north_saved[0];
         }
-        return indexed_write8(
-            hardware,
-            UINT16_C(0xA8),
-            UINT16_C(0xA9),
-            UINT8_C(0x11),
-            value);
+        return indexed_write8(hardware, UINT16_C(0xA8), UINT16_C(0xA9), UINT8_C(0x11), value);
     case UF_CHIPSET_NORTH_SIS_496:
-        if (enabled)
-        {
-            if (!pci_read(chipset, &chipset->north, UINT8_C(0xD0), &chipset->north_saved[0]))
-            {
+        if (enabled) {
+            if (!pci_read(chipset, &chipset->north, UINT8_C(0xD0), &chipset->north_saved[0])) {
                 return false;
             }
-            return pci_write(
-                chipset,
-                &chipset->north,
-                UINT8_C(0xD0),
-                chipset->north_saved[0] | UINT32_C(0xF8));
+            return pci_write(chipset, &chipset->north, UINT8_C(0xD0), chipset->north_saved[0] | UINT32_C(0xF8));
         }
-        return pci_write(
-            chipset,
-            &chipset->north,
-            UINT8_C(0xD0),
-            chipset->north_saved[0]);
+        return pci_write(chipset, &chipset->north, UINT8_C(0xD0), chipset->north_saved[0]);
     case UF_CHIPSET_NORTH_ALI:
-        if (enabled)
-        {
-            if (!pci_read(chipset, &chipset->north, UINT8_C(0x4C), &chipset->north_saved[0]))
-            {
+        if (enabled) {
+            if (!pci_read(chipset, &chipset->north, UINT8_C(0x4C), &chipset->north_saved[0])) {
                 return false;
             }
-            return pci_write(
-                chipset,
-                &chipset->north,
-                UINT8_C(0x4C),
-                chipset->north_saved[0] & UINT32_C(0x00FFFFFF));
+            return pci_write(chipset, &chipset->north, UINT8_C(0x4C), chipset->north_saved[0] & UINT32_C(0x00FFFFFF));
         }
-        return pci_write(
-            chipset,
-            &chipset->north,
-            UINT8_C(0x4C),
-            chipset->north_saved[0]);
+        return pci_write(chipset, &chipset->north, UINT8_C(0x4C), chipset->north_saved[0]);
     case UF_CHIPSET_NORTH_FINALI:
-        if (enabled)
-        {
-            if (
-                !indexed_write8(
-                    hardware,
-                    UINT16_C(0x22),
-                    UINT16_C(0x23),
-                    UINT8_C(0x03),
-                    UINT8_C(0xC5)) ||
-                !indexed_read8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    UINT8_C(0x12), &value))
-            {
+        if (enabled) {
+            if (!indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x03), UINT8_C(0xC5)) ||
+                !indexed_read8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x12), &value)) {
                 return false;
             }
             chipset->north_saved[0] = value;
-            if (!indexed_write8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    UINT8_C(0x12), value | UINT8_C(0x11)))
-            {
+            if (!indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x12), value | UINT8_C(0x11))) {
                 return false;
             }
-            if (!indexed_read8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    UINT8_C(0x21), &value))
-            {
+            if (!indexed_read8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x21), &value)) {
                 return false;
             }
             chipset->north_saved[1] = value;
-            if (!indexed_write8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    UINT8_C(0x21), value | UINT8_C(0x20)))
-            {
+            if (!indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x21), value | UINT8_C(0x20))) {
                 return false;
             }
-            if (!indexed_read8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    UINT8_C(0x2B), &value))
-            {
+            if (!indexed_read8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x2B), &value)) {
                 return false;
             }
             chipset->north_saved[2] = value;
-            return indexed_write8(
-                hardware, UINT16_C(0x22), UINT16_C(0x23),
-                UINT8_C(0x2B), value | UINT8_C(0x20));
+            return indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x2B), value | UINT8_C(0x20));
         }
         return (
-            indexed_write8(
-                hardware, UINT16_C(0x22), UINT16_C(0x23),
-                UINT8_C(0x12), (uint8_t)chipset->north_saved[0]) &&
-            indexed_write8(
-                hardware, UINT16_C(0x22), UINT16_C(0x23),
-                UINT8_C(0x21), (uint8_t)chipset->north_saved[1]) &&
-            indexed_write8(
-                hardware, UINT16_C(0x22), UINT16_C(0x23),
-                UINT8_C(0x2B), (uint8_t)chipset->north_saved[2]) &&
-            indexed_write8(
-                hardware, UINT16_C(0x22), UINT16_C(0x23),
-                UINT8_C(0x03), UINT8_C(0)));
+            indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x12), (uint8_t)chipset->north_saved[0]) &&
+            indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x21), (uint8_t)chipset->north_saved[1]) &&
+            indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x2B), (uint8_t)chipset->north_saved[2]) &&
+            indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x03), UINT8_C(0)));
     case UF_CHIPSET_NORTH_CYPRESS:
-        if (enabled)
-        {
-            if (!indexed_read8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    UINT8_C(0x12), &value))
-            {
+        if (enabled) {
+            if (!indexed_read8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x12), &value)) {
                 return false;
             }
             chipset->north_saved[0] = value;
             value &= UINT8_C(0xEF);
-        }
-        else
-        {
+        } else {
             value = (uint8_t)chipset->north_saved[0];
         }
-        return indexed_write8(
-            hardware, UINT16_C(0x22), UINT16_C(0x23),
-            UINT8_C(0x12), value);
+        return indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x12), value);
     default:
         return false;
     }
 }
 
-static bool save_and_write(
-    uf_chipset_t *chipset,
-    uint8_t slot,
-    uint8_t reg,
-    uint32_t and_mask,
-    uint32_t or_mask)
-{
-    if (
-        !pci_read(
-            chipset,
-            &chipset->south,
-            reg,
-            &chipset->south_saved[slot]))
-    {
+static bool save_and_write(uf_chipset_t *chipset, uint8_t slot, uint8_t reg, uint32_t and_mask, uint32_t or_mask) {
+    if (!pci_read(chipset, &chipset->south, reg, &chipset->south_saved[slot])) {
         return false;
     }
     chipset->south_saved_valid |= (uint8_t)(UINT8_C(1) << slot);
-    return pci_write(
-        chipset,
-        &chipset->south,
-        reg,
-        (chipset->south_saved[slot] & and_mask) | or_mask);
+    return pci_write(chipset, &chipset->south, reg, (chipset->south_saved[slot] & and_mask) | or_mask);
 }
 
-static bool restore_reg(
-    uf_chipset_t *chipset,
-    uint8_t slot,
-    uint8_t reg)
-{
-    if (
-        (chipset->south_saved_valid & (uint8_t)(UINT8_C(1) << slot)) == 0)
-    {
+static bool restore_reg(uf_chipset_t *chipset, uint8_t slot, uint8_t reg) {
+    if ((chipset->south_saved_valid & (uint8_t)(UINT8_C(1) << slot)) == 0) {
         return true;
     }
-    if (!pci_write(
-            chipset,
-            &chipset->south,
-            reg,
-            chipset->south_saved[slot]))
-    {
+    if (!pci_write(chipset, &chipset->south, reg, chipset->south_saved[slot])) {
         return false;
     }
-    chipset->south_saved_valid &=
-        (uint8_t)~(uint8_t)(UINT8_C(1) << slot);
+    chipset->south_saved_valid &= (uint8_t)~(uint8_t)(UINT8_C(1) << slot);
     return true;
 }
 
-static bool set_south_simple(
-    uf_chipset_t *chipset,
-    bool enabled,
-    uint8_t reg,
-    uint32_t and_mask,
-    uint32_t or_mask)
-{
-    return enabled
-               ? save_and_write(chipset, 0, reg, and_mask, or_mask)
-               : restore_reg(chipset, 0, reg);
+static bool set_south_simple(uf_chipset_t *chipset, bool enabled, uint8_t reg, uint32_t and_mask, uint32_t or_mask) {
+    return enabled ? save_and_write(chipset, 0, reg, and_mask, or_mask) : restore_reg(chipset, 0, reg);
 }
 
-static bool set_sis_enabled(
-    uf_chipset_t *chipset,
-    bool enabled)
-{
+static bool set_sis_enabled(uf_chipset_t *chipset, bool enabled) {
     const uf_hardware_t *hardware = chipset->pci.hardware;
     uint8_t subtype = (uint8_t)chipset->south_method;
     uint8_t value;
 
-    if (enabled)
-    {
-        if (
-            !save_and_write(
-                chipset, 0, UINT8_C(0x40),
-                UINT32_C(0xFFFFFFFB), UINT32_C(0x0B)))
-        {
+    if (enabled) {
+        if (!save_and_write(chipset, 0, UINT8_C(0x40), UINT32_C(0xFFFFFFFB), UINT32_C(0x0B))) {
             return false;
         }
-        if (subtype == 1 || subtype == 2)
-        {
-            uint8_t index = subtype == 1
-                                ? UINT8_C(0x80)
-                                : UINT8_C(0x50);
+        if (subtype == 1 || subtype == 2) {
+            uint8_t index = subtype == 1 ? UINT8_C(0x80) : UINT8_C(0x50);
 
-            if (!indexed_read8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    index, &value))
-            {
+            if (!indexed_read8(hardware, UINT16_C(0x22), UINT16_C(0x23), index, &value)) {
                 return false;
             }
             chipset->south_saved[1] = value;
             chipset->south_saved_valid |= UINT8_C(0x02);
-            if (!indexed_write8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
-                    index, (value & UINT8_C(0xDF)) | UINT8_C(0x04)))
-            {
+            if (!indexed_write8(hardware,
+                    UINT16_C(0x22),
+                    UINT16_C(0x23),
+                    index,
+                    (value & UINT8_C(0xDF)) | UINT8_C(0x04))) {
                 return false;
             }
-            if (subtype == 1)
-            {
-                if (!indexed_read8(
-                        hardware, UINT16_C(0x22), UINT16_C(0x23),
-                        UINT8_C(0x70), &value))
-                {
+            if (subtype == 1) {
+                if (!indexed_read8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x70), &value)) {
                     return false;
                 }
                 chipset->south_saved[2] = value;
                 chipset->south_saved_valid |= UINT8_C(0x04);
-                return indexed_write8(
-                    hardware, UINT16_C(0x22), UINT16_C(0x23),
+                return indexed_write8(hardware,
+                    UINT16_C(0x22),
+                    UINT16_C(0x23),
                     UINT8_C(0x70),
                     (value & UINT8_C(0xDF)) | UINT8_C(0x04));
             }
             return true;
         }
-        return save_and_write(
-            chipset,
+        return save_and_write(chipset,
             1,
             UINT8_C(0x44),
-            subtype == 3
-                ? UINT32_C(0xFFFFDFFF)
-                : UINT32_C(0xFFFF7FFF),
+            subtype == 3 ? UINT32_C(0xFFFFDFFF) : UINT32_C(0xFFFF7FFF),
             subtype == 3 ? UINT32_C(0x400) : UINT32_C(0x4000));
     }
-    if (!restore_reg(chipset, 0, UINT8_C(0x40)))
-    {
+    if (!restore_reg(chipset, 0, UINT8_C(0x40))) {
         return false;
     }
-    if (subtype == 1 || subtype == 2)
-    {
-        uint8_t index = subtype == 1
-                            ? UINT8_C(0x80)
-                            : UINT8_C(0x50);
+    if (subtype == 1 || subtype == 2) {
+        uint8_t index = subtype == 1 ? UINT8_C(0x80) : UINT8_C(0x50);
 
-        if (
-            (chipset->south_saved_valid & UINT8_C(0x02)) != 0 && !indexed_write8(
-                                                                     hardware, UINT16_C(0x22), UINT16_C(0x23),
-                                                                     index, (uint8_t)chipset->south_saved[1]))
-        {
+        if ((chipset->south_saved_valid & UINT8_C(0x02)) != 0 &&
+            !indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), index, (uint8_t)chipset->south_saved[1])) {
             return false;
         }
         chipset->south_saved_valid &= UINT8_C(0xFD);
-        if (
-            subtype == 1 && (chipset->south_saved_valid & UINT8_C(0x04)) != 0 && !indexed_write8(hardware, UINT16_C(0x22), UINT16_C(0x23), UINT8_C(0x70), (uint8_t)chipset->south_saved[2]))
-        {
+        if (subtype == 1 && (chipset->south_saved_valid & UINT8_C(0x04)) != 0 &&
+            !indexed_write8(hardware,
+                UINT16_C(0x22),
+                UINT16_C(0x23),
+                UINT8_C(0x70),
+                (uint8_t)chipset->south_saved[2])) {
             return false;
         }
         chipset->south_saved_valid &= UINT8_C(0xFB);
@@ -549,249 +390,146 @@ static bool set_sis_enabled(
     return restore_reg(chipset, 1, UINT8_C(0x44));
 }
 
-static bool set_south_enabled(
-    uf_chipset_t *chipset,
-    bool enabled)
-{
+static bool set_south_enabled(uf_chipset_t *chipset, bool enabled) {
     uint8_t family = (uint8_t)(chipset->south_method >> 8);
     uint8_t subtype = (uint8_t)chipset->south_method;
 
-    switch (family)
-    {
+    switch (family) {
     case 0:
         return true;
-    case 1:
-    {
+    case 1: {
         uint32_t mask = UINT32_C(0x00440000);
-        if ((subtype & 1) != 0)
-        {
+        if ((subtype & 1) != 0) {
             mask |= UINT32_C(0x00800000);
         }
-        if ((subtype & 2) != 0)
-        {
+        if ((subtype & 2) != 0) {
             mask |= UINT32_C(0x02000000);
         }
-        if ((subtype & 4) != 0)
-        {
+        if ((subtype & 4) != 0) {
             mask = UINT32_C(0x00C00000);
         }
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x4C), UINT32_MAX, mask);
+        return set_south_simple(chipset, enabled, UINT8_C(0x4C), UINT32_MAX, mask);
     }
     case 2:
-        if (enabled)
-        {
-            return save_and_write(
-                       chipset, 0, UINT8_C(0x4C),
-                       UINT32_MAX, UINT32_C(0x10000)) &&
-                   save_and_write(
-                       chipset, 1, UINT8_C(0xE0),
-                       UINT32_MAX, UINT32_C(0xFF000000));
+        if (enabled) {
+            return save_and_write(chipset, 0, UINT8_C(0x4C), UINT32_MAX, UINT32_C(0x10000)) &&
+                   save_and_write(chipset, 1, UINT8_C(0xE0), UINT32_MAX, UINT32_C(0xFF000000));
         }
         return restore_reg(chipset, 0, UINT8_C(0x4C)) && restore_reg(chipset, 1, UINT8_C(0xE0));
     case 3:
-        return set_south_simple(
-            chipset,
+        return set_south_simple(chipset,
             enabled,
             UINT8_C(0x40),
             UINT32_MAX,
             subtype == UINT8_C(0x10)
                 ? UINT32_C(0x7F10)
-                : UINT32_C(0xC0000001) | ((subtype & 1) != 0
-                                              ? UINT32_C(0x20000000)
-                                              : UINT32_C(0)));
+                : UINT32_C(0xC0000001) | ((subtype & 1) != 0 ? UINT32_C(0x20000000) : UINT32_C(0)));
     case 4:
-        if (enabled)
-        {
-            if (
-                !save_and_write(
-                    chipset, 0, UINT8_C(0x44),
-                    UINT32_MAX, UINT32_C(0x47000000)) ||
-                !save_and_write(
-                    chipset, 1, UINT8_C(0x40),
-                    UINT32_C(0xFFFFFFFB), UINT32_C(0)))
-            {
+        if (enabled) {
+            if (!save_and_write(chipset, 0, UINT8_C(0x44), UINT32_MAX, UINT32_C(0x47000000)) ||
+                !save_and_write(chipset, 1, UINT8_C(0x40), UINT32_C(0xFFFFFFFB), UINT32_C(0))) {
                 return false;
             }
-            if ((subtype & 1) != 0)
-            {
-                return save_and_write(
-                           chipset, 2, UINT8_C(0x78),
-                           UINT32_MAX, UINT32_C(0x1000)) &&
-                       save_and_write(
-                           chipset, 3, UINT8_C(0x7C),
-                           UINT32_MAX, UINT32_C(0x01000000));
+            if ((subtype & 1) != 0) {
+                return save_and_write(chipset, 2, UINT8_C(0x78), UINT32_MAX, UINT32_C(0x1000)) &&
+                       save_and_write(chipset, 3, UINT8_C(0x7C), UINT32_MAX, UINT32_C(0x01000000));
             }
             return true;
         }
-        if (
-            !restore_reg(chipset, 0, UINT8_C(0x44)) || !restore_reg(chipset, 1, UINT8_C(0x40)))
-        {
+        if (!restore_reg(chipset, 0, UINT8_C(0x44)) || !restore_reg(chipset, 1, UINT8_C(0x40))) {
             return false;
         }
         return (subtype & 1) == 0 || (restore_reg(chipset, 2, UINT8_C(0x78)) && restore_reg(chipset, 3, UINT8_C(0x7C)));
     case 5:
         return set_sis_enabled(chipset, enabled);
     case 6:
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x4C),
-            UINT32_MAX, UINT32_C(0x02C40000));
+        return set_south_simple(chipset, enabled, UINT8_C(0x4C), UINT32_MAX, UINT32_C(0x02C40000));
     case 7:
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x4C),
-            UINT32_C(0xFFFFDF00), UINT32_C(0xD000));
+        return set_south_simple(chipset, enabled, UINT8_C(0x4C), UINT32_C(0xFFFFDF00), UINT32_C(0xD000));
     case 8:
-        return set_south_simple(
-            chipset,
+        return set_south_simple(chipset,
             enabled,
             subtype == 1 ? UINT8_C(0x44) : UINT8_C(0x50),
-            subtype == 1
-                ? UINT32_C(0xFFFF7FFF)
-                : UINT32_C(0xFEFFFFFF),
+            subtype == 1 ? UINT32_C(0xFFFF7FFF) : UINT32_C(0xFEFFFFFF),
             subtype == 1 ? UINT32_C(0) : UINT32_C(0xE0000000));
-    case 9:
-    {
+    case 9: {
         const uf_hardware_t *hardware = chipset->pci.hardware;
         uint8_t port_value;
 
-        if (enabled)
-        {
-            if (
-                !save_and_write(
-                    chipset, 0, UINT8_C(0x40),
-                    UINT32_MAX, UINT32_C(0x200)) ||
-                !save_and_write(
-                    chipset, 1, UINT8_C(0x70),
-                    UINT32_MAX, UINT32_C(0x80)) ||
-                !hardware->in8(
-                    hardware->context,
-                    UINT16_C(0x0C6F),
-                    &port_value))
-            {
+        if (enabled) {
+            if (!save_and_write(chipset, 0, UINT8_C(0x40), UINT32_MAX, UINT32_C(0x200)) ||
+                !save_and_write(chipset, 1, UINT8_C(0x70), UINT32_MAX, UINT32_C(0x80)) ||
+                !hardware->in8(hardware->context, UINT16_C(0x0C6F), &port_value)) {
                 return false;
             }
             chipset->south_saved[2] = port_value;
             chipset->south_saved_valid |= UINT8_C(0x04);
-            return hardware->out8(
-                hardware->context,
-                UINT16_C(0x0C6F),
-                port_value | UINT8_C(0x40));
+            return hardware->out8(hardware->context, UINT16_C(0x0C6F), port_value | UINT8_C(0x40));
         }
-        if (
-            !restore_reg(chipset, 0, UINT8_C(0x40)) || !restore_reg(chipset, 1, UINT8_C(0x70)))
-        {
+        if (!restore_reg(chipset, 0, UINT8_C(0x40)) || !restore_reg(chipset, 1, UINT8_C(0x70))) {
             return false;
         }
-        if (
-            (chipset->south_saved_valid & UINT8_C(0x04)) != 0 && !hardware->out8(
-                                                                     hardware->context,
-                                                                     UINT16_C(0x0C6F),
-                                                                     (uint8_t)chipset->south_saved[2]))
-        {
+        if ((chipset->south_saved_valid & UINT8_C(0x04)) != 0 &&
+            !hardware->out8(hardware->context, UINT16_C(0x0C6F), (uint8_t)chipset->south_saved[2])) {
             return false;
         }
         chipset->south_saved_valid &= UINT8_C(0xFB);
         return true;
     }
-    case 10:
-    {
+    case 10: {
         const uf_hardware_t *hardware = chipset->pci.hardware;
         uint8_t value;
 
-        if (enabled)
-        {
-            if (!indexed_read8(
-                    hardware,
-                    UINT16_C(0x24),
-                    UINT16_C(0x26),
-                    UINT8_C(0x03),
-                    &value))
-            {
+        if (enabled) {
+            if (!indexed_read8(hardware, UINT16_C(0x24), UINT16_C(0x26), UINT8_C(0x03), &value)) {
                 return false;
             }
             chipset->south_saved[0] = value;
             chipset->south_saved_valid |= UINT8_C(0x01);
             value |= UINT8_C(0x40);
-        }
-        else
-        {
-            if ((chipset->south_saved_valid & UINT8_C(0x01)) == 0)
-            {
+        } else {
+            if ((chipset->south_saved_valid & UINT8_C(0x01)) == 0) {
                 return true;
             }
             value = (uint8_t)chipset->south_saved[0];
         }
-        if (!indexed_write8(
-                hardware,
-                UINT16_C(0x24),
-                UINT16_C(0x26),
-                UINT8_C(0x03),
-                value))
-        {
+        if (!indexed_write8(hardware, UINT16_C(0x24), UINT16_C(0x26), UINT8_C(0x03), value)) {
             return false;
         }
-        if (!enabled)
-        {
+        if (!enabled) {
             chipset->south_saved_valid &= UINT8_C(0xFE);
         }
         return true;
     }
     case 11:
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x50),
-            UINT32_MAX, UINT32_C(0x00060000));
+        return set_south_simple(chipset, enabled, UINT8_C(0x50), UINT32_MAX, UINT32_C(0x00060000));
     case 12:
-        if (enabled)
-        {
-            return save_and_write(
-                       chipset, 0, UINT8_C(0x44),
-                       UINT32_MAX, UINT32_C(0x80000000)) &&
-                   save_and_write(
-                       chipset, 1, UINT8_C(0x48),
-                       UINT32_C(0x00FFFFFF), UINT32_C(0x3F000000));
+        if (enabled) {
+            return save_and_write(chipset, 0, UINT8_C(0x44), UINT32_MAX, UINT32_C(0x80000000)) &&
+                   save_and_write(chipset, 1, UINT8_C(0x48), UINT32_C(0x00FFFFFF), UINT32_C(0x3F000000));
         }
         return restore_reg(chipset, 0, UINT8_C(0x44)) && restore_reg(chipset, 1, UINT8_C(0x48));
     case 13:
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x60),
-            UINT32_C(0xFFFFEFFF), UINT32_C(0x02));
+        return set_south_simple(chipset, enabled, UINT8_C(0x60), UINT32_C(0xFFFFEFFF), UINT32_C(0x02));
     case 14:
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x44),
-            UINT32_C(0xBFFFFFFF), UINT32_C(0));
+        return set_south_simple(chipset, enabled, UINT8_C(0x44), UINT32_C(0xBFFFFFFF), UINT32_C(0));
     case 15:
-        return set_south_simple(
-            chipset, enabled, UINT8_C(0x44),
-            UINT32_MAX, UINT32_C(0xE0000000));
+        return set_south_simple(chipset, enabled, UINT8_C(0x44), UINT32_MAX, UINT32_C(0xE0000000));
     case 16:
-        if (enabled)
-        {
-            return save_and_write(
-                       chipset, 0, UINT8_C(0x44),
-                       UINT32_MAX, UINT32_C(0x100)) &&
-                   save_and_write(
-                       chipset, 1, UINT8_C(0x70),
-                       UINT32_C(0xFFE0FFFF), UINT32_C(0xC0)) &&
-                   save_and_write(
-                       chipset, 2, UINT8_C(0x74),
-                       UINT32_C(0), UINT32_C(0)) &&
-                   save_and_write(
-                       chipset, 3, UINT8_C(0x78),
-                       UINT32_C(0), UINT32_C(0)) &&
-                   save_and_write(
-                       chipset, 4, UINT8_C(0x7C),
-                       UINT32_C(0), UINT32_C(0));
+        if (enabled) {
+            return save_and_write(chipset, 0, UINT8_C(0x44), UINT32_MAX, UINT32_C(0x100)) &&
+                   save_and_write(chipset, 1, UINT8_C(0x70), UINT32_C(0xFFE0FFFF), UINT32_C(0xC0)) &&
+                   save_and_write(chipset, 2, UINT8_C(0x74), UINT32_C(0), UINT32_C(0)) &&
+                   save_and_write(chipset, 3, UINT8_C(0x78), UINT32_C(0), UINT32_C(0)) &&
+                   save_and_write(chipset, 4, UINT8_C(0x7C), UINT32_C(0), UINT32_C(0));
         }
-        return restore_reg(chipset, 0, UINT8_C(0x44)) && restore_reg(chipset, 1, UINT8_C(0x70)) && restore_reg(chipset, 2, UINT8_C(0x74)) && restore_reg(chipset, 3, UINT8_C(0x78)) && restore_reg(chipset, 4, UINT8_C(0x7C));
+        return restore_reg(chipset, 0, UINT8_C(0x44)) && restore_reg(chipset, 1, UINT8_C(0x70)) &&
+               restore_reg(chipset, 2, UINT8_C(0x74)) && restore_reg(chipset, 3, UINT8_C(0x78)) &&
+               restore_reg(chipset, 4, UINT8_C(0x7C));
     case 17:
-        if (enabled)
-        {
-            return save_and_write(
-                       chipset, 0, UINT8_C(0xDC),
-                       UINT32_MAX, UINT32_C(1)) &&
-                   save_and_write(
-                       chipset, 1, UINT8_C(0xD8),
-                       UINT32_MAX, UINT32_C(0xFF0F));
+        if (enabled) {
+            return save_and_write(chipset, 0, UINT8_C(0xDC), UINT32_MAX, UINT32_C(1)) &&
+                   save_and_write(chipset, 1, UINT8_C(0xD8), UINT32_MAX, UINT32_C(0xFF0F));
         }
         return restore_reg(chipset, 0, UINT8_C(0xDC)) && restore_reg(chipset, 1, UINT8_C(0xD8));
     default:
@@ -799,224 +537,129 @@ static bool set_south_enabled(
     }
 }
 
-static bool lpc_unlock(uf_chipset_t *chipset)
-{
+static bool lpc_unlock(uf_chipset_t *chipset) {
     const uf_hardware_t *hardware = chipset->pci.hardware;
-    uint8_t sequence[] = {
-        UINT8_C(0x87), UINT8_C(0x87), UINT8_C(0x87),
-        UINT8_C(0x01), UINT8_C(0x55)};
+    uint8_t sequence[] = {UINT8_C(0x87), UINT8_C(0x87), UINT8_C(0x87), UINT8_C(0x01), UINT8_C(0x55)};
 
-    for (uint8_t index = 0; index < sizeof(sequence); ++index)
-    {
-        if (!hardware->out8(
-                hardware->context,
-                chipset->lpc_base,
-                sequence[index]))
-        {
+    for (uint8_t index = 0; index < sizeof(sequence); ++index) {
+        if (!hardware->out8(hardware->context, chipset->lpc_base, sequence[index])) {
             return false;
         }
     }
-    return hardware->out8(
-        hardware->context,
+    return hardware->out8(hardware->context,
         chipset->lpc_base,
-        chipset->lpc_base == UINT16_C(0x2E)
-            ? UINT8_C(0x55)
-            : UINT8_C(0xAA));
+        chipset->lpc_base == UINT16_C(0x2E) ? UINT8_C(0x55) : UINT8_C(0xAA));
 }
 
-static bool set_lpc_enabled(
-    uf_chipset_t *chipset,
-    bool enabled)
-{
+static bool set_lpc_enabled(uf_chipset_t *chipset, bool enabled) {
     const uf_hardware_t *hardware = chipset->pci.hardware;
     uint8_t family = (uint8_t)(chipset->lpc_method >> 8);
     uint8_t value;
 
-    if (family == 0)
-    {
+    if (family == 0) {
         return true;
     }
-    if (
-        (family != 1 && family != 2) || !lpc_unlock(chipset))
-    {
+    if ((family != 1 && family != 2) || !lpc_unlock(chipset)) {
         return false;
     }
-    if (enabled)
-    {
-        if (!indexed_read8(
-                hardware,
-                chipset->lpc_base,
-                chipset->lpc_base + 1,
-                UINT8_C(0x24),
-                &value))
-        {
+    if (enabled) {
+        if (!indexed_read8(hardware, chipset->lpc_base, chipset->lpc_base + 1, UINT8_C(0x24), &value)) {
             return false;
         }
         chipset->lpc_saved = value;
-        value = family == 1
-                    ? value | UINT8_C(0x7C)
-                    : (value & UINT8_C(0xC7)) | UINT8_C(0x28);
-    }
-    else
-    {
+        value = family == 1 ? value | UINT8_C(0x7C) : (value & UINT8_C(0xC7)) | UINT8_C(0x28);
+    } else {
         value = chipset->lpc_saved;
     }
-    if (!indexed_write8(
-            hardware,
-            chipset->lpc_base,
-            chipset->lpc_base + 1,
-            UINT8_C(0x24),
-            value))
-    {
+    if (!indexed_write8(hardware, chipset->lpc_base, chipset->lpc_base + 1, UINT8_C(0x24), value)) {
         return false;
     }
-    if (family == 1)
-    {
+    if (family == 1) {
         uint8_t control;
-        if (!indexed_read8(
-                hardware,
-                chipset->lpc_base,
-                chipset->lpc_base + 1,
-                UINT8_C(0x02),
-                &control))
-        {
+        if (!indexed_read8(hardware, chipset->lpc_base, chipset->lpc_base + 1, UINT8_C(0x02), &control)) {
             return false;
         }
-        return indexed_write8(
-            hardware,
+        return indexed_write8(hardware,
             chipset->lpc_base,
             chipset->lpc_base + 1,
             UINT8_C(0x02),
             control | UINT8_C(0x02));
     }
-    return hardware->out8(
-        hardware->context,
-        chipset->lpc_base,
-        UINT8_C(0xAA));
+    return hardware->out8(hardware->context, chipset->lpc_base, UINT8_C(0xAA));
 }
 
-static const chipset_id_t *find_id(
-    const chipset_id_t *ids,
-    uint16_t count,
-    uint16_t vendor,
-    uint16_t device)
-{
-    for (uint16_t index = 0; index < count; ++index)
-    {
-        if (
-            ids[index].vendor == vendor && ids[index].device == device)
-        {
+static const chipset_id_t *find_id(const chipset_id_t *ids, uint16_t count, uint16_t vendor, uint16_t device) {
+    for (uint16_t index = 0; index < count; ++index) {
+        if (ids[index].vendor == vendor && ids[index].device == device) {
             return &ids[index];
         }
     }
     return NULL;
 }
 
-typedef struct detect_context
-{
+typedef struct detect_context {
     uf_chipset_t *chipset;
     bool wants_lpc;
 } detect_context_t;
 
-static bool visit_chipset(
-    void *context,
-    const uf_pci_function_info_t *device)
-{
+static bool visit_chipset(void *context, const uf_pci_function_info_t *device) {
     detect_context_t *detect = context;
     const chipset_id_t *id;
 
-    id = find_id(
-        north_ids,
-        (uint16_t)(sizeof(north_ids) / sizeof(north_ids[0])),
-        device->vendor_id,
-        device->device_id);
-    if (
-        id != NULL && !detect->chipset->north_found && device->class_code == UINT8_C(0x06) && device->subclass == UINT8_C(0x00))
-    {
+    id = find_id(north_ids, (uint16_t)(sizeof(north_ids) / sizeof(north_ids[0])), device->vendor_id, device->device_id);
+    if (id != NULL && !detect->chipset->north_found && device->class_code == UINT8_C(0x06) &&
+        device->subclass == UINT8_C(0x00)) {
         detect->chipset->north = *device;
         detect->chipset->north_found = true;
         detect->chipset->north_name = id->name;
         detect->chipset->north_method = id->method;
-        if (id->detect_lpc)
-        {
+        if (id->detect_lpc) {
             detect->wants_lpc = true;
         }
     }
 
-    id = find_id(
-        south_ids,
-        (uint16_t)(sizeof(south_ids) / sizeof(south_ids[0])),
-        device->vendor_id,
-        device->device_id);
-    if (
-        id != NULL && !detect->chipset->south_found && device->class_code == UINT8_C(0x06) && (device->subclass == UINT8_C(0x01) || device->subclass == UINT8_C(0x80) || device->subclass == UINT8_C(0x00)))
-    {
+    id = find_id(south_ids, (uint16_t)(sizeof(south_ids) / sizeof(south_ids[0])), device->vendor_id, device->device_id);
+    if (id != NULL && !detect->chipset->south_found && device->class_code == UINT8_C(0x06) &&
+        (device->subclass == UINT8_C(0x01) || device->subclass == UINT8_C(0x80) || device->subclass == UINT8_C(0x00))) {
         detect->chipset->south = *device;
         detect->chipset->south_found = true;
         detect->chipset->south_name = id->name;
         detect->chipset->south_method = id->method;
-        if (id->detect_lpc)
-        {
+        if (id->detect_lpc) {
             detect->wants_lpc = true;
         }
     }
     return true;
 }
 
-static bool lpc_read(
-    uf_chipset_t *chipset,
-    uint8_t index,
-    uint8_t *value)
-{
-    return indexed_read8(
-        chipset->pci.hardware,
-        chipset->lpc_base,
-        chipset->lpc_base + 1,
-        index,
-        value);
+static bool lpc_read(uf_chipset_t *chipset, uint8_t index, uint8_t *value) {
+    return indexed_read8(chipset->pci.hardware, chipset->lpc_base, chipset->lpc_base + 1, index, value);
 }
 
-static bool lpc_lock(
-    uf_chipset_t *chipset,
-    bool ite)
-{
+static bool lpc_lock(uf_chipset_t *chipset, bool ite) {
     const uf_hardware_t *hardware = chipset->pci.hardware;
 
-    if (ite)
-    {
+    if (ite) {
         uint8_t value;
-        return lpc_read(chipset, UINT8_C(0x02), &value) && indexed_write8(
-                                                               hardware,
-                                                               chipset->lpc_base,
-                                                               chipset->lpc_base + 1,
-                                                               UINT8_C(0x02),
-                                                               value | UINT8_C(0x02));
+        return lpc_read(chipset, UINT8_C(0x02), &value) &&
+               indexed_write8(hardware, chipset->lpc_base, chipset->lpc_base + 1, UINT8_C(0x02), value | UINT8_C(0x02));
     }
-    return hardware->out8(
-        hardware->context,
-        chipset->lpc_base,
-        UINT8_C(0xAA));
+    return hardware->out8(hardware->context, chipset->lpc_base, UINT8_C(0xAA));
 }
 
-static bool detect_lpc_at(
-    uf_chipset_t *chipset,
-    uf_io_port_t base)
-{
+static bool detect_lpc_at(uf_chipset_t *chipset, uf_io_port_t base) {
     uint8_t high;
     uint8_t low;
     uint16_t id;
     bool ite = false;
 
     chipset->lpc_base = base;
-    if (
-        !lpc_unlock(chipset) || !lpc_read(chipset, UINT8_C(0x20), &high) || !lpc_read(chipset, UINT8_C(0x21), &low))
-    {
+    if (!lpc_unlock(chipset) || !lpc_read(chipset, UINT8_C(0x20), &high) || !lpc_read(chipset, UINT8_C(0x21), &low)) {
         chipset->lpc_base = 0;
         return false;
     }
     id = ((uint16_t)high << 8) | low;
-    switch (id)
-    {
+    switch (id) {
     case 0x8702:
     case 0x8711:
     case 0x8712:
@@ -1030,8 +673,7 @@ static bool detect_lpc_at(
         ite = true;
         break;
     default:
-        switch (id & UINT16_C(0xFFF0))
-        {
+        switch (id & UINT16_C(0xFFF0)) {
         case 0x5210:
         case 0x5230:
         case 0x5950:
@@ -1050,8 +692,7 @@ static bool detect_lpc_at(
         }
         break;
     }
-    if (!lpc_lock(chipset, ite))
-    {
+    if (!lpc_lock(chipset, ite)) {
         chipset->lpc_base = 0;
         chipset->lpc_method = 0;
         return false;
@@ -1059,14 +700,11 @@ static bool detect_lpc_at(
     return true;
 }
 
-static void apply_integrated_overrides(uf_chipset_t *chipset)
-{
-    if (!chipset->north_found || chipset->north.vendor_id != 0x1039)
-    {
+static void apply_integrated_overrides(uf_chipset_t *chipset) {
+    if (!chipset->north_found || chipset->north.vendor_id != 0x1039) {
         return;
     }
-    switch (chipset->north.device_id)
-    {
+    switch (chipset->north.device_id) {
     case 0x0496:
         chipset->south_method = 0;
         break;
@@ -1098,154 +736,101 @@ static void apply_integrated_overrides(uf_chipset_t *chipset)
         chipset->south_method = 0x0504;
         break;
     default:
-        if (chipset->south_method == 0)
-        {
+        if (chipset->south_method == 0) {
             chipset->south_method = 0x0503;
         }
         break;
     }
 }
 
-bool uf_chipset_detect(
-    uf_chipset_t *chipset,
-    const uf_hardware_t *hardware)
-{
+bool uf_chipset_detect(uf_chipset_t *chipset, const uf_hardware_t *hardware) {
     detect_context_t detect;
     uint8_t mechanism;
 
-    if (
-        chipset == NULL || !uf_hardware_is_valid(hardware))
-    {
+    if (chipset == NULL || !uf_hardware_is_valid(hardware)) {
         return false;
     }
     memset(chipset, 0, sizeof(*chipset));
-    if (!uf_pci_bus_init(&chipset->pci, hardware))
-    {
+    if (!uf_pci_bus_init(&chipset->pci, hardware)) {
         return false;
     }
     /*
      * Match PCI.PAS: select configuration mechanism 1 when port CFB is
      * implemented, while leaving an absent (0xFF) register untouched.
      */
-    if (
-        hardware->in8(
-            hardware->context,
-            UINT16_C(0xCFB),
-            &mechanism) &&
-        mechanism != UINT8_C(0xFF))
-    {
-        (void)hardware->out8(
-            hardware->context,
-            UINT16_C(0xCFB),
-            mechanism | UINT8_C(1));
+    if (hardware->in8(hardware->context, UINT16_C(0xCFB), &mechanism) && mechanism != UINT8_C(0xFF)) {
+        (void)hardware->out8(hardware->context, UINT16_C(0xCFB), mechanism | UINT8_C(1));
     }
     detect.chipset = chipset;
     detect.wants_lpc = false;
-    if (!uf_pci_enumerate(&chipset->pci, visit_chipset, &detect))
-    {
+    if (!uf_pci_enumerate(&chipset->pci, visit_chipset, &detect)) {
         return false;
     }
     apply_integrated_overrides(chipset);
-    if (detect.wants_lpc)
-    {
-        if (
-            !detect_lpc_at(chipset, UINT16_C(0x2E)) && !detect_lpc_at(chipset, UINT16_C(0x4E)))
-        {
+    if (detect.wants_lpc) {
+        if (!detect_lpc_at(chipset, UINT16_C(0x2E)) && !detect_lpc_at(chipset, UINT16_C(0x4E))) {
             chipset->lpc_base = 0;
             chipset->lpc_method = 0;
         }
     }
-    if (chipset->north_found && chipset->south_found)
-    {
+    if (chipset->north_found && chipset->south_found) {
         size_t north_length = strlen(chipset->north_name);
         size_t south_length = strlen(chipset->south_name);
         size_t available = sizeof(chipset->name_storage) - 1;
 
-        if (north_length > available)
-        {
+        if (north_length > available) {
             north_length = available;
         }
         memcpy(chipset->name_storage, chipset->north_name, north_length);
         available -= north_length;
-        if (available >= 3)
-        {
-            memcpy(
-                chipset->name_storage + north_length,
-                " + ",
-                3);
+        if (available >= 3) {
+            memcpy(chipset->name_storage + north_length, " + ", 3);
             north_length += 3;
             available -= 3;
         }
-        if (south_length > available)
-        {
+        if (south_length > available) {
             south_length = available;
         }
-        memcpy(
-            chipset->name_storage + north_length,
-            chipset->south_name,
-            south_length);
+        memcpy(chipset->name_storage + north_length, chipset->south_name, south_length);
         chipset->name_storage[north_length + south_length] = '\0';
         chipset->name = chipset->name_storage;
-    }
-    else if (chipset->north_found)
-    {
+    } else if (chipset->north_found) {
         chipset->name = chipset->north_name;
-    }
-    else if (chipset->south_found)
-    {
+    } else if (chipset->south_found) {
         chipset->name = chipset->south_name;
-    }
-    else
-    {
+    } else {
         chipset->name = "Unknown PCI chipset";
     }
-    return (
-        chipset->north_found || chipset->south_found);
+    return (chipset->north_found || chipset->south_found);
 }
 
-bool uf_chipset_rom_set_enabled(
-    uf_chipset_t *chipset,
-    bool enabled)
-{
+bool uf_chipset_rom_set_enabled(uf_chipset_t *chipset, bool enabled) {
     bool north_ok;
     bool south_ok;
     bool lpc_ok;
 
-    if (
-        chipset == NULL || chipset->pci.hardware == NULL || chipset->rom_enabled == enabled)
-    {
+    if (chipset == NULL || chipset->pci.hardware == NULL || chipset->rom_enabled == enabled) {
         return chipset != NULL;
     }
-    if (enabled)
-    {
+    if (enabled) {
         chipset->south_saved_valid = 0;
         north_ok = set_north_enabled(chipset, true);
-        south_ok = north_ok
-                       ? set_south_enabled(chipset, true)
-                       : false;
-        lpc_ok = south_ok
-                     ? set_lpc_enabled(chipset, true)
-                     : false;
-        if (!lpc_ok)
-        {
-            if (north_ok)
-            {
+        south_ok = north_ok ? set_south_enabled(chipset, true) : false;
+        lpc_ok = south_ok ? set_lpc_enabled(chipset, true) : false;
+        if (!lpc_ok) {
+            if (north_ok) {
                 (void)set_south_enabled(chipset, false);
             }
-            if (north_ok)
-            {
+            if (north_ok) {
                 (void)set_north_enabled(chipset, false);
             }
             return false;
         }
-    }
-    else
-    {
+    } else {
         lpc_ok = set_lpc_enabled(chipset, false);
         south_ok = set_south_enabled(chipset, false);
         north_ok = set_north_enabled(chipset, false);
-        if (!lpc_ok || !south_ok || !north_ok)
-        {
+        if (!lpc_ok || !south_ok || !north_ok) {
             return false;
         }
     }

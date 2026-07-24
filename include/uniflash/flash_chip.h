@@ -114,33 +114,12 @@ typedef struct uf_flash_manufacturer {
     uint16_t chip_count;
 } uf_flash_manufacturer_t;
 
-UF_STATIC_ASSERT(
-    flash_sector_region_count_is_2_bytes,
-    sizeof(((uf_flash_sector_region_t *)0)->sector_count) == 2
-);
-UF_STATIC_ASSERT(
-    flash_sector_region_size_is_4_bytes,
-    sizeof(((uf_flash_sector_region_t *)0)->sector_size_bytes) == 4
-);
-UF_STATIC_ASSERT(
-    flash_chip_capacity_is_4_bytes,
-    sizeof(((uf_flash_chip_t *)0)->capacity_bytes) == 4
-);
-UF_STATIC_ASSERT(
-    flash_chip_page_size_is_2_bytes,
-    sizeof(((uf_flash_chip_t *)0)->page_size_bytes) == 2
-);
-UF_STATIC_ASSERT(
-    flash_chip_behavior_is_1_byte,
-    sizeof(((uf_flash_chip_t *)0)->behavior) == 1
-);
-UF_STATIC_ASSERT(
-    flash_chip_program_algorithm_is_1_byte,
-    sizeof(((uf_flash_chip_t *)0)->program_algorithm) == 1
-);
-UF_STATIC_ASSERT(
-    flash_chip_erase_algorithm_is_1_byte,
-    sizeof(((uf_flash_chip_t *)0)->erase_algorithm) == 1
-);
+UF_STATIC_ASSERT(flash_sector_region_count_is_2_bytes, sizeof(((uf_flash_sector_region_t *)0)->sector_count) == 2);
+UF_STATIC_ASSERT(flash_sector_region_size_is_4_bytes, sizeof(((uf_flash_sector_region_t *)0)->sector_size_bytes) == 4);
+UF_STATIC_ASSERT(flash_chip_capacity_is_4_bytes, sizeof(((uf_flash_chip_t *)0)->capacity_bytes) == 4);
+UF_STATIC_ASSERT(flash_chip_page_size_is_2_bytes, sizeof(((uf_flash_chip_t *)0)->page_size_bytes) == 2);
+UF_STATIC_ASSERT(flash_chip_behavior_is_1_byte, sizeof(((uf_flash_chip_t *)0)->behavior) == 1);
+UF_STATIC_ASSERT(flash_chip_program_algorithm_is_1_byte, sizeof(((uf_flash_chip_t *)0)->program_algorithm) == 1);
+UF_STATIC_ASSERT(flash_chip_erase_algorithm_is_1_byte, sizeof(((uf_flash_chip_t *)0)->erase_algorithm) == 1);
 
 #endif

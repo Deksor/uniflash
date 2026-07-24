@@ -3,17 +3,11 @@
 
 #include "uniflash/generic_algorithms.h"
 
-uf_phys_addr_t uf_flash_intel_lock_address(
-    const struct uf_flash_service *service,
-    uf_rom_offset_t operation_address);
-bool uf_flash_program_intel_sector_u(
-    struct uf_flash_service *service,
+uf_phys_addr_t uf_flash_intel_lock_address(const struct uf_flash_service *service, uf_rom_offset_t operation_address);
+bool uf_flash_program_intel_sector_u(struct uf_flash_service *service,
     uf_rom_offset_t position,
     uf_phys_addr_t source_address);
-bool uf_flash_erase_intel_sector_protected_u(
-    struct uf_flash_service *service,
-    uf_rom_offset_t sector_address);
-bool uf_flash_register_intel_algorithms(
-    uf_flash_algorithm_registry_t *registry);
+bool uf_flash_erase_intel_sector_protected_u(struct uf_flash_service *service, uf_rom_offset_t sector_address);
+bool uf_flash_register_intel_algorithms(uf_flash_algorithm_registry_t *registry);
 
 #endif

@@ -6,18 +6,12 @@
 #define UF_CMOS_FIRST_SAVED_INDEX UINT8_C(0x0E)
 #define UF_CMOS_MAX_SAVED_BYTES UINT16_C(242)
 
-bool uf_cmos_detect_last_index(
-    const uf_hardware_t *hardware,
-    uint8_t *last_index);
-bool uf_cmos_read(
-    const uf_hardware_t *hardware,
+bool uf_cmos_detect_last_index(const uf_hardware_t *hardware, uint8_t *last_index);
+bool uf_cmos_read(const uf_hardware_t *hardware,
     uint8_t last_index,
     uint8_t *data,
     uint16_t capacity,
     uint16_t *size_bytes);
-bool uf_cmos_save_file(
-    const uf_hardware_t *hardware,
-    uint8_t last_index,
-    const char *path);
+bool uf_cmos_save_file(const uf_hardware_t *hardware, uint8_t last_index, const char *path);
 
 #endif

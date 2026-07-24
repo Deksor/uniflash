@@ -8,8 +8,7 @@
  * be accessed through the flat-real-mode hardware interface just like the
  * OldBIOS and NewBIOS linear blocks in the Pascal program.
  */
-typedef struct uf_xms
-{
+typedef struct uf_xms {
     uint32_t entry_point;
     uf_phys_addr_t linear_base;
     uf_rom_size_t size_bytes;

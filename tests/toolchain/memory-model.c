@@ -17,8 +17,7 @@
 #error The Open Watcom huge memory model is not enabled
 #endif
 
-#define STATIC_SIZE_ASSERT(name, expression) \
-    typedef char static_size_assert_##name[(expression) ? 1 : -1]
+#define STATIC_SIZE_ASSERT(name, expression) typedef char static_size_assert_##name[(expression) ? 1 : -1]
 
 STATIC_SIZE_ASSERT(uint8_is_1, sizeof(uint8_t) == 1);
 STATIC_SIZE_ASSERT(uint16_is_2, sizeof(uint16_t) == 2);
@@ -29,7 +28,4 @@ STATIC_SIZE_ASSERT(data_pointer_is_4, sizeof(void *) == 4);
 STATIC_SIZE_ASSERT(function_pointer_is_4, sizeof(void (*)(void)) == 4);
 STATIC_SIZE_ASSERT(size_t_is_2, sizeof(size_t) == 2);
 
-int main(void)
-{
-    return 0;
-}
+int main(void) { return 0; }

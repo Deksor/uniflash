@@ -6,8 +6,7 @@
 #include "uniflash/intel_algorithms.h"
 #include "uniflash/sharp_algorithms.h"
 
-typedef struct mock_flash
-{
+typedef struct mock_flash {
     uint32_t reads;
     uint32_t writes;
     uint16_t block_reads;
@@ -50,81 +49,50 @@ typedef struct mock_flash
     bool lock_states[4];
 } mock_flash_t;
 
-static bool mock_read_byte(
-    void *context,
-    uf_rom_offset_t address,
-    uint8_t *value)
-{
+static bool mock_read_byte(void *context, uf_rom_offset_t address, uint8_t *value) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
-    if (mock->read_script_index < mock->read_script_count)
-    {
-        assert(
-            address == mock->read_addresses[mock->read_script_index]);
+    if (mock->read_script_index < mock->read_script_count) {
+        assert(address == mock->read_addresses[mock->read_script_index]);
         *value = mock->read_values[mock->read_script_index];
         ++mock->read_script_index;
-    }
-    else if (
-        address == UINT32_C(0x1F0000) && mock->sharp_top_busy_reads > 0)
-    {
+    } else if (address == UINT32_C(0x1F0000) && mock->sharp_top_busy_reads > 0) {
         --mock->sharp_top_busy_reads;
         *value = UINT8_C(0x00);
-    }
-    else if (mock->toggle_reads)
-    {
-        *value = (mock->reads & UINT32_C(1)) != 0
-                     ? UINT8_C(0x40)
-                     : UINT8_C(0x00);
-    }
-    else if (mock->zero_reads)
-    {
+    } else if (mock->toggle_reads) {
+        *value = (mock->reads & UINT32_C(1)) != 0 ? UINT8_C(0x40) : UINT8_C(0x00);
+    } else if (mock->zero_reads) {
         *value = UINT8_C(0x00);
-    }
-    else if (mock->use_default_read_value)
-    {
+    } else if (mock->use_default_read_value) {
         *value = mock->default_read_value;
-    }
-    else
-    {
+    } else {
         *value = UINT8_C(0xFF);
     }
     ++mock->reads;
     return true;
 }
 
-static bool mock_write_byte(
-    void *context,
-    uf_rom_offset_t address,
-    uint8_t value)
-{
+static bool mock_write_byte(void *context, uf_rom_offset_t address, uint8_t value) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
-    if (mock->writes < 64)
-    {
+    if (mock->writes < 64) {
         mock->write_addresses[mock->writes] = address;
         mock->write_values[mock->writes] = value;
     }
     mock->last_write_address = address;
     mock->last_write_value = value;
     ++mock->writes;
-    if (mock->fail_on_write == mock->writes)
-    {
+    if (mock->fail_on_write == mock->writes) {
         return false;
     }
     return true;
 }
 
-static bool mock_read_source_byte(
-    void *context,
-    uf_phys_addr_t source_address,
-    uint8_t *value)
-{
+static bool mock_read_source_byte(void *context, uf_phys_addr_t source_address, uint8_t *value) {
     mock_flash_t *mock = (mock_flash_t *)context;
     uf_phys_addr_t offset;
 
-    if (
-        source_address < mock->source_base || source_address - mock->source_base >= mock->source_size)
-    {
+    if (source_address < mock->source_base || source_address - mock->source_base >= mock->source_size) {
         return false;
     }
     offset = source_address - mock->source_base;
@@ -133,65 +101,47 @@ static bool mock_read_source_byte(
     return true;
 }
 
-static bool mock_delay_us(void *context, uint32_t microseconds)
-{
+static bool mock_delay_us(void *context, uint32_t microseconds) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
-    if (mock->delays < 32)
-    {
+    if (mock->delays < 32) {
         mock->delay_values[mock->delays] = microseconds;
     }
     ++mock->delays;
-    if (mock->fail_on_delay == mock->delays)
-    {
+    if (mock->fail_on_delay == mock->delays) {
         return false;
     }
     return true;
 }
 
-static bool mock_select_window(
-    void *context,
-    uf_phys_addr_t rom_base)
-{
+static bool mock_select_window(void *context, uf_phys_addr_t rom_base) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
-    if (mock->windows < 16)
-    {
+    if (mock->windows < 16) {
         mock->window_bases[mock->windows] = rom_base;
     }
     ++mock->windows;
-    if (mock->fail_on_window == mock->windows)
-    {
+    if (mock->fail_on_window == mock->windows) {
         return false;
     }
     return true;
 }
 
-static bool mock_set_write_lock(
-    void *context,
-    uf_phys_addr_t lock_register_address,
-    bool locked)
-{
+static bool mock_set_write_lock(void *context, uf_phys_addr_t lock_register_address, bool locked) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
-    if (mock->lock_changes < 4)
-    {
+    if (mock->lock_changes < 4) {
         mock->lock_addresses[mock->lock_changes] = lock_register_address;
         mock->lock_states[mock->lock_changes] = locked;
     }
     ++mock->lock_changes;
-    if (mock->fail_on_lock_change == mock->lock_changes)
-    {
+    if (mock->fail_on_lock_change == mock->lock_changes) {
         return false;
     }
     return true;
 }
 
-static bool mock_program(
-    struct uf_flash_service *service,
-    uf_rom_offset_t position,
-    uf_phys_addr_t source_address)
-{
+static bool mock_program(struct uf_flash_service *service, uf_rom_offset_t position, uf_phys_addr_t source_address) {
     mock_flash_t *mock = (mock_flash_t *)service->access.context;
 
     ++mock->programs;
@@ -200,10 +150,7 @@ static bool mock_program(
     return mock->fail_algorithm ? false : true;
 }
 
-static bool mock_erase(
-    struct uf_flash_service *service,
-    uf_rom_offset_t sector_address)
-{
+static bool mock_erase(struct uf_flash_service *service, uf_rom_offset_t sector_address) {
     mock_flash_t *mock = (mock_flash_t *)service->access.context;
 
     ++mock->erases;
@@ -211,12 +158,7 @@ static bool mock_erase(
     return mock->fail_algorithm ? false : true;
 }
 
-static bool mock_read_block(
-    void *context,
-    uf_rom_offset_t flash_address,
-    void *destination,
-    uf_rom_size_t size_bytes)
-{
+static bool mock_read_block(void *context, uf_rom_offset_t flash_address, void *destination, uf_rom_size_t size_bytes) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
     (void)destination;
@@ -226,12 +168,8 @@ static bool mock_read_block(
     return true;
 }
 
-static bool mock_write_block(
-    void *context,
-    const void *source,
-    uf_rom_offset_t flash_address,
-    uf_rom_size_t size_bytes)
-{
+static bool
+mock_write_block(void *context, const void *source, uf_rom_offset_t flash_address, uf_rom_size_t size_bytes) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
     (void)source;
@@ -241,13 +179,11 @@ static bool mock_write_block(
     return true;
 }
 
-static bool mock_compare_block(
-    void *context,
+static bool mock_compare_block(void *context,
     const void *source,
     uf_rom_offset_t flash_address,
     uf_rom_size_t size_bytes,
-    bool *equal)
-{
+    bool *equal) {
     mock_flash_t *mock = (mock_flash_t *)context;
 
     (void)source;
@@ -258,8 +194,7 @@ static bool mock_compare_block(
     return true;
 }
 
-int main(void)
-{
+int main(void) {
     mock_flash_t mock;
     uf_flash_access_t access;
     uf_flash_algorithm_registry_t algorithms;
@@ -294,11 +229,7 @@ int main(void)
     assert(uf_flash_access_is_valid(&access) == false);
     access.write_byte = mock_write_byte;
 
-    assert(
-        uf_flash_service_init(
-            &service,
-            &access,
-            UINT32_C(0xFFF80000)) == true);
+    assert(uf_flash_service_init(&service, &access, UINT32_C(0xFFF80000)) == true);
     assert(service.rom_base == UINT32_C(0xFFF80000));
     assert(service.manufacturer == NULL);
     assert(service.chip == NULL);
@@ -324,62 +255,26 @@ int main(void)
     assert(service.device_id == UINT8_C(0xA1));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(uf_flash_service_range_is_valid(&service, UF_KIB(32), 0));
-    assert(
-        uf_flash_service_range_is_valid(
-            &service,
-            UF_KIB(32) - UINT32_C(4),
-            UINT32_C(4)));
+    assert(uf_flash_service_range_is_valid(&service, UF_KIB(32) - UINT32_C(4), UINT32_C(4)));
     assert(!uf_flash_service_range_is_valid(&service, UF_KIB(32), 1));
 
-    assert(
-        uf_flash_service_read_block(
-            &service,
-            UF_KIB(32) - sizeof(buffer),
-            buffer,
-            sizeof(buffer)));
+    assert(uf_flash_service_read_block(&service, UF_KIB(32) - sizeof(buffer), buffer, sizeof(buffer)));
     assert(mock.block_reads == 1);
     assert(mock.block_address == UF_KIB(32) - sizeof(buffer));
     assert(mock.block_size == sizeof(buffer));
-    assert(
-        !uf_flash_service_read_block(
-            &service,
-            UF_KIB(32) - sizeof(buffer) + 1,
-            buffer,
-            sizeof(buffer)));
+    assert(!uf_flash_service_read_block(&service, UF_KIB(32) - sizeof(buffer) + 1, buffer, sizeof(buffer)));
     assert(mock.block_reads == 1);
 
-    assert(
-        uf_flash_service_write_block(
-            &service,
-            buffer,
-            UF_KIB(32) - sizeof(buffer),
-            sizeof(buffer)));
+    assert(uf_flash_service_write_block(&service, buffer, UF_KIB(32) - sizeof(buffer), sizeof(buffer)));
     assert(mock.block_writes == 1);
-    assert(
-        !uf_flash_service_write_block(
-            &service,
-            buffer,
-            UF_KIB(32),
-            sizeof(buffer)));
+    assert(!uf_flash_service_write_block(&service, buffer, UF_KIB(32), sizeof(buffer)));
     assert(mock.block_writes == 1);
 
     equal = false;
-    assert(
-        uf_flash_service_compare_block(
-            &service,
-            buffer,
-            UF_KIB(32) - sizeof(buffer),
-            sizeof(buffer),
-            &equal));
+    assert(uf_flash_service_compare_block(&service, buffer, UF_KIB(32) - sizeof(buffer), sizeof(buffer), &equal));
     assert(equal == true);
     assert(mock.block_compares == 1);
-    assert(
-        !uf_flash_service_compare_block(
-            &service,
-            buffer,
-            UF_KIB(32),
-            sizeof(buffer),
-            &equal));
+    assert(!uf_flash_service_compare_block(&service, buffer, UF_KIB(32), sizeof(buffer), &equal));
     assert(mock.block_compares == 1);
 
     assert(uf_flash_service_select_chip(&service, 0x01, 0x00) == false);
@@ -436,11 +331,7 @@ int main(void)
     mock.read_values[2] = UINT8_C(0x01);
     mock.read_addresses[3] = 1;
     mock.read_values[3] = UINT8_C(0xA1);
-    assert(
-        uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_STANDARD,
-            &id_result));
+    assert(uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_STANDARD, &id_result));
     assert(id_result.initial_manufacturer_id == UINT8_C(0xFF));
     assert(id_result.initial_device_id == UINT8_C(0xFF));
     assert(id_result.manufacturer_id == UINT8_C(0x01));
@@ -469,11 +360,7 @@ int main(void)
     mock.read_values[4] = UINT8_C(0x7F);
     mock.read_addresses[5] = 0x101;
     mock.read_values[5] = UINT8_C(0x13);
-    assert(
-        uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_STANDARD,
-            &id_result));
+    assert(uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_STANDARD, &id_result));
     assert(id_result.manufacturer_id == UINT8_C(0x1C));
     assert(id_result.device_id == UINT8_C(0x13));
     assert(id_result.valid == true);
@@ -492,11 +379,7 @@ int main(void)
     mock.read_values[4] = UINT8_C(0x1F);
     mock.read_addresses[5] = 1;
     mock.read_values[5] = UINT8_C(0xA0);
-    assert(
-        uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_STANDARD,
-            &id_result));
+    assert(uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_STANDARD, &id_result));
     assert(id_result.manufacturer_id == UINT8_C(0x7F));
     assert(id_result.device_id == UINT8_C(0xA0));
     assert(id_result.valid == true);
@@ -511,11 +394,7 @@ int main(void)
     mock.read_values[2] = UINT8_C(0xC2);
     mock.read_addresses[3] = 1;
     mock.read_values[3] = UINT8_C(0xA4);
-    assert(
-        uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_STANDARD,
-            &id_result));
+    assert(uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_STANDARD, &id_result));
     assert(id_result.manufacturer_id == UINT8_C(0xC2));
     assert(id_result.device_id == UINT8_C(0xA4));
     assert(id_result.valid == true);
@@ -537,11 +416,7 @@ int main(void)
     mock.read_values[2] = UINT8_C(0x89);
     mock.read_addresses[3] = 1;
     mock.read_values[3] = UINT8_C(0x94);
-    assert(
-        uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_LEGACY,
-            &id_result));
+    assert(uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_LEGACY, &id_result));
     assert(id_result.manufacturer_id == UINT8_C(0x89));
     assert(id_result.device_id == UINT8_C(0x94));
     assert(id_result.valid == true);
@@ -556,27 +431,15 @@ int main(void)
     mock.read_addresses[1] = 1;
     mock.read_values[1] = UINT8_C(0xFF);
     mock.fail_on_delay = 1;
-    assert(
-        !uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_STANDARD,
-            &id_result));
+    assert(!uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_STANDARD, &id_result));
     assert(mock.reads == 2);
     assert(mock.writes == 3);
     assert(mock.delays == 1);
 
-    assert(
-        !uf_flash_service_probe_id(
-            &service,
-            UINT8_C(2),
-            &id_result));
+    assert(!uf_flash_service_probe_id(&service, UINT8_C(2), &id_result));
     assert(!uf_flash_service_probe_id(&service, 0, NULL));
     service.access.delay_us = NULL;
-    assert(
-        !uf_flash_service_probe_id(
-            &service,
-            UF_FLASH_ID_METHOD_STANDARD,
-            &id_result));
+    assert(!uf_flash_service_probe_id(&service, UF_FLASH_ID_METHOD_STANDARD, &id_result));
 
     id_result.manufacturer_id = UINT8_C(0x01);
     id_result.device_id = UINT8_C(0x93);
@@ -669,8 +532,7 @@ int main(void)
     memset(&mock, 0, sizeof(mock));
     service.rom_base = 0;
     script_index = 0;
-    for (candidate_index = 0; candidate_index < 6; ++candidate_index)
-    {
+    for (candidate_index = 0; candidate_index < 6; ++candidate_index) {
         mock.read_addresses[script_index] = 0;
         mock.read_values[script_index++] = UINT8_C(0xFF);
         mock.read_addresses[script_index] = 1;
@@ -749,30 +611,18 @@ int main(void)
     assert(uf_flash_service_select_chip(&service, 0x01, 0xA1));
 
     memset(&mock, 0, sizeof(mock));
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UF_KIB(32) - UINT32_C(128),
-            UINT32_C(0x10000)));
+    assert(!uf_flash_service_program(&service, UF_KIB(32) - UINT32_C(128), UINT32_C(0x10000)));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.programs == 0);
 
     algorithms.program[UF_FLASH_PROGRAM_AMD_FLASH] = mock_program;
-    assert(
-        uf_flash_service_program(
-            &service,
-            UF_KIB(32) - UINT32_C(128),
-            UINT32_C(0x10000)));
+    assert(uf_flash_service_program(&service, UF_KIB(32) - UINT32_C(128), UINT32_C(0x10000)));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.programs == 1);
     assert(mock.algorithm_position == UF_KIB(32) - UINT32_C(128));
     assert(mock.algorithm_source == UINT32_C(0x10000));
 
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UF_KIB(32) - UINT32_C(127),
-            UINT32_C(0x10000)));
+    assert(!uf_flash_service_program(&service, UF_KIB(32) - UINT32_C(127), UINT32_C(0x10000)));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.programs == 1);
 
@@ -813,8 +663,7 @@ int main(void)
     assert(!uf_flash_register_amd_sector_erase(&algorithms));
     algorithms.erase[UF_FLASH_ERASE_NONE] = NULL;
     assert(uf_flash_register_amd_sector_erase(&algorithms));
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_AMD_SECTOR] == uf_flash_erase_amd_sector);
+    assert(algorithms.erase[UF_FLASH_ERASE_AMD_SECTOR] == uf_flash_erase_amd_sector);
     assert(uf_flash_service_set_algorithms(&service, &algorithms));
     assert(uf_flash_service_select_chip(&service, 0x01, 0x20));
 
@@ -859,8 +708,7 @@ int main(void)
     assert(!uf_flash_register_amd_bulk_erase(&algorithms));
     algorithms.erase[UF_FLASH_ERASE_NONE] = NULL;
     assert(uf_flash_register_amd_bulk_erase(&algorithms));
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_AMD_BULK] == uf_flash_erase_amd_bulk);
+    assert(algorithms.erase[UF_FLASH_ERASE_AMD_BULK] == uf_flash_erase_amd_bulk);
     assert(uf_flash_service_set_algorithms(&service, &algorithms));
     assert(uf_flash_service_select_chip(&service, 0x20, 0x24));
 
@@ -902,8 +750,7 @@ int main(void)
     assert(!uf_flash_register_amd_embedded_erase(&algorithms));
     algorithms.erase[UF_FLASH_ERASE_NONE] = NULL;
     assert(uf_flash_register_amd_embedded_erase(&algorithms));
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_AMD_EMBEDDED] == uf_flash_erase_amd_embedded);
+    assert(algorithms.erase[UF_FLASH_ERASE_AMD_EMBEDDED] == uf_flash_erase_amd_embedded);
     assert(uf_flash_service_set_algorithms(&service, &algorithms));
     assert(uf_flash_service_select_chip(&service, 0x01, 0xA2));
 
@@ -952,31 +799,22 @@ int main(void)
     assert(!uf_flash_register_generic_algorithms(&algorithms));
     algorithms.erase[UF_FLASH_ERASE_NONE] = NULL;
     assert(uf_flash_register_generic_algorithms(&algorithms));
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_GENERIC_PAGE_BYTE] == uf_flash_program_generic_page);
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_INTEL_SECTOR] == uf_flash_program_intel_sector);
+    assert(algorithms.program[UF_FLASH_PROGRAM_GENERIC_PAGE_BYTE] == uf_flash_program_generic_page);
+    assert(algorithms.program[UF_FLASH_PROGRAM_INTEL_SECTOR] == uf_flash_program_intel_sector);
     assert(algorithms.program[UF_FLASH_PROGRAM_INTEL_SECTOR_U] == NULL);
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_AMD_SECTOR] == uf_flash_program_amd_sector);
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_AMD_EMBEDDED] == uf_flash_program_amd_embedded);
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_AMD_FLASH] == uf_flash_program_amd_flash);
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_INTEL_SECTOR] == uf_flash_erase_intel_sector);
+    assert(algorithms.program[UF_FLASH_PROGRAM_AMD_SECTOR] == uf_flash_program_amd_sector);
+    assert(algorithms.program[UF_FLASH_PROGRAM_AMD_EMBEDDED] == uf_flash_program_amd_embedded);
+    assert(algorithms.program[UF_FLASH_PROGRAM_AMD_FLASH] == uf_flash_program_amd_flash);
+    assert(algorithms.erase[UF_FLASH_ERASE_INTEL_SECTOR] == uf_flash_erase_intel_sector);
     assert(algorithms.erase[UF_FLASH_ERASE_INTEL_SECTOR_U] == NULL);
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_AMD_FLASH] == uf_flash_erase_amd_flash);
+    assert(algorithms.erase[UF_FLASH_ERASE_AMD_FLASH] == uf_flash_erase_amd_flash);
     assert(!uf_flash_register_intel_algorithms(NULL));
     algorithms.erase[UF_FLASH_ERASE_NONE] = mock_erase;
     assert(!uf_flash_register_intel_algorithms(&algorithms));
     algorithms.erase[UF_FLASH_ERASE_NONE] = NULL;
     assert(uf_flash_register_intel_algorithms(&algorithms));
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_INTEL_SECTOR_U] == uf_flash_program_intel_sector_u);
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_INTEL_SECTOR_U] == uf_flash_erase_intel_sector_protected_u);
+    assert(algorithms.program[UF_FLASH_PROGRAM_INTEL_SECTOR_U] == uf_flash_program_intel_sector_u);
+    assert(algorithms.erase[UF_FLASH_ERASE_INTEL_SECTOR_U] == uf_flash_erase_intel_sector_protected_u);
     assert(uf_flash_service_set_algorithms(&service, &algorithms));
 
     assert(uf_flash_service_select_chip(&service, 0xBF, 0x01));
@@ -984,11 +822,7 @@ int main(void)
     mock.source_base = UINT32_C(0x10000);
     mock.source_size = 128;
     memset(mock.source_values, 0xFF, mock.source_size);
-    assert(
-        uf_flash_service_program(
-            &service,
-            0,
-            mock.source_base));
+    assert(uf_flash_service_program(&service, 0, mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.source_reads == 129);
     assert(mock.writes == 131);
@@ -1008,11 +842,7 @@ int main(void)
     mock.read_values[0] = UINT8_C(0x80);
     mock.read_addresses[1] = UINT32_C(0x1000);
     mock.read_values[1] = UINT8_C(0x80);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.source_reads == 128);
     assert(mock.writes == 5);
@@ -1040,8 +870,7 @@ int main(void)
     assert(mock.write_values[4] == UINT8_C(0xFF));
 
     assert(uf_flash_service_select_chip(&service, 0x89, 0xAD));
-    assert(
-        uf_flash_intel_lock_address(&service, UINT32_C(0x10000)) == UINT32_C(0xFFB90002));
+    assert(uf_flash_intel_lock_address(&service, UINT32_C(0x10000)) == UINT32_C(0xFFB90002));
 
     memset(&mock, 0, sizeof(mock));
     mock.source_base = UINT32_C(0x28000);
@@ -1053,11 +882,7 @@ int main(void)
     mock.read_values[0] = UINT8_C(0x80);
     mock.read_addresses[1] = UINT32_C(0x1000);
     mock.read_values[1] = UINT8_C(0x80);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.lock_changes == 2);
     assert(mock.lock_states[0] == false);
@@ -1071,11 +896,7 @@ int main(void)
     memset(mock.source_values, 0xFF, mock.source_size);
     mock.source_values[0] = UINT8_C(0x12);
     mock.fail_on_write = 1;
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(!uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.lock_changes == 2);
     assert(mock.lock_states[0] == false);
@@ -1086,11 +907,7 @@ int main(void)
     mock.source_size = 128;
     memset(mock.source_values, 0xFF, mock.source_size);
     mock.fail_on_lock_change = 1;
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(!uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.lock_changes == 1);
     assert(mock.writes == 0);
@@ -1121,11 +938,7 @@ int main(void)
     mock.read_values[0] = UINT8_C(0x80);
     mock.read_addresses[1] = UINT32_C(0x1000);
     mock.read_values[1] = UINT8_C(0x80);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.source_reads == 128);
     assert(mock.writes == 7);
@@ -1144,11 +957,7 @@ int main(void)
     mock.read_values[0] = UINT8_C(0x80);
     mock.read_addresses[1] = UINT32_C(0x1000);
     mock.read_values[1] = UINT8_C(0x80);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.source_reads == 128);
     assert(mock.writes == 4);
@@ -1171,11 +980,7 @@ int main(void)
     mock.read_values[2] = UINT8_C(0x00);
     mock.read_addresses[3] = UINT32_C(0x1000);
     mock.read_values[3] = UINT8_C(0x00);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(mock.writes == 6);
     assert(mock.write_values[0] == UINT8_C(0x10));
     assert(mock.write_values[1] == UINT8_C(0x12));
@@ -1191,11 +996,7 @@ int main(void)
     mock.read_script_count = 1;
     mock.read_addresses[0] = UINT32_C(0x1000);
     mock.read_values[0] = UINT8_C(0x12);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.source_reads == 128);
     assert(mock.writes == 5);
@@ -1213,18 +1014,11 @@ int main(void)
     memset(mock.source_values, 0xFF, mock.source_size);
     mock.source_values[0] = UINT8_C(0x12);
     mock.read_script_count = 25;
-    for (candidate_index = 0; candidate_index < 25; ++candidate_index)
-    {
+    for (candidate_index = 0; candidate_index < 25; ++candidate_index) {
         mock.read_addresses[candidate_index] = UINT32_C(0x1000);
-        mock.read_values[candidate_index] = candidate_index == 24
-                                                ? UINT8_C(0x12)
-                                                : UINT8_C(0x00);
+        mock.read_values[candidate_index] = candidate_index == 24 ? UINT8_C(0x12) : UINT8_C(0x00);
     }
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(!uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.writes == 77);
     assert(mock.reads == 25);
@@ -1247,10 +1041,8 @@ int main(void)
     assert(!uf_flash_register_sharp_algorithms(&algorithms));
     algorithms.erase[UF_FLASH_ERASE_NONE] = NULL;
     assert(uf_flash_register_sharp_algorithms(&algorithms));
-    assert(
-        algorithms.program[UF_FLASH_PROGRAM_SHARP_SECTOR] == uf_flash_program_sharp_sector);
-    assert(
-        algorithms.erase[UF_FLASH_ERASE_SHARP_SECTOR] == uf_flash_erase_sharp_sector);
+    assert(algorithms.program[UF_FLASH_PROGRAM_SHARP_SECTOR] == uf_flash_program_sharp_sector);
+    assert(algorithms.erase[UF_FLASH_ERASE_SHARP_SECTOR] == uf_flash_erase_sharp_sector);
     assert(uf_flash_service_select_chip(&service, 0xB0, 0xC9));
 
     memset(&mock, 0, sizeof(mock));
@@ -1269,11 +1061,7 @@ int main(void)
     mock.read_values[3] = UINT8_C(0x80);
     mock.read_addresses[4] = 0;
     mock.read_values[4] = UINT8_C(0x80);
-    assert(
-        uf_flash_service_program(
-            &service,
-            UINT32_C(0x0F0000),
-            mock.source_base));
+    assert(uf_flash_service_program(&service, UINT32_C(0x0F0000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_NONE);
     assert(mock.writes == 11);
     assert(mock.write_values[0] == UINT8_C(0x60));
@@ -1298,11 +1086,7 @@ int main(void)
     mock.sharp_top_busy_reads = UINT32_C(6000);
     mock.use_default_read_value = true;
     mock.default_read_value = UINT8_C(0x80);
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UINT32_C(0x0F0000),
-            mock.source_base));
+    assert(!uf_flash_service_program(&service, UINT32_C(0x0F0000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.sharp_top_busy_reads == 0);
     assert(mock.reads == UINT32_C(6004));
@@ -1339,22 +1123,14 @@ int main(void)
     mock.read_addresses[0] = 0;
     mock.read_values[0] = UINT8_C(0x80);
     mock.fail_on_write = 3;
-    assert(
-        !uf_flash_service_program(
-            &service,
-            UINT32_C(0x1000),
-            mock.source_base));
+    assert(!uf_flash_service_program(&service, UINT32_C(0x1000), mock.source_base));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
     assert(mock.writes == 5);
     assert(mock.write_values[3] == UINT8_C(0x60));
     assert(mock.write_values[4] == UINT8_C(0xBB));
 
     service.access.read_source_byte = NULL;
-    assert(
-        !uf_flash_service_program(
-            &service,
-            0,
-            UINT32_C(0x50000)));
+    assert(!uf_flash_service_program(&service, 0, UINT32_C(0x50000)));
     assert(service.error == UF_FLASH_ERROR_PROGRAM);
 
     assert(uf_flash_service_command(NULL, UINT8_C(0x90)) == false);

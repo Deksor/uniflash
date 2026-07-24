@@ -3,7 +3,6 @@
 
 #include "uniflash/generic_algorithms.h"
 
-bool uf_flash_register_macronix_algorithms(
-    uf_flash_algorithm_registry_t *registry);
+bool uf_flash_register_macronix_algorithms(uf_flash_algorithm_registry_t *registry);
 
 #endif

@@ -21,15 +21,9 @@ typedef struct uf_language {
 
 extern const uf_language_t uf_language_english;
 
-const char *uf_language_get(
-    const uf_language_t *language,
-    uf_message_id_t id
-);
+const char *uf_language_get(const uf_language_t *language, uf_message_id_t id);
 
 UF_STATIC_ASSERT(message_id_is_2_bytes, sizeof(uf_message_id_t) == 2);
-UF_STATIC_ASSERT(
-    language_message_count_is_2_bytes,
-    sizeof(((uf_language_t *)0)->message_count) == 2
-);
+UF_STATIC_ASSERT(language_message_count_is_2_bytes, sizeof(((uf_language_t *)0)->message_count) == 2);
 
 #endif

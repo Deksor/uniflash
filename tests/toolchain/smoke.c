@@ -19,13 +19,9 @@
 
 typedef uint32_t uf_phys_addr_t;
 
-int main(void)
-{
+int main(void) {
     const uf_phys_addr_t top_of_first_megabyte = UINT32_C(0x100000);
 
-    printf(
-        "UniFlash C toolchain: DOS/16, 386, huge model; address=%lu\r\n",
-        (unsigned long)top_of_first_megabyte
-    );
+    printf("UniFlash C toolchain: DOS/16, 386, huge model; address=%lu\r\n", (unsigned long)top_of_first_megabyte);
     return 0;
 }

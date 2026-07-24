@@ -5,8 +5,15 @@
 #include "uniflash/types.h"
 
 typedef enum uf_cli_action {
-    UF_CLI_GUI = 0, UF_CLI_HELP, UF_CLI_INFO, UF_CLI_DUMP, UF_CLI_BOOTBLOCK,
-    UF_CLI_COMPARE, UF_CLI_CHIPLIST, UF_CLI_CMOS_SAVE, UF_CLI_LANGUAGES
+    UF_CLI_GUI = 0,
+    UF_CLI_HELP,
+    UF_CLI_INFO,
+    UF_CLI_DUMP,
+    UF_CLI_BOOTBLOCK,
+    UF_CLI_COMPARE,
+    UF_CLI_CHIPLIST,
+    UF_CLI_CMOS_SAVE,
+    UF_CLI_LANGUAGES
 } uf_cli_action_t;
 
 typedef enum uf_cli_target { UF_CLI_TARGET_SYSTEM = 0, UF_CLI_TARGET_CT, UF_CLI_TARGET_PCI } uf_cli_target_t;
@@ -24,5 +31,13 @@ typedef struct uf_cli_options {
     bool force_id;
     uint16_t forced_id;
 } uf_cli_options_t;
+
+bool uf_cli_parse_options(int argc, char **argv, uf_cli_options_t *options);
+void uf_cli_print_help(void);
+void uf_cli_print_chip_list(void);
+void uf_cli_print_languages(void);
+#if defined(UF_TARGET_DOS16)
+int uf_cli_run_read_only(const uf_cli_options_t *options);
+#endif
 
 #endif

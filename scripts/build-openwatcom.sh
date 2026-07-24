@@ -57,6 +57,12 @@ wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
 wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
     -dUF_TARGET_DOS16 \
     -i=. -i=include \
+    -fo="$build_dir/cli.obj" \
+    src/cli.c
+
+wcc -q -bt=dos -3 -mh -d2 -od -wx -za99 \
+    -dUF_TARGET_DOS16 \
+    -i=. -i=include \
     -fo="$build_dir/flashsvc.obj" \
     src/flash/flash_service.c
 
@@ -226,6 +232,7 @@ wcl -q -bt=dos -lr -3 -mh -k16384 -d2 -od -wx \
     -fe="$build_dir/UNIFLASH.EXE" \
     -fm="$build_dir/uniflash.map" \
     "$build_dir/main.obj" \
+    "$build_dir/cli.obj" \
     "$build_dir/flashsvc.obj" \
     "$build_dir/genalgo.obj" \
     "$build_dir/intelalgo.obj" \

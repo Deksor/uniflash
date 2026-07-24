@@ -83,15 +83,15 @@ bool uf_cmos_read(const uf_hardware_t *hardware,
     if (standard_last > UINT16_C(0x7F)) {
         standard_last = UINT16_C(0x7F);
     }
-    for (uint16_t index = UF_CMOS_FIRST_SAVED_INDEX; index <= standard_last; ++index) {
-        if (!indexed_read(hardware, UINT16_C(0x70), (uint8_t)index, &data[output])) {
+    for (uint16_t i = UF_CMOS_FIRST_SAVED_INDEX; i <= standard_last; ++i) {
+        if (!indexed_read(hardware, UINT16_C(0x70), (uint8_t)i, &data[output])) {
             return false;
         }
         ++output;
     }
     if (last_index > UINT8_C(0x7F)) {
-        for (uint16_t index = 0x80; index <= last_index; ++index) {
-            if (!indexed_read(hardware, UINT16_C(0x72), (uint8_t)index, &data[output])) {
+        for (uint16_t i = 0x80; i <= last_index; ++i) {
+            if (!indexed_read(hardware, UINT16_C(0x72), (uint8_t)i, &data[output])) {
                 return false;
             }
             ++output;

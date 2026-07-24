@@ -26,6 +26,19 @@ typedef struct uf_chipset {
     bool rom_enabled;
 } uf_chipset_t;
 
+typedef struct uf_chipset_id {
+    uint16_t vendor;
+    uint16_t device;
+    const char *name;
+    uf_chipset_method_t method;
+    bool detect_lpc;
+} uf_chipset_id_t;
+
+typedef struct uf_chipset_detect_context {
+    uf_chipset_t *chipset;
+    bool wants_lpc;
+} uf_chipset_detect_context_t;
+
 bool uf_chipset_detect(uf_chipset_t *chipset, const uf_hardware_t *hardware);
 bool uf_chipset_rom_set_enabled(uf_chipset_t *chipset, bool enabled);
 

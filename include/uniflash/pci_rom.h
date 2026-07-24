@@ -16,6 +16,11 @@ typedef struct uf_pci_rom_list {
     uint8_t count;
 } uf_pci_rom_list_t;
 
+typedef struct uf_pci_rom_scan_context {
+    uf_pci_rom_list_t *list;
+    const uf_pci_interface_t *pci;
+} uf_pci_rom_scan_context_t;
+
 typedef uint8_t uf_pci_flash_kind_t;
 
 enum {

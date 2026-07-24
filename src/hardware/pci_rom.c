@@ -5,11 +5,6 @@
 
 #define UF_PCI_FLASH_POLL_LIMIT UINT32_C(1000000)
 
-typedef struct scan_context {
-    uf_pci_rom_list_t *list;
-    const uf_pci_interface_t *pci;
-} scan_context_t;
-
 static bool probe_rom_size(const uf_pci_interface_t *pci, const uf_pci_function_info_t *device, uf_rom_size_t *size) {
     uint32_t saved_command = 0;
     uint32_t saved_bar = 0;
@@ -64,7 +59,7 @@ restore:
 }
 
 static bool scan_visit(void *context, const uf_pci_function_info_t *device) {
-    scan_context_t *scan = context;
+    uf_pci_rom_scan_context_t *scan = context;
     uf_rom_size_t size;
 
     if (scan->list->count < UF_PCI_ROM_MAX_DEVICES && probe_rom_size(scan->pci, device, &size)) {
@@ -77,7 +72,7 @@ static bool scan_visit(void *context, const uf_pci_function_info_t *device) {
 
 bool uf_pci_rom_scan(uf_pci_rom_list_t *list, const uf_hardware_t *hardware) {
     uf_pci_interface_t pci;
-    scan_context_t scan;
+    uf_pci_rom_scan_context_t scan;
 
     if (list == NULL || !uf_pci_bus_init(&pci, hardware)) {
         return false;

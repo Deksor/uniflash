@@ -2,18 +2,10 @@
 
 #include "uniflash/chipset.h"
 
-typedef struct chipset_id {
-    uint16_t vendor;
-    uint16_t device;
-    const char *name;
-    uf_chipset_method_t method;
-    bool detect_lpc;
-} chipset_id_t;
-
 #define CHIP(vendor_value, device_value, text, method_value) {vendor_value, device_value, text, method_value, false}
 #define CHIP_LPC(vendor_value, device_value, text, method_value) {vendor_value, device_value, text, method_value, true}
 
-static const chipset_id_t north_ids[] = {CHIP(0x8086, 0x04A3, "Intel 82433LX/NX", 0),
+static const uf_chipset_id_t north_ids[] = {CHIP(0x8086, 0x04A3, "Intel 82433LX/NX", 0),
     CHIP(0x8086, 0x122D, "Intel 82437FX", 0),
     CHIP(0x8086, 0x1235, "Intel 82437MX", 0),
     CHIP(0x8086, 0x1237, "Intel 82441FX", 0),
@@ -128,7 +120,7 @@ static const chipset_id_t north_ids[] = {CHIP(0x8086, 0x04A3, "Intel 82433LX/NX"
     CHIP(0x10DE, 0x01A4, "NVIDIA IGP", 0),
     CHIP(0x10DE, 0x01E0, "NVIDIA IGP2", 0)};
 
-static const chipset_id_t south_ids[] = {CHIP(0x8086, 0x0484, "Intel SIO", 0x0104),
+static const uf_chipset_id_t south_ids[] = {CHIP(0x8086, 0x0484, "Intel SIO", 0x0104),
     CHIP(0x8086, 0x122E, "Intel PIIX", 0x0101),
     CHIP(0x8086, 0x1234, "Intel MPIIX", 0x0100),
     CHIP(0x8086, 0x7000, "Intel PIIX3", 0x0101),
@@ -588,7 +580,7 @@ static bool set_lpc_enabled(uf_chipset_t *chipset, bool enabled) {
     return hardware->out8(hardware->context, chipset->lpc_base, UINT8_C(0xAA));
 }
 
-static const chipset_id_t *find_id(const chipset_id_t *ids, uint16_t count, uint16_t vendor, uint16_t device) {
+static const uf_chipset_id_t *find_id(const uf_chipset_id_t *ids, uint16_t count, uint16_t vendor, uint16_t device) {
     for (uint16_t index = 0; index < count; ++index) {
         if (ids[index].vendor == vendor && ids[index].device == device) {
             return &ids[index];
@@ -597,14 +589,9 @@ static const chipset_id_t *find_id(const chipset_id_t *ids, uint16_t count, uint
     return NULL;
 }
 
-typedef struct detect_context {
-    uf_chipset_t *chipset;
-    bool wants_lpc;
-} detect_context_t;
-
 static bool visit_chipset(void *context, const uf_pci_function_info_t *device) {
-    detect_context_t *detect = context;
-    const chipset_id_t *id;
+    uf_chipset_detect_context_t *detect = context;
+    const uf_chipset_id_t *id;
 
     id = find_id(north_ids, (uint16_t)(sizeof(north_ids) / sizeof(north_ids[0])), device->vendor_id, device->device_id);
     if (id != NULL && !detect->chipset->north_found && device->class_code == UINT8_C(0x06) &&
@@ -744,7 +731,7 @@ static void apply_integrated_overrides(uf_chipset_t *chipset) {
 }
 
 bool uf_chipset_detect(uf_chipset_t *chipset, const uf_hardware_t *hardware) {
-    detect_context_t detect;
+    uf_chipset_detect_context_t detect;
     uint8_t mechanism;
 
     if (chipset == NULL || !uf_hardware_is_valid(hardware)) {

@@ -1,6 +1,15 @@
-Released in 1998 and updated until 2005, this is the original source code to the Uniflash project, by Pascal Van Leeuwen, Galkowski Adam and Ondrej Zary (aka Rainbow Software) now released on github.
+Uniflash is a DOS utility written in Pascal meant to backup and flash the BIOS of your motherboard.
 
-You can find their respective websites on archive.org here
+It was initially released in 1997 by by Pascal Van Leeuwen and Galkowski Adam.
+Later it was picked up by Ondrej Zary (aka Rainbow Software) who updated it until 2005.
+Finally, rom.by made more updates to it between 2007 and 2010.
+
+I've compiled all the source files into a single repository with every version tagged.
+
+The last release by Ondrej Zary is [version 1.40](https://github.com/Deksor/uniflash/releases/tag/1.40).
+
+You can find their respective websites on archive.org here:
 
 - http://ourworld.compuserve.com/homepages/pvanleeuwen/techforum.htm
 - https://web.archive.org/web/20070820105814/http://www.uniflash.org/
+- https://web.archive.org/web/20180314235201/http://www.rom.by/book/Uniflash

@@ -7,6 +7,7 @@ Finally, rom.by made more updates to it between 2007 and 2010.
 I've compiled all the source files into a single repository with every version tagged.
 
 The last release by Ondrej Zary is [version 1.40](https://github.com/Deksor/uniflash/releases/tag/1.40).
+The last known version by rom.by is [version 2.00rc03](https://github.com/Deksor/uniflash/releases/tag/2.00.spi.rc03)
 
 You can find their respective websites on archive.org here:
 

@@ -212,6 +212,18 @@ Begin
            Size := 2048;
            Name := ConstPtr( 'A29L160B/3V' ); {Bottom Boot Block}
           End;
+
+    $95 : Begin {v1.47re}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 128;  {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 512;
+           Name := ConstPtr( 'A49LF004/3V (FWH)' );
+          End;
+
     else Exit;
    End;
   End;

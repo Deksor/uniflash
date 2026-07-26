@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.40';
+Version    = '1.47re.08';
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}

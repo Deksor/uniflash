@@ -3,7 +3,7 @@ unit PCI;  { Unit to communicate with chipsets }
 
 interface
 
-uses AMIBIOS, AsusBIOS;
+uses Award, AMIBIOS, AsusBIOS, Phoenix;
 
 Const
 PCICfIdx    = $CF8;
@@ -15,6 +15,8 @@ NorthPos,SouthPos,PMUPos,CurPCIROM,PCIROMBus,PCIROMDev,PCIROMFun,LPCBase: Byte;
 CurrentChipset, CurrentPCICard: string;
 WantToUseAMI, AMIUsed, ChipsetFound, ROMEnabled, PCIROMEnabled: Boolean;
 WantToUseAsus, AsusUsed: Boolean;
+AwardUsed: Boolean;  {1.42re}
+PhoenixUsed: Boolean;{1.43re}
 PCIROMs: array[1..20] of
           record
             MaxSize      : LongInt;
@@ -270,8 +272,18 @@ Begin
     $3590: NorthName:='iE7520'; {v1.39}
     $359E: NorthName:='iE7525'; {v1.39}
     $0500: NorthName:='iE8870'; {v1.39}
-    $2580: NorthName:='i829xxx'; {v1.37}
-    $2590: NorthName:='i829xxxM'; {v1.39}
+    $2580: NorthName:='i910GL/i915G(GL/GV/P/PL)'; {v1.37} {v1.47re}
+    $2590: NorthName:='i910GML/i915GM(GMS/PM)'; {v1.39} {Mobile} {v1.47re}
+
+    $2770: NorthName:='i945G/GZ/P/PL'; {v1.47re}
+    $27A0: NorthName:='i945GM/PM/GMS/GT/i943/i940GML'; {Mobile} {v1.47re}
+    $2970: NorthName:='i946GZ/PL/GL'; {v1.47re}
+    $2980: NorthName:='i965 G1'; {v1.47re}
+    $2990: NorthName:='iQ963/Q965'; {v1.47re}
+    $29A0: NorthName:='iP965/G965'; {v1.47re}
+    $29C0: NorthName:='iG33/G31/P35'; {v1.47re}
+    $2A00: NorthName:='iPM965/GM965/GL960'; {Mobile} {v1.47re}
+
    End;
   End else
  If NorthMan = $1106 {VIA} then
@@ -306,11 +318,15 @@ Begin
     $3102: NorthName:='VT8662';
     $3103: NorthName:='VT8615';
     $3112: NorthName:='VT8361';
+    $3116: NorthName:='VT8375';
     $3133: NorthName:='VT3133';
     $3148: NorthName:='VT8751';
     $3128: NorthName:='VT8753(A)/8754';
     $3189: NorthName:='VT8377';
     $3205: NorthName:='VT8378';
+
+    $0314: NorthName:='P4M800'; {1.47re}
+
    End;
   End else
  If NorthMan = $1022 {AMD} then {v1.20}
@@ -523,17 +539,41 @@ Begin
  If NorthMan = $10DE {nVidia} then {v1.30}
   Begin
    case NorthId of
-    $1A4: NorthName:='nVidia IGP';
-    $1E0: NorthName:='nVidia IGP2';
+    $01A4: NorthName:='nVidia IGP';
+    $01E0: NorthName:='nVidia IGP2';
+    $00D1: NorthName:='nVidia nForce3'; {v1.41re}
+    $00E1: NorthName:='nVidia nForce3 250Gb'; {v1.41re}
+
+    $03d0: NorthName:='nVidia 430'; {v1.47re}
+    $03d1: NorthName:='nVidia 405'; {v1.47re}
+    $03d2: NorthName:='nVidia 400'; {v1.47re}
+    $03d5: NorthName:='nVidia 420'; {v1.47re}
+
+   end;
+  End else
+ If NorthMan = $1002 {ATI} then {v1.46re}
+  Begin
+   case NorthId of
+    $0000: NorthName:='0'; {v1.47re}
    end;
   End;
 
  {Id southbridge}
  If SouthMan = $8086 {Intel} then
   Begin
-   if (Hi(SouthId)=$24) or (Hi(SouthId)=$25) then SouthFunc := $0200
-     else SouthFunc := $0100; {v1.21}
-   if Hi(SouthId)=$26 then SouthFunc := $1700; {v1.37}
+   {v1.47re}
+   SouthFunc := $0100; {by default}
+   case Hi(SouthId) of
+      $24: SouthFunc := $0200; {ICH0-5}
+      $25: SouthFunc := $0200; {i6300ESB ICH}
+
+      $26: SouthFunc := $1700; {ICH6}
+      $27: SouthFunc := $1700; {ICH7}
+      $28: SouthFunc := $1700; {ICH8}
+      $29: SouthFunc := $1700; {ICH9}
+   End;
+   {/v1.47re}
+
    case SouthId of {case v1.21}
      $484: Begin
             if SouthRev<$88 then SouthName:='i82378ZB SIO' else
@@ -556,19 +596,48 @@ Begin
            End;
     $2410: SouthName:='i82801AA ICH';
     $2420: SouthName:='i82801AB ICH0';
+
     $2440: SouthName:='i82801BA ICH2';
     $244C: SouthName:='i82801BAM ICH2-M';
+
     $248C: SouthName:='i82801CAM ICH3-M';
     $2480: SouthName:='i82801CA ICH3-S';
+
     $24C0: SouthName:='i82801DB ICH4';
     $24CC: SouthName:='i82801DBM ICH4-M';
+
     $24D0: SouthName:='i82801EB ICH5(R)';
+
+    $25A1: SouthName:='i6300ESB ICH'; {v1.39}
+
     $2640: SouthName:='i82801FB/R ICH6(R)'; {v1.37}
     $2641: SouthName:='i82801FBM ICH6-M'; {v1.39}
     $2642: SouthName:='i82801F(R)W ICH6(R)W'; {v1.37}
-    $25A1: SouthName:='i6300ESB ICH'; {v1.39}
+
+    $2670: SouthName:='i631xESB/632xESB/3100 ICH'; {v1.46re}
+
+    $27B0: SouthName:='i82801GH ICH7DH'; {v1.46re}
+    $27B8: SouthName:='i82801GB/R ICH7(R)'; {v1.46re}
+    $27B9: SouthName:='i82801GBM ICH7-M'; {v1.46re}
+    $27BD: SouthName:='i82801GHM ICH7-M DH'; {v1.46re}
+
+    $2810: SouthName:='i82801HB/R ICH8(R)'; {v1.46re}
+    $2811: SouthName:='i82801HBM ICH8-M'; {v1.46re}
+    $2812: SouthName:='i82801HH ICH8DH'; {v1.46re}
+    $2814: SouthName:='i82801HO ICH8DO'; {v1.46re}
+    $2815: SouthName:='i82801HHM ICH8DH-M'; {v1.46re}
+
+    $2911: SouthName:='ICH9'; {v1.47re}
+    $2912: SouthName:='i82801IH ICH9DH'; {v1.47re}
+    $2914: SouthName:='ICH9'; {v1.47re}
+    $2916: SouthName:='i82801IR ICH9R'; {v1.47re}
+    $2917: SouthName:='Mobile ICH9'; {v1.47re}
+    $2918: SouthName:='i82801IB ICH9'; {v1.47re}
+    $2919: SouthName:='Mobile ICH9'; {v1.47re}
+
    End;
   End else
+
  If SouthMan = $1106 {VIA} then
   Begin
    SouthFunc := $0300; {VIA/AMD method}
@@ -577,11 +646,17 @@ Begin
      $596: Begin SouthName:='VT82C596(A|B)'; Inc( SouthFunc ); End;
      $686: Begin SouthName:='VT82C686(A|B)'; Inc( SouthFunc ); End;
     $8231: SouthName:='VT8231';
-    $3074,$3147: begin SouthName:='VT8233(A|C)'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
+    {v1.47re}
+    $3074: begin SouthName:='VT8233'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
+    $3109: begin SouthName:='VT8233C'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
+    $3147: begin SouthName:='VT8233A'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
+    {/v1.47re}
     $3177: begin SouthName:='VT8235'; SouthFunc := $0310; LPCFunc:=LPCDetect; end;
     $3227: begin SouthName:='VT8237'; SouthFunc := $0310; LPCFunc:=LPCDetect; end; {v1.39}
+    $3287: begin SouthName:='VT8251'; SouthFunc := $0310; LPCFunc:=LPCDetect; end; {v1.47re}
    End;
   End else
+
  If SouthMan = $1022 {AMD} then {v1.20}
   Begin
    SouthFunc := $0300; {AMD/VIA method}
@@ -589,28 +664,49 @@ Begin
     $7408: SouthName:='AMD-756';
     $7410: SouthName:='AMD-766';
     $7440: SouthName:='AMD-768';
+    $7450: SouthName:='AMD-8131 PCI-X'; {v1.47re}
+    $7454: SouthName:='AMD-8151 System Controller'; {v1.47re}
+    $7458: SouthName:='AMD-8132 PCI-X 2.0'; {v1.47re}
     $7468: SouthName:='AMD-8111'; {v1.36}
    end;
   End else
+
  If SouthMan = $1039 {SiS} then
   Begin
    case SouthId of {v1.21}
      $8: SouthName:='SiS South Bridge'; {any SiS South Bridge}
     $18: SouthName:='SiS 950'; {SiS 950 can have $8 or $18}
+
+   $961: SouthName:='SiS 961'; {v1.47re}
+   $962: SouthName:='SiS 962'; {v1.47re}
+   $963: SouthName:='SiS 963'; {v1.47re}
    $964: SouthName:='SiS 964'; {v1.35}
+   $965: SouthName:='SiS 965'; {v1.47re}
+   $966: SouthName:='SiS 966'; {v1.47re}
+   $968: SouthName:='SiS 968'; {v1.47re}
+
    End;
   End else
+
  If SouthMan = $10B9 {ALi} then {v1.18}
   Begin
    SouthFunc := $0400; {ALi method}
    case SouthId of
     $1449: begin SouthName:='M1449'; SouthFunc:=0; end;
     $1523: SouthName:='M1523(B)';
-    $1533,
-    $1543,
-    $1535: begin SouthName:='M1533/1543/1535'; Inc(SouthFunc); end;
+    {v1.47re}
+    $1533: begin SouthName:='M1533'; Inc(SouthFunc); end;
+    $1535: begin SouthName:='M1535'; Inc(SouthFunc); end;
+    $1543: begin SouthName:='M1543'; Inc(SouthFunc); end;
+    {/v1.47re}
+    $1563: begin SouthName:='M1563'; Inc(SouthFunc); end;{v1.47re}
+    $1567: begin SouthName:='M1567'; Inc(SouthFunc); end;{v1.47re}
+    $1573: begin SouthName:='M1573'; Inc(SouthFunc); end;{v1.47re}
+    $1575: begin SouthName:='M1575'; Inc(SouthFunc); end;{v1.47re}
+
    end;
   End else
+
  If SouthMan = $1055 {SMSC} then {v1.21}
   Begin
    If SouthId = $9460 then {SLC90E66} {v1.21}
@@ -619,6 +715,7 @@ Begin
      SouthName:='SMSC SLC90E66';
     End;
   End else
+
  If SouthMan = $10AD {Winbond/Symphony Labs} then {v1.21}
   Begin
    If SouthId = $0565 then {W83C553F/4F} {v1.21}
@@ -627,6 +724,7 @@ Begin
      SouthName:='Winbond W83C553F/4F';
     End;
   End else
+
  If SouthMan = $1283 {ITE} then {v1.21}
   Begin
    case SouthId of
@@ -634,6 +732,7 @@ Begin
     $8888 : Begin SouthFunc := $0802; SouthName:='ITE IT8888F'; End;
    End;
   End else
+
  If SouthMan = $1166 {Reliance/ServerWorks} then {v1.24}
   Begin
    SouthFunc:=$0900;
@@ -641,6 +740,7 @@ Begin
     $0200 : SouthName:='Reliance OSB4';
    End;
   End else
+
  If SouthMan = $1066 {PicoPower} then {v1.25}
   Begin
    SouthFunc:=$1000;
@@ -648,6 +748,7 @@ Begin
     $0002,$8002 : SouthName:='Vesuvius V3-LS';
    End;
   End else
+
  If SouthMan = $100B {National} then {v1.36}
   Begin
    SouthFunc:=$1100;
@@ -656,6 +757,7 @@ Begin
     $0510 : begin SouthName:='Geode SC1100'; LPCFunc:=LPCDetect; end;
    End;
   End else
+
  If SouthMan = $1078 {Cyrix} then {v1.25}
   Begin
    SouthFunc:=$1100;
@@ -665,6 +767,7 @@ Begin
     $0100 : SouthName:='Cyrix Cx5530(A)';
    End;
   End else
+
  If SouthMan = $1045 {OPTi} then {v1.26}
   Begin
    SouthFunc:=$1200;
@@ -673,6 +776,7 @@ Begin
     $C568: SouthName:='OPTi 82C568';
    end;
   End else
+
  If SouthMan = $3388 {HiNT} then {v1.26}
   Begin
    SouthFunc:=$1300;
@@ -680,6 +784,7 @@ Begin
     $8012: SouthName:='HiNT VXPro-II South';
    end;
   End;
+
  If SouthMan = $1060 {UMC} then {v1.28}
   Begin
    SouthFunc:=$1400;
@@ -687,12 +792,14 @@ Begin
     $886A: SouthName:='UMC UM8886BF';
    end;
   End else
+
  If SouthMan = $1344 {Micron} then {v1.29}
   Begin
    case SouthId of
     $3470: SouthName:='Micron MT7LLN22NCNE';
    end;
   End else
+
  If SouthMan = $1080 {Contaq/Cypress} then {v1.29}
   Begin
    SouthFunc:=$1500;
@@ -700,14 +807,112 @@ Begin
     $C693: SouthName:='CY82C693(U/UB)';
    end;
   End else
+
  If SouthMan = $10DE {nVidia} then {v1.30}
   Begin
    SouthFunc:=$1600;
    case SouthId of
-    $01B2: SouthName:='nVidia MCP/MCP-D';
-    $0060: SouthName:='nVidia MCP2';
+    $01B2: begin SouthName:='nVidia MCP/MCP-D';                 SouthFunc:=$1601; end; {v1.41re}
+    $0060: begin SouthName:='nVidia MCP2';                      SouthFunc:=$1602; end; {v1.41re}
+    $0080: begin SouthName:='nVidia MCP2A/MCP2S';               SouthFunc:=$1602; end; {v1.41re}
+    $00D0: begin SouthName:='nVidia nForce3 LPC Bridge';        SouthFunc:=$1602; end; {v1.41re}
+    $00E0: begin SouthName:='nVidia nForce3 250Gb LPC Bridge';  SouthFunc:=$1602; end; {v1.41re}
+    $0050: begin SouthName:='nVidia nForce4 LPC Bridge';        SouthFunc:=$1602; end; {v1.45re}
+    $0030: begin SouthName:='nVidia MCP-04';                    SouthFunc:=$1602; end; {v1.45re}
+
+    $0260, {v1.47re}    {nForce 430}
+    $0261,
+    $0262,
+    $0263: begin SouthName:='nVidia MCP51 LPC Bridge';          SouthFunc:=$1602; end;
+
+    $0360, {v1.47re}    {nForce 550/570/590}
+    $0361,
+    $0362,
+    $0363,
+    $0364,
+    $0365,
+    $0366,
+    $0367: begin SouthName:='nVidia MCP55 LPC Bridge';          SouthFunc:=$1602; end;
+
+    $03E0, {v1.47re}    {nForce 520/630}
+    $03E1,
+    $03E2: begin SouthName:='nVidia MCP61 LPC Bridge';          SouthFunc:=$1602; end;
+
+    $0440, {v1.47re}
+    $0441,
+    $0442,
+    $0443: begin SouthName:='nVidia MCP65 LPC Bridge';          SouthFunc:=$1602; end;
+
+    $0540, {v1.47re}
+    $0541,
+    $0542,
+    $0543: begin SouthName:='nVidia MCP67 LPC Bridge';          SouthFunc:=$1602; end;
+
+    $07B0, {v1.47re}
+    $07B1,
+    $07B2,
+    $07B3: begin SouthName:='nVidia MCP72 LPC Bridge';          SouthFunc:=$1602; end;
+
+    $07F0, {v1.47re}
+    $07F1,
+    $07F2,
+    $07F3: begin SouthName:='nVidia MCP73 LPC Bridge';          SouthFunc:=$1602; end;
+
+   end;
+  End else
+
+ If SouthMan = $1002 {ATI/AMD} then {v1.47re}
+  Begin
+   SouthFunc:=$0200;
+   case SouthId of
+    $4377: SouthName:='IXP SB400';
+    $438D: SouthName:='IXP SB600';
+
    end;
   End;
+{
+nForce 520 (MCP65S) и nForce 520LE (MCP61D)
+nForce 570 LT SLI (MCP65P)
+
+nForce 590 SLI (C51XE + MCP55P) - > MCP72XE;
+nForce 570 SLI (MCP55P) - > MCP72P and nForce 570 LT SLI (MCP65P);
+nForce 570 Ultra (MCP55-Ultra) - > MCP72-Ultra.
+
+"C19 + MCP55P" under sign board nForce 590 sli Intel Edition.
+
+product NVIDIA MCP67_SMB        0x0542  MCP67 SMBus
+
+550/570/590 should be a category -- MCP55
+520/630 is the other -- MCP61
+
+NVIDIA® C51PV (GeForce 6150) and MCP51 (nForce 430) chipset
+
+    Короче 1,40 пишет 1022,1100,00+10DE,0260,A3 вываливает
+    Описание устройства
+Северный мост: AMD Hammer DDR2 IMC
+Северный мост: nVIDIA GeForce 6150 (C51PV)
+Южный мост: nVIDIA nForce 430 (MCP51)
+
+
+NVidia nForce3
+[ ? ]
+
+NVidia nForce3 250Gb
+[ ? ]
+
+NVidia ?
+(CK8)
+[ ? ]
+[ ? ]
+GeForce4 MX
+
+NVidia nForce3 Pro 150
+[ ? ]
+
+NVidia nForce3 Pro 250
+[ ? ]
+
+}
 
 
  {Id chipset as a whole}
@@ -1006,14 +1211,31 @@ Begin
                       ',' + Hb( SouthRev ) + ')';
   End;
  if LPCName<>'' then CurrentChipset:=CurrentChipset+' + '+LPCName; {v1.27}
- If WantToUseAMI and AMICheckFor then {v1.24}
+
+ If PhoenixCheckFor then {v1.43re}
+  Begin
+   PhoenixUsed := True;
+   ChipsetFound := True;
+   CurrentChipset := CurrentChipset + ' [Phoenix BIOS]';
+   LogWrite('Phoenix flash interface enabled');
+   EXIT;
+  End;
+ If AwardCheckFor then {v1.42re}
+  Begin
+   AwardUsed := True;
+   ChipsetFound := True;
+   CurrentChipset := CurrentChipset + ' [AWARD BIOS]';
+   LogWrite('AWARD flash interface enabled');
+  End;
+ If AMICheckFor then {v1.42re}
   Begin
    AMIUsed := True;
    ChipsetFound := True;
-   CurrentChipset := CurrentChipset + ' [AMI FLASH]';
+   CurrentChipset := CurrentChipset + ' [AMI BIOS]';
    LogWrite('AMI flash interface enabled');
   End;
- If WantToUseAsus and AsusCheckFor then {v1.39}
+{ If WantToUseAsus and AsusCheckFor then} {v1.39}
+ If AsusCheckFor then {v1.42re}
   Begin
    AsusUsed := True;
    ChipsetFound := True;
@@ -1047,6 +1269,7 @@ PIIXReg, PIIXReg2, PIIXReg3, PIIXReg4, PIIXReg5 : LongInt;
 
 {Generic Intel chipset low ROM enable & ROM write access enable}
 Procedure ROMEnable( Map : Boolean );
+
 Var
 Mask : LongInt;
 Pos_: Byte;
@@ -1054,18 +1277,35 @@ Pos_: Byte;
 Begin
  if ROMEnabled=Map then Exit; {v1.22}
 
+ if PhoenixUsed then                          {1.43re}
+ begin
+   if Map then PhoenixEnable else PhoenixDisable;
+   ROMEnabled:=Map;
+   Exit;
+ end;
+
+ if AwardUsed then                            {1.42re}
+ begin
+   if Map then AwardEnable else AwardDisable;
+   ROMEnabled:=Map;
+   Exit;
+ end;
+
  if AMIUsed then
   begin
-    if Map then AMIEnable else AMIDisable;
-    ROMEnabled:=Map;
-    Exit;
+   if Map then AMIEnable else AMIDisable;
+   ROMEnabled:=Map;
+   Exit;
   end;
+
  if AsusUsed then
   begin
-    if Map then AsusEnable else AsusDisable;
-    ROMEnabled:=Map;
-    Exit;
+   if Map then AsusEnable else AsusDisable;
+   ROMEnabled:=Map;
+   Exit;
   end;
+
+
 
  {Chipset northbridge stuff}
  Case Hi( NorthFunc ) of
@@ -1791,6 +2031,8 @@ Begin
           End;
         End;
   $16 : Begin {nForce method} {v1.30}
+           case Lo(SouthFunc) of
+            $01: Begin {nForce(1) method} {v1.41re}
          If Map then
           Begin
            PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $44 );
@@ -1826,6 +2068,27 @@ Begin
             SouthPos and $7, $7C )));
            SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $7C, PIIXReg5 );
           End;
+                 End;
+            $02: Begin {nForce2 and higher method} {v1.41re}
+         If Map then
+          Begin
+           PIIXReg := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $6C );
+           LogWrite('nForce method: reg $6C = '+Hl(PIIXReg));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $6C, PIIXReg or $100);
+           PIIXReg2 := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $90 );
+           LogWrite('nForce method: reg $90 = '+Hl(PIIXReg2));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $90, PIIXReg2 and $FF00FFFF);
+          End else
+          Begin
+           LogWrite('nForce method: restoring reg $6C from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $6C )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $6C, PIIXReg );
+           LogWrite('nForce method: restoring reg $90 from '+Hl(GetPCIRegD( $00, SouthPos shr 3,
+            SouthPos and $7, $90 )));
+           SetPCIRegD( $00, SouthPos shr 3, SouthPos and $7, $90, PIIXReg2 );
+          End;
+                 End;
+               End;
         End;
   $17 : Begin {Intel 9xx (ICH6) method} {v1.37}
          If Map then
@@ -1910,6 +2173,8 @@ begin
  WantToUseAMI:=False;
  AsusUsed:=False;
  WantToUseAsus:=False;
+ AwardUsed:=False;  {1.42re}
+ PhoenixUsed:=False;{1.43re}
  ChipsetFound:=False;
  ROMEnabled:=False; {v1.22}
  {v1.22 Initialization moved to UNIFLASH.PAS}

@@ -466,6 +466,16 @@ Begin
            Size := 384;
            Name := ConstPtr( '49LF030(A)/3V (LPC)' );
           End;
+    $50 : Begin {v1.47re}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 128;  {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 512;
+           Name := ConstPtr( '49LF040B/3V (LPC)' );
+          End;
     $51 : Begin {v1.21}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
@@ -486,6 +496,48 @@ Begin
            Size := 1024;
            Name := ConstPtr( '49LF080(A)/3V (LPC)' );
           End;
+
+    $43 : Begin {v1.47re}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 64;  {64 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 1024;
+           Name := ConstPtr( '25LF020A/3V (SPI)' );
+          End;
+    $44 : Begin {v1.47re}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 128;  {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 1024;
+           Name := ConstPtr( '25LF040A/3V (SPI)' );
+          End;
+    $8D : Begin {v1.47re}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 128;  {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 1024;
+           Name := ConstPtr( '25VF040B/3V (SPI)' );
+          End;
+    $8E : Begin {v1.47re}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 256;  {256 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 1024;
+           Name := ConstPtr( '25VF080B/3V (SPI)' );
+          End;
+
     else Exit;
    End;
   End;

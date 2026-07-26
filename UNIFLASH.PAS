@@ -1688,16 +1688,16 @@ Begin
  if NoVideo then DirectVideo:=False; {v1.28}
 
  ClrScr;
- GotoXY(9,2);
+ GotoXY(3,2);
  Text_Color(Yellow);
- Write('UniFlash ');
+ Write('Uniflash ');
  Text_Color(LightGreen);
  Write('v' + Version );
  Text_Color(LightCyan);
- WriteLn(' (c) 2005 Rainbow Software (http://www.uniflash.org)');
+ WriteLn('  2007, http://rom.by/UniflashRE/');
  Text_Color(LightMagenta);
  GotoXY(9,3);
- Write('Original version by Pascal van Leeuwen & Galkowski Adam');
+ Write('Original version by www.uniflash.org');
  Text_Color(LightGray);
 
  CurLang := 1; {default = English}

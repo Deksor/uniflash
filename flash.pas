@@ -13,12 +13,13 @@ ChipInfo   = Record
               Progr   : Fl_Program;
               Sectors : ARRAY[ 0 .. 4, 0 .. 1 ] of Word;
               Size    : Word;
+              {Size    : LongInt;}{alexx}
               PgSize  : Word;
               Flags   : Byte;
 {              Count   : Byte;}
              End;
 PChipInfo  = ^ChipInfo;
-Fl_IdChip  = Function( DevID : Byte; Var CInfo : ChipInfo ) : Boolean;
+Fl_IdChip  = Function( DevID : Word{alexx}; Var CInfo : ChipInfo ) : Boolean;
 PFl_Manuf  = ^Fl_Manuf;
 Fl_Manuf   = Record
               IdChip : Fl_IdChip;

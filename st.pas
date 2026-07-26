@@ -161,7 +161,7 @@ begin
  Protect_B(Pos);
 end;
 
-Function STIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function STIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  STIdChip := False;
  With CInfo do
@@ -552,6 +552,56 @@ Begin
            Sectors[ 0, 1 ] := 512;
            Size := 2048;
            Name := ConstPtr( 'M50FW016/3V (FWH)' );
+          End;
+    $2010 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 2; {2 x 32k}
+           Sectors[ 0, 1 ] := 256;
+           PgSize := 128;
+           Size := 512;
+           Name := ConstPtr( 'M25P05A' );
+          End;
+    $2011 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 4; {4 x 32k}
+           Sectors[ 0, 1 ] := 256;
+           PgSize := 128;
+           Size := 1024;
+           Name := ConstPtr( 'M25P10A' );
+          End;
+    $2012 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 4; {32 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           PgSize := 256;
+           Size := 2048;
+           Name := ConstPtr( 'M25P20' );
+          End;
+    $2013 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 8; {8 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           PgSize := 256;
+           Size := 4096;
+           Name := ConstPtr( 'M25P40' );
+          End;
+    $2014 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 16; {16 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           PgSize := 256;
+           Size := 8192;
+           Name := ConstPtr( 'M25P80' );
           End;
     else Exit;
    End;

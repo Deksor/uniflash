@@ -6,7 +6,7 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function MoselIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function MoselIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  MoselIdChip := False;
  With CInfo do

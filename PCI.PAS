@@ -35,9 +35,13 @@ Procedure RomEnable( Map : boolean);
 procedure ShadowDisable_Aladdin; {v1.31}
 procedure ShadowRestore_Aladdin; {v1.31}
 
+function LPCRead(Index:Byte):Byte;{alexx}
+procedure LPCWrite(Index,Data:Byte);{alexx}
+
 implementation
 
-Uses Tools,Flash,Crt,DMI;
+Uses Tools,Flash,Crt,DMI, Spi{alexx}, IT87Spi{alexx}, WBSIOSpi{alexx},
+     ICHSpi{alexx}, SBSpi{alexx};
 
 { PortD[ x ] := y }
 Procedure OPortD( Prt : Word; Val : LongInt ); Assembler;
@@ -130,6 +134,8 @@ NorthId   : Word;
 NorthName,
 SouthName,
 LPCName : String;
+{alexx}
+alexx_test1, alexx_test2:word;
 
   function LPCDetectAt(Base: Byte):Word;
   var ID:Word;
@@ -146,6 +152,22 @@ LPCName : String;
      $8710: begin LPCDetectAt:=$0100; LPCName:='ITE IT8710F'; end;
      $8711: begin LPCDetectAt:=$0000; LPCName:='ITE IT8711F'; end; {v1.39}
      $8712: begin LPCDetectAt:=$0000; LPCName:='ITE IT8712F'; end; {v1.39}
+     $8716: begin {alexx}
+            LPCDetectAt:=$0000;
+            LPCName:='ITE IT8716F';
+            if IT87_Probe then
+               begin
+                 FlashBus := SPI_TYPE_IT87XX;
+               end;
+            end;
+     $8718: begin {alexx}
+            LPCDetectAt:=$0000;
+            LPCName:='ITE IT8718F';
+            if IT87_Probe then
+               begin
+                 FlashBus := SPI_TYPE_IT87XX;
+               end;
+            end;
      $8722: begin LPCDetectAt:=$0000; LPCName:='ITE IT8722F'; end; {v1.39}
     end;
     if LPCName<>'' then
@@ -168,6 +190,14 @@ LPCName : String;
        LPCLock_WB;
        Exit;
      end;
+    {alexx}
+    if WBSIO_Probe then
+       begin
+         FlashBus := SPI_TYPE_WBSIO;
+         LPCDetectAt:=$0000;
+         LPCName:='Winbond W83627DHG';
+         Exit;
+       end;
     LPCBase:=0;
     LogWrite('Unknown LPC ID '+Hw(ID));
   end;
@@ -616,10 +646,23 @@ Begin
 
     $2670: SouthName:='i631xESB/632xESB/3100 ICH'; {v1.46re}
 
-    $27B0: SouthName:='i82801GH ICH7DH'; {v1.46re}
-    $27B8: SouthName:='i82801GB/R ICH7(R)'; {v1.46re}
-    $27B9: SouthName:='i82801GBM ICH7-M'; {v1.46re}
-    $27BD: SouthName:='i82801GHM ICH7-M DH'; {v1.46re}
+    $27B0,$27B8,$27B9,$27BD:{alexx}
+           begin
+            FlashBus := SPI_TYPE_ICH7;
+            if not ICH_Probe then
+               begin
+                 FlashBus := SPI_TYPE_NONE;
+                 LogWrite('ICH Spi not detect!');
+               end;
+
+            case SouthId of
+                 $27B0: SouthName:='i82801GH ICH7DH'; {v1.46re}
+                 $27B8: SouthName:='i82801GB/R ICH7(R)'; {v1.46re}
+                 $27B9: SouthName:='i82801GBM ICH7-M'; {v1.46re}
+                 $27BD: SouthName:='i82801GHM ICH7-M DH'; {v1.46re}
+            end;
+
+           end;{alexx}
 
     $2810: SouthName:='i82801HB/R ICH8(R)'; {v1.46re}
     $2811: SouthName:='i82801HBM ICH8-M'; {v1.46re}
@@ -841,7 +884,9 @@ Begin
     $0440, {v1.47re}
     $0441,
     $0442,
-    $0443: begin SouthName:='nVidia MCP65 LPC Bridge';          SouthFunc:=$1602; end;
+    $0443: begin SouthName:='nVidia MCP65 LPC Bridge';          SouthFunc:=$1602;
+                 LPCFunc:=LPCDetect; {alexx}
+                 end;
 
     $0540, {v1.47re}
     $0541,
@@ -866,8 +911,24 @@ Begin
    SouthFunc:=$0200;
    case SouthId of
     $4377: SouthName:='IXP SB400';
-    $438D: SouthName:='IXP SB600';
+    $438D,
+    $439D: begin {alexx}
+           if SouthId = $438D then SouthName:='IXP SB600'; {???}
+           if SouthId = $439D then SouthName:='AMD SB700/SB710/SB750';
 
+           if not SB_Probe then
+              begin
+                FlashBus := SPI_TYPE_NONE;
+                LogWrite('SBXXX Spi not detect!');
+              end
+              else
+              begin
+                FlashBus := SPI_TYPE_SBXXX;
+                LogWrite('SBXXX Spi detect!');
+              end;
+
+
+           end;{alexx}
    end;
   End;
 {

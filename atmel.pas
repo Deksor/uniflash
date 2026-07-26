@@ -217,7 +217,7 @@ begin
 end;
 
 
-Function AtmelIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function AtmelIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  AtmelIdChip := False;
  With CInfo do

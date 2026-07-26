@@ -56,7 +56,7 @@ begin
    FIMemB(SAddr and $FFFF0000+$FFC00002-LongInt(CurCInfo.Size) shl 10) or $01);
 end;
 
-Function WBIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function WBIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  WBIdChip := False;
  With CInfo do
@@ -200,6 +200,92 @@ Begin
  WBIdChip := True;
 End;
 
+{alexx -  Winbond (ex Nexcom) serial flash devices}
+Function WBIdChipNex( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
+Begin
+ WBIdChipNex := False;
+ With CInfo do
+  Begin
+   Progr  := GenPageProgB;
+   Case DevId of
+    $3011 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 32; {32 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 1024;
+           Name := ConstPtr( 'W25X10' );
+          End;
+    $3012 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 64; {64 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 2048;
+           Name := ConstPtr( 'W25X20' );
+          End;
+    $3013 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 128; {128 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 4096;
+           Name := ConstPtr( 'W25X40' );
+          End;
+    $3014 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 256; {256 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 8192;
+           Name := ConstPtr( 'W25X80' );
+          End;
+    $3015 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 512; {512 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 16384;
+           Name := ConstPtr( 'W25X216' );
+          End;
+    $3016 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 1024; {1024 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 32768;
+           Name := ConstPtr( 'W25X32' );
+          End;
+(*    $3017 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           {Progr  := nil;}
+           {Erase := nil;}
+           Sectors[ 0, 0 ] := 2048; {2048 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           PgSize := 256;
+           Size := 65536;
+           Name := ConstPtr( 'W25X64' );
+          End;*)
+    else Exit;
+   End;
+  End;
+ CInfo.Manuf := ConstPtr( 'Winbond' );
+ WBIdChipNex := True;
+End;
+
 Begin
  RegisterFlashManu( $DA, WBIdChip );
+ RegisterFlashManu( $EF, WBIdChipNex );
 End.

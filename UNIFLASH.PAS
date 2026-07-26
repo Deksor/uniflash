@@ -1,4 +1,4 @@
-{$M 16384, 0, 16384}
+{$M 32768, 0, 16384}
 {$I-}
 {$S-}
 {$R-}
@@ -9,7 +9,7 @@ Uses Crt, Dos,
      Flash, PCI, PCICards, Tools, GenFlash, CT_Flash, DMI,
      Intel, Atmel, SST, Winbond, AMD, Catalyst, Macronix, AMIC, Alliance,
      ISSI, Mosel, EON, PMC, Hyundai, IMT, ST, TI, Fujitsu, SHARP,
-     Language, English{, French, Dutch, Italian, German};
+     Language, English{, French, Dutch, Italian, German}, Spi{alexx};
 
 
 Const
@@ -66,6 +66,8 @@ StdOut      : Text;
 StdOutRec   : TextRec absolute StdOut;
 ForceIdVal  : Word;
 SaveDir     : String; {v1.28}
+gcr:word;{alexx}
+gcrb:byte;
 
 Function AskFor2(L : Byte;Txt : String) : Boolean;
 Var X,Y,X2,Y2 : Byte;
@@ -96,49 +98,6 @@ begin
  Y:=WhereY;
  AskFor := AskFor2( L, Txt );
  GotoXY( X,Y );
-end;
-
-procedure ErrorMsg(Message:String); {v1.28}
-begin
-  GotoXY(1,20);
-  ClrEol;
-  GotoXY(18,20);
-  Write(Message);
-  Delay(2000);
-  GotoXY(1,20);
-  ClrEol;
-end;
-
-function IOError:Boolean; {v1.28}
-var Error:byte;
-    Message:String;
-begin
-  IOError:=False;
-  Error:=IOResult;
-  if Error=0 then Exit;
-  IOError:=True;
-  Message:='Error #'+IntToStr(Error)+': ';
-  case Error of
-     2,18: Message:=Message+'File not found.';
-        3: Message:=Message+'Path not found.';
-        4: Message:=Message+'Too many open files.';
-        5: Message:=Message+'Access denied.';
-        6: Message:=Message+'Invalid file handle.';
-       15: Message:=Message+'Drive error.';
-   19,150: Message:=Message+'Disk is write protected.';
-       20: Message:=Message+'Unknown drive.';
-   21,152: Message:=Message+'Drive is not ready.';
-       23: Message:=Message+'CRC Error.';
-       25: Message:=Message+'Seek error.';
-       26: Message:=Message+'Unknown media type.';
-       27: Message:=Message+'Sector not found.';
-      100: Message:=Message+'Disk read error.';
-      101: Message:=Message+'Disk full.';
-      103: Message:=Message+'File is not open.';
-      183: Message:=Message+'File is open in read-only mode.';
-  else Message:=Message+'Unknown Error.';
-  end;
-  ErrorMsg(Message);
 end;
 
 Procedure FlashBlock( Block, Start, Size : LongInt );
@@ -1310,7 +1269,9 @@ begin
  If XMSLeft = -1 then Err( Msg( 37 ) );
 
  If not FlatRealOn then
-  Err( Msg( 38 ) ) else LogWrite('Flat Real Mode initialized'); {v1.23}
+    Err( Msg( 38 ) )
+ else
+     LogWrite('Flat Real Mode initialized'); {v1.23}
 
  {Allocate high memory if XMS not present}
  AllocHimem;
@@ -1694,10 +1655,10 @@ Begin
  Text_Color(LightGreen);
  Write('v' + Version );
  Text_Color(LightCyan);
- WriteLn('  2007, http://rom.by/UniflashRE/');
+ WriteLn('  2010, http://www.rom.by/book/Uniflash');
  Text_Color(LightMagenta);
- GotoXY(9,3);
- Write('Original version by www.uniflash.org');
+ {GotoXY(9,3);
+ Write('Original version by www.uniflash.org');}
  Text_Color(LightGray);
 
  CurLang := 1; {default = English}
@@ -1943,6 +1904,8 @@ Begin
  if CMOS and not Emergency and not SaveBIOS then Exit;
  if Windows then Err( Msg( 110 ) ); {v1.22}
 
+ MemInit; {v1.24}
+
  if (not LocatePIIX) and (BaseForced=0) and not CTFlash then Err(Msg(111)); {v1.22}
 
  GotoXY( 2, 7 );
@@ -1953,7 +1916,7 @@ Begin
 
  LogWrite( 'Chipset detected: ' + CurrentChipset ); {v1.23}
 
- MemInit; {v1.24}
+ (*MemInit; {v1.24}*)
 
  CMOSSize := GetCMOSSize;
  LogWrite( 'CMOS size detected: '+_Str(CMOSSize+1)+'b'); {v1.25}
@@ -1982,7 +1945,12 @@ Begin
    If ROMBase = 0 then
     ROMBase := - LongInt( FlashInfo^.Size ) shl 10; {rom starts at top of memory}
    Size512K:=CurCInfo.Size>=512; {v1.34}
-  End else FlashInfo := FlashDetect;
+  End
+  else {alexx}
+      if FlashBus = SPI_TYPE_NONE then
+         FlashInfo := FlashDetect
+      else
+         FlashInfo := SpiFlashDetect;
 
  ROMType; {v1.24}
 
@@ -1991,8 +1959,17 @@ Begin
 
  If SaveBIOS then
   Begin
-   WriteBIOSImg;
-   GotoXY( 1, Hi( WindMax ) );
+    LogWrite('Found save option');{alexx}
+    if FlashBus = SPI_TYPE_NONE then
+       begin
+         WriteBIOSImg;
+         GotoXY( 1, Hi( WindMax ) );
+       end
+      else
+        begin
+         spi_chip_read(SaveName,FlashInfo);
+        end;
+
   End;
 
  if Quit then Exit; {v1.28}
@@ -2024,13 +2001,25 @@ Begin
    LogWrite('Entering emergency mode');
    If FlashError <> 0 then Err( Msg( 60 ) );
    Beep( 1000, 500 ); {single beep, start reading}
-   Assign( IFile, EmFName );
-   Reset( IFile, 1 );
-   If IOResult <> 0 then Err( Msg( 8 ) + EMFName + Msg( 95 ) );
-   FlashFile( IFile, True {force boot block write, from personal experience}
+    LogWrite('Found write option');{alexx}
+    if FlashBus = SPI_TYPE_NONE then
+       begin
+         Assign( IFile, EmFName );
+         Reset( IFile, 1 );
+         If IOResult <> 0 then Err( Msg( 8 ) + EMFName + Msg( 95 ) );
+
+         FlashFile( IFile, True {force boot block write, from personal experience}
                           {I really think that it can't be avoided !!      } );
-   Close( IFile );
-   IOError;
+         GotoXY( 1, Hi( WindMax ) );
+         Close( IFile );
+         IOError;
+       end
+      else
+        begin
+         LogWrite('SPI Write image from file '+EmFName);
+         spi_chip_write(EmFName,FlashInfo);
+        end;
+
    if Reboot then
     asm
       db 0EAh,00h,00h,0FFh,0FFh

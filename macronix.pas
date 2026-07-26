@@ -168,7 +168,7 @@ Begin
 End;
 
 
-Function MxIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function MxIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  MxIdChip := False;
  With CInfo do
@@ -570,6 +570,56 @@ Begin
            Size := 4096;
            Name := ConstPtr( 'MX29L3211/3.3V' );
           End;
+    $2010 : Begin {alexx}
+             Flags := 0;
+             {Progr := }
+             {Erase := }
+             Sectors[ 0, 0 ] := 16; {16 x 4k}
+             Sectors[ 0, 1 ] := 32;
+             PgSize := 256;
+             Size := 512;
+             Name := ConstPtr( 'MX25L512' );
+            End;
+    $2011 : Begin {alexx}
+             Flags := 0;
+             {Progr := }
+             {Erase := }
+             Sectors[ 0, 0 ] := 32; {32 x 4k}
+             Sectors[ 0, 1 ] := 32;
+             PgSize := 256;
+             Size := 1024;
+             Name := ConstPtr( 'MX25L1005' );
+            End;
+    $2012 : Begin {alexx}
+             Flags := 0;
+             {Progr := }
+             {Erase := }
+             Sectors[ 0, 0 ] := 64; {64 x 4k}
+             Sectors[ 0, 1 ] := 32;
+             PgSize := 256;
+             Size := 2048;
+             Name := ConstPtr( 'MX25L2005' );
+            End;
+    $2013 : Begin {alexx}
+             Flags := 0;
+             {Progr := }
+             {Erase := }
+             Sectors[ 0, 0 ] := 128; {128 x 4k}
+             Sectors[ 0, 1 ] := 32;
+             PgSize := 256;
+             Size := 4096;
+             Name := ConstPtr( 'MX25L4005A' );
+            End;
+    $2014 : Begin {alexx}
+             Flags := 0;
+             {Progr := }
+             {Erase := }
+             Sectors[ 0, 0 ] := 256; {256 x 4k}
+             Sectors[ 0, 1 ] := 32;
+             PgSize := 256;
+             Size := 8192;
+             Name := ConstPtr( 'MX25L8005' );
+            End;
     else Exit;
    End;
   End;

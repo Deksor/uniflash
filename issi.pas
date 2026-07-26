@@ -6,7 +6,7 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function ISSIIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function ISSIIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  ISSIIdChip := False;
  With CInfo do

@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '1.47re.08';
+Version    = '2.00.SPI.RC02';{alexx}
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}
@@ -74,6 +74,8 @@ function NoVideo:Boolean; {v1.28}
 procedure FInput(var Name:String;DefaultName:String;MaxLen:Byte); {v1.28}
 function BrowseFile:String; {v1.28}
 function IntToStr(I:LongInt):String; {v1.28}
+procedure ErrorMsg(Message:String); {v1.28}
+function IOError:Boolean; {v1.28}
 
 Implementation
 
@@ -93,6 +95,50 @@ Ext       : Char; {v1.23}
 History   : String[2]; {v1.23}
 Shift     : Boolean; {v1.23}
 XMSManager: Boolean; {v1.27}
+
+procedure ErrorMsg(Message:String); {v1.28}
+begin
+  GotoXY(1,20);
+  ClrEol;
+  GotoXY(18,20);
+  Write(Message);
+  Delay(2000);
+  GotoXY(1,20);
+  ClrEol;
+end;
+
+function IOError:Boolean; {v1.28}
+var Error:byte;
+    Message:String;
+begin
+  IOError:=False;
+  Error:=IOResult;
+  if Error=0 then Exit;
+  IOError:=True;
+  Message:='Error #'+IntToStr(Error)+': ';
+  case Error of
+     2,18: Message:=Message+'File not found.';
+        3: Message:=Message+'Path not found.';
+        4: Message:=Message+'Too many open files.';
+        5: Message:=Message+'Access denied.';
+        6: Message:=Message+'Invalid file handle.';
+       15: Message:=Message+'Drive error.';
+   19,150: Message:=Message+'Disk is write protected.';
+       20: Message:=Message+'Unknown drive.';
+   21,152: Message:=Message+'Drive is not ready.';
+       23: Message:=Message+'CRC Error.';
+       25: Message:=Message+'Seek error.';
+       26: Message:=Message+'Unknown media type.';
+       27: Message:=Message+'Sector not found.';
+      100: Message:=Message+'Disk read error.';
+      101: Message:=Message+'Disk full.';
+      103: Message:=Message+'File is not open.';
+      183: Message:=Message+'File is open in read-only mode.';
+  else Message:=Message+'Unknown Error.';
+  end;
+  ErrorMsg(Message);
+  LogWrite(Message);
+end;
 
 Function ConstPtr( Const S : String ) : Pointer;
 Begin

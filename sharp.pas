@@ -77,7 +77,7 @@ begin
    end;
 end;
 
-Function SHARPIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function SHARPIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  SHARPIdChip := False;
  With CInfo do

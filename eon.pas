@@ -1,50 +1,18 @@
-Unit AMIC; { Unit to communicate with AMIC chips } {v1.20}
+Unit EON; { Unit to communicate with EON chips } {v1.21}
 Interface
-
+{Note: Mfg. ID from 2nd bank}
 
 Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function AMICIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function EONIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
- AMICIdChip := False;
+ EONIdChip := False;
  With CInfo do
   Begin
    Case DevId of
-    $A1: Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 3;  {3 x 32k}
-           Sectors[ 0, 1 ] := 256;
-           Sectors[ 1, 0 ] := 1;  {1 x 16k}
-           Sectors[ 1, 1 ] := 128;
-           Sectors[ 2, 0 ] := 2;  {2 x 4k}
-           Sectors[ 2, 1 ] := 32;
-           Sectors[ 3, 0 ] := 1;  {1 x 8k}
-           Sectors[ 3, 1 ] := 64;
-           Size := 128;
-           Name := ConstPtr( 'A29001(1)T/5V' ); {Top Boot Block}
-          End;
-    $4C: Begin
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 1;  {1 x 8k}
-           Sectors[ 0, 1 ] := 64;
-           Sectors[ 1, 0 ] := 2;  {2 x 4k}
-           Sectors[ 1, 1 ] := 32;
-           Sectors[ 2, 0 ] := 1;  {1 x 16k}
-           Sectors[ 2, 1 ] := 128;
-           Sectors[ 3, 0 ] := 3;  {3 x 32k}
-           Sectors[ 3, 1 ] := 256;
-           Size := 128;
-           Name := ConstPtr( 'A29001(1)B/5V' ); {Bottom Boot Block}
-          End;
-    $8C : Begin
+    $92 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -58,9 +26,9 @@ Begin
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
            Size := 256;
-           Name := ConstPtr( 'A29002(1)T/5V' ); {Top Boot Block}
+           Name := ConstPtr( 'EN29F002(A)T/5V' ); {Top Boot Block}
           End;
-    $0D : Begin
+    $97 : Begin
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -74,20 +42,38 @@ Begin
            Sectors[ 3, 0 ] := 3;  {3 x 64k}
            Sectors[ 3, 1 ] := 512;
            Size := 256;
-           Name := ConstPtr( 'A29002(1)B/5V' ); {Bottom Boot Block}
+           Name := ConstPtr( 'EN29F002(A)B/5V' ); {Bottom Boot Block}
           End;
-    $A4: Begin
+    $21,
+    $6F : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
            Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 4;  {4 x 32k}
-           Sectors[ 0, 1 ] := 256;
-           Size := 128;
-           Name := ConstPtr( 'A29010/5V' );
+           Sectors[ 0, 0 ] := 4;  {4 x 16k}
+           Sectors[ 0, 1 ] := 128;
+           Size := 64;
+           Case DevId of
+            $21 : Name := ConstPtr( 'EN29F512/5V' );
+            $6F : Name := ConstPtr( 'EN29LV512/3V' );
+           End;
           End;
-    $86,
-    $92 : Begin
+    $20,
+    $6E : Begin {v1.37}
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 8;  {8 x 16k}
+           Sectors[ 0, 1 ] := 128;
+           Size := 128;
+           Case DevId of
+            $20 : Name := ConstPtr( 'EN29F010/5V' );
+            $6E : Name := ConstPtr( 'EN29LV010/3V' );
+           End;
+          End;
+    $04,
+    $4F : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -96,12 +82,21 @@ Begin
            Sectors[ 0, 1 ] := 512;
            Size := 512;
            Case DevId of
-            $86 : Name := ConstPtr( 'A29040(A/B)/5V' );
-            $92 : Name := ConstPtr( 'A29L040/3V' ); {v1.37}
+            $04 : Name := ConstPtr( 'EN29F040(A)/5V' );
+            $4F : Name := ConstPtr( 'EN29LV040/3V' );
            End;
           End;
-    $B0,
-    $34: Begin
+    $08 : Begin
+           Flags  := 0;   {sector mode}
+           PgSize := 128; {'page' size, program 128 bytes at a time}
+           Progr  := AMDSecProg;
+           Erase := AMDSecErase;
+           Sectors[ 0, 0 ] := 16;  {16 x 64k}
+           Sectors[ 0, 1 ] := 512;
+           Size := 1024;
+           Name := ConstPtr( 'EN29F080/5V' );
+          End;
+    $B9 : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -115,13 +110,9 @@ Begin
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
            Size := 512;
-           Case DevId of
-            $B0 : Name := ConstPtr( 'A29400T/5V' ); {Top Boot Block}
-            $34 : Name := ConstPtr( 'A29L004T/400B/3V' ); {Top Boot Block} {v1.37}
-           End;
+           Name := ConstPtr( 'EN29LV400T/3V' ); {Top Boot Block}
           End;
-    $31,
-    $B5: Begin
+    $BA : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -135,13 +126,10 @@ Begin
            Sectors[ 3, 0 ] := 7;  {7 x 64k}
            Sectors[ 3, 1 ] := 512;
            Size := 512;
-           Case DevId of
-            $31 : Name := ConstPtr( 'A29400B/5V' ); {Bottom Boot Block}
-            $B5 : Name := ConstPtr( 'A29L004B/400B/5V' ); {Bottom Boot Block} {v1.37}
-           End;
+           Name := ConstPtr( 'EN29LV400B/3V' ); {Bottom Boot Block}
           End;
-    $0E,
-    $1A: Begin {v1.37}
+    $89,
+    $DA : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -156,12 +144,12 @@ Begin
            Sectors[ 3, 1 ] := 128;
            Size := 1024;
            Case DevId of
-            $0E : Name := ConstPtr( 'A29800T/5V' ); {Top Boot Block}
-            $1A : Name := ConstPtr( 'A29L008T/800T/3V' ); {Top Boot Block}
+            $89 : Name := ConstPtr( 'EN29F800T/5V' ); {Top Boot Block}
+            $DA : Name := ConstPtr( 'EN29LV800(A)T/3V' ); {Top Boot Block}
            End;
           End;
-    $8F,
-    $9B: Begin {v1.37}
+    $8A,
+    $5B : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -176,11 +164,11 @@ Begin
            Sectors[ 3, 1 ] := 512;
            Size := 1024;
            Case DevId of
-            $8F : Name := ConstPtr( 'A29800B/5V' ); {Bottom Boot Block}
-            $9B : Name := ConstPtr( 'A29L008B/800B/3V' ); {Bottom Boot Block}
+            $8A : Name := ConstPtr( 'EN29F800B/5V' ); {Bottom Boot Block}
+            $5B : Name := ConstPtr( 'EN29LV800(A)B/3V' ); {Bottom Boot Block}
            End;
           End;
-    $A8: Begin {v1.37}
+    $C4 : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -194,9 +182,9 @@ Begin
            Sectors[ 3, 0 ] := 1;  {1 x 16k}
            Sectors[ 3, 1 ] := 128;
            Size := 2048;
-           Name := ConstPtr( 'A29L160T/3V' ); {Top Boot Block}
+           Name := ConstPtr( 'EN29LV160T/3V' ); {Top Boot Block}
           End;
-    $29: Begin {v1.37}
+    $49 : Begin {v1.37}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
            Progr  := AMDSecProg;
@@ -210,27 +198,15 @@ Begin
            Sectors[ 3, 0 ] := 31;  {31 x 64k}
            Sectors[ 3, 1 ] := 512;
            Size := 2048;
-           Name := ConstPtr( 'A29L160B/3V' ); {Bottom Boot Block}
+           Name := ConstPtr( 'EN29LV160B/3V' ); {Bottom Boot Block}
           End;
-
-    $95 : Begin {v1.47re}
-           Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
-           Sectors[ 0, 0 ] := 128;  {128 x 4k}
-           Sectors[ 0, 1 ] := 32;
-           Size := 512;
-           Name := ConstPtr( 'A49LF004/3V (FWH)' );
-          End;
-
     else Exit;
    End;
   End;
- CInfo.Manuf := ConstPtr( 'AMIC' );
- AMICIdChip := True;
+ CInfo.Manuf := ConstPtr( 'EON' );
+ EONIdChip := True;
 End;
 
 Begin
- RegisterFlashManu( $37, AMICIdChip );
+ RegisterFlashManu( $1C, EONIdChip ); {Note: ID from 2nd bank}
 End.

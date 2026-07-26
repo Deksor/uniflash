@@ -11,7 +11,7 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function CatIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function CatIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  CatIdChip := False;
  With CInfo do

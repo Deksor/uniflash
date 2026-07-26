@@ -6,7 +6,7 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function AMDIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function AMDIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  AMDIdChip := False;
  With CInfo do

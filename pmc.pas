@@ -52,7 +52,7 @@ begin
   FOMemB(X,FIMemB(X) or $01);
 end;
 
-Function PMCIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function PMCIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  PMCIdChip := False;
  With CInfo do

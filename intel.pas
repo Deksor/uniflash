@@ -44,7 +44,7 @@ Begin
  Protect( Pos );
 End;
 
-Function IntelIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function IntelIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  IntelIdChip := False;
  With CInfo do

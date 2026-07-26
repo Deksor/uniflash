@@ -5,7 +5,7 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function TIIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function TIIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  TIIdChip := False;
  With CInfo do

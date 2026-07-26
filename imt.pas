@@ -7,7 +7,7 @@ Implementation
 
 Uses Flash, GenFlash, Tools;
 
-Function IMTIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function IMTIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  IMTIdChip := False;
  With CInfo do

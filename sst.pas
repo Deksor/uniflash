@@ -181,7 +181,7 @@ begin
 end;
 
 
-Function SSTIdChip( DevId : Byte; Var CInfo : ChipInfo ) : Boolean; Far;
+Function SSTIdChip( DevId : Word{alexx}; Var CInfo : ChipInfo ) : Boolean; Far;
 Begin
  SSTIdChip := False;
  With CInfo do
@@ -497,45 +497,65 @@ Begin
            Name := ConstPtr( '49LF080(A)/3V (LPC)' );
           End;
 
-    $43 : Begin {v1.47re}
+    $43 : Begin {alexx} {REMS/RES}
            Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           PgSize := 1; {'page' size, program 1 byte at a time}
+           Progr  := nil;{AMDSecProg;}{alexx}
+           Erase := nil;{AMDSecErase;}{alexx}
            Sectors[ 0, 0 ] := 64;  {64 x 4k}
            Sectors[ 0, 1 ] := 32;
-           Size := 1024;
+           Size := 2048;
            Name := ConstPtr( '25LF020A/3V (SPI)' );
           End;
-    $44 : Begin {v1.47re}
+    $44 : Begin {alexx} {REMS/RES}
            Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           PgSize := 1; {'page' size, program 1 byte at a time}
+           Progr  := nil;{AMDSecProg;}{alexx}
+           Erase := nil;{AMDSecErase;}{alexx}
            Sectors[ 0, 0 ] := 128;  {128 x 4k}
            Sectors[ 0, 1 ] := 32;
-           Size := 1024;
+           Size := 4096;
            Name := ConstPtr( '25LF040A/3V (SPI)' );
           End;
-    $8D : Begin {v1.47re}
+    $258D : Begin {alexx}
            Flags  := 0;   {sector mode}
            PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           Progr  := nil;{AMDSecProg;}{alexx}
+           Erase := nil;{AMDSecErase;}{alexx}
            Sectors[ 0, 0 ] := 128;  {128 x 4k}
            Sectors[ 0, 1 ] := 32;
-           Size := 1024;
+           Size := 4096;
            Name := ConstPtr( '25VF040B/3V (SPI)' );
           End;
-    $8E : Begin {v1.47re}
+    $258E : Begin {alexx}
            Flags  := 0;   {sector mode}
-           PgSize := 128; {'page' size, program 128 bytes at a time}
-           Progr  := AMDSecProg;
-           Erase := AMDSecErase;
+           PgSize := 1; {'page' size, program 1 byte at a time}
+           Progr  := nil;{AMDSecProg;}{alexx}
+           Erase := nil;{AMDSecErase;}{alexx}
            Sectors[ 0, 0 ] := 256;  {256 x 4k}
            Sectors[ 0, 1 ] := 32;
-           Size := 1024;
+           Size := 8192;
            Name := ConstPtr( '25VF080B/3V (SPI)' );
+          End;
+    $2541 : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           PgSize := 1; {'page' size, program 1 byte at a time}
+           Progr  := nil;{AMDSecProg;}{alexx}
+           Erase := nil;{AMDSecErase;}{alexx}
+           Sectors[ 0, 0 ] := 512;  {512 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 16384;
+           Name := ConstPtr( '25VF016B/3V (SPI)' );
+          End;
+    $254A : Begin {alexx}
+           Flags  := 0;   {sector mode}
+           PgSize := 1; {'page' size, program 1 byte at a time}
+           Progr  := nil;{AMDSecProg;}{alexx}
+           Erase := nil;{AMDSecErase;}{alexx}
+           Sectors[ 0, 0 ] := 1024;  {1024 x 4k}
+           Sectors[ 0, 1 ] := 32;
+           Size := 32768;
+           Name := ConstPtr( '25VF032B/3V (SPI)' );
           End;
 
     else Exit;

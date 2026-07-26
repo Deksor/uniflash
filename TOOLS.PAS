@@ -24,7 +24,7 @@ MenuItem   = Record
              End;
 
 Const
-Version    = '2.00.SPI.RC02';{alexx}
+Version    = '2.00.SPI.RC03';{alexx}
 XMSLeft    : LongInt = 0;
 XMSPos     : LongInt = 0;
 Logging    : Boolean = False; {v1.23}

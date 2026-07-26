@@ -1,3 +1,4 @@
+
 {$R-}
 unit PCI;  { Unit to communicate with chipsets }
 
@@ -663,12 +664,23 @@ Begin
             end;
 
            end;{alexx}
+    $2810,$2811,$2812,$2814,$2815:{alexx}
+           begin
+            FlashBus := SPI_TYPE_ICH8;
+            if not ICH_Probe then
+               begin
+                 FlashBus := SPI_TYPE_NONE;
+                 LogWrite('ICH Spi not detect!');
+               end;
 
-    $2810: SouthName:='i82801HB/R ICH8(R)'; {v1.46re}
-    $2811: SouthName:='i82801HBM ICH8-M'; {v1.46re}
-    $2812: SouthName:='i82801HH ICH8DH'; {v1.46re}
-    $2814: SouthName:='i82801HO ICH8DO'; {v1.46re}
-    $2815: SouthName:='i82801HHM ICH8DH-M'; {v1.46re}
+            case SouthId of
+                 $2810: SouthName:='i82801HB/R ICH8(R)'; {v1.46re}
+                 $2811: SouthName:='i82801HBM ICH8-M'; {v1.46re}
+                 $2812: SouthName:='i82801HH ICH8DH'; {v1.46re}
+                 $2814: SouthName:='i82801HO ICH8DO'; {v1.46re}
+                 $2815: SouthName:='i82801HHM ICH8DH-M'; {v1.46re}
+            end;
+           end;{alexx}
 
     $2911: SouthName:='ICH9'; {v1.47re}
     $2912: SouthName:='i82801IH ICH9DH'; {v1.47re}

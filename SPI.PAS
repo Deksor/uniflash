@@ -90,6 +90,8 @@ Type
              SPI_TYPE_IT87XX,
              SPI_TYPE_WBSIO,
              SPI_TYPE_ICH7,
+             SPI_TYPE_ICH8,
+             SPI_TYPE_ICH9,
              SPI_TYPE_VIA,
              SPI_TYPE_SBXXX);
     SpiPacket=array[1..SpiPacketLen]of byte;
@@ -132,7 +134,9 @@ Begin
                                                 readcnt, readarr);
               exit;
          end;
-     SPI_TYPE_ICH7:
+     SPI_TYPE_ICH7,
+     SPI_TYPE_ICH8,
+     SPI_TYPE_ICH9:
          begin
               Spi_Command := ICH_Spi_Command(writecnt, writearr,
                                               readcnt, readarr);
@@ -301,7 +305,9 @@ begin
         End;}
 
      case FlashBus of
-          SPI_TYPE_ICH7:
+          SPI_TYPE_ICH7,
+          SPI_TYPE_ICH8,
+          SPI_TYPE_ICH9:
              begin
                spi_chip_read := ich_spi_read(chip, IFile);
              end;
@@ -334,7 +340,9 @@ begin
         End;}
 
      case FlashBus of
-          SPI_TYPE_ICH7:
+          SPI_TYPE_ICH7,
+          SPI_TYPE_ICH8,
+          SPI_TYPE_ICH9:
              begin
                spi_chip_write := ich_spi_write(chip, IFile);
              end;

@@ -51,6 +51,8 @@ Const
      ICH_STRAP_LPC  = $03;
 
      ICH7SpiBarOffset = $3020;
+     ICH8SpiBarOffset = $3020;
+     ICH9SpiBarOffset = $3800;
 
      ICH7_REG_SPIS = $00;
      SPIS_SCIP  = $0001;
@@ -86,6 +88,32 @@ Const
      SPI_OPCODE_TYPE_WRITE_NO_ADDRESS   = $01;
      SPI_OPCODE_TYPE_READ_WITH_ADDRESS  = $02;
      SPI_OPCODE_TYPE_WRITE_WITH_ADDRESS = $03;
+
+{ ICH9 controller register definition }
+ICH9_REG_FADDR  =       $08;	{ 32 Bits }
+ICH9_REG_FDATA0 =       $10;	{ 64 Bytes }
+
+ICH9_REG_SSFS   =       $90;	{ 08 Bits }
+SSFS_SCIP	=	$00000001;
+SSFS_CDS	=	$00000004;
+SSFS_FCERR	=	$00000008;
+SSFS_AEL	=	$00000010;
+
+ICH9_REG_SSFC   =       $91;	{ 24 Bits }
+SSFC_SCGO	=	$00000200;
+SSFC_ACS	=	$00000400;
+SSFC_SPOP	=	$00000800;
+SSFC_COP	=	$00001000;
+SSFC_DBC	=	$00010000;
+SSFC_DS		=	$00400000;
+SSFC_SME	=	$00800000;
+SSFC_SCF	=	$01000000;
+SSFC_SCF_20MHZ  =       $00000000;
+SSFC_SCF_33MHZ  =       $01000000;
+
+ICH9_REG_PREOP  =       $94;	{ 16 Bits }
+ICH9_REG_OPTYPE =       $96;	{ 16 Bits }
+ICH9_REG_OPMENU =       $98;	{ 64 Bits }
 
      Op_Common:opcodes=(preop:(
                                JEDEC_WREN,0
@@ -215,7 +243,8 @@ var
 begin
      generate_opcodes := -1;
      case FlashBus of
-          SPI_TYPE_ICH7:
+          SPI_TYPE_ICH7,
+          SPI_TYPE_VIA:
             begin
              preop  := REGREAD16(ICH7_REG_PREOP);
               LogWrite('Read PREOP='+Hw(preop));
@@ -225,6 +254,19 @@ begin
               LogWrite('Read OPMENU[0]='+Hl(opmenu[1]));
 	     opmenu[2] := REGREAD32(ICH7_REG_OPMENU + 4);
               LogWrite('Read OPMENU[1]='+Hl(opmenu[2]));
+            end;
+          SPI_TYPE_ICH8,
+          SPI_TYPE_ICH9:
+            begin
+             preop := REGREAD16(ICH9_REG_PREOP);
+             LogWrite('Read PREOP='+Hw(preop));
+	     optype:= REGREAD16(ICH9_REG_OPTYPE);
+             LogWrite('Read OPTYPE='+Hw(optype));
+	     opmenu[1] := REGREAD32(ICH9_REG_OPMENU);
+             LogWrite('Read OPMENU[0]='+Hl(opmenu[1]));
+	     opmenu[2] := REGREAD32(ICH9_REG_OPMENU + 4);
+             LogWrite('Read OPMENU[0]='+Hl(opmenu[2]));
+
             end;
           else
             begin
@@ -302,7 +344,8 @@ begin
          end;
 
      case FlashBus of
-          SPI_TYPE_ICH7:
+          SPI_TYPE_ICH7,
+          SPI_TYPE_VIA:
              begin
                LogWrite('Write PREOP='+Hw(preop));
                REGWRITE16(ICH7_REG_PREOP, preop);
@@ -324,6 +367,22 @@ begin
                REGWRITE32(ICH7_REG_SPID0,long);
                LogWrite('Read SPID0='+Hl(REGREAD32(ICH7_REG_SPID0)));}
              end;
+          SPI_TYPE_ICH8,
+          SPI_TYPE_ICH9:
+            begin
+               LogWrite('Write PREOP='+Hw(preop));
+               REGWRITE16(ICH9_REG_PREOP, preop);
+
+               LogWrite('Write OPTYPE='+Hw(optype));
+	       REGWRITE16(ICH9_REG_OPTYPE, optype);
+
+               LogWrite('Write OPMENU[0]='+Hl(opmenu[1]));
+	       REGWRITE32(ICH9_REG_OPMENU, opmenu[1]);
+
+               LogWrite('Write OPMENU[1]='+Hl(opmenu[2]));
+	       REGWRITE32(ICH9_REG_OPMENU + 4, opmenu[2]);
+
+            end;
           else
               begin
                 LogWrite('Unsupported chipset!');
@@ -374,6 +433,7 @@ end;
 Function ICH_Probe:boolean;
 var
    long,long2:Longint;
+   word1:word;
    bbs : byte;
 Begin
      {enable_flash_ich}
@@ -403,8 +463,16 @@ Begin
          ICH_Probe := false;
          exit;
         end;
-     {FlashBus := SPI_TYPE_ICH7;}
-     SpiBar := FlashPort + ICH7SpiBarOffset;
+
+     case FlashBus of
+	SPI_TYPE_ICH7:
+             SpiBar := FlashPort + ICH7SpiBarOffset;
+        SPI_TYPE_ICH8:
+	     SpiBar := FlashPort + ICH8SpiBarOffset;
+	SPI_TYPE_ICH9:
+	     SpiBar := FlashPort + ICH9SpiBarOffset;
+     end;
+
      case FlashBus of
           SPI_TYPE_ICH7:
              begin
@@ -468,7 +536,10 @@ Begin
                LogWrite('PBR2='+Hb(FIMemB(SpiBar+$6B))+Hb(FIMemB(SpiBar+$6A))+
                       Hb(FIMemB(SpiBar+$69))+Hb(FIMemB(SpiBar+$68)));
 
-               if (FIMemB(SpiBar) and ($01 shl 15))<>0 then
+	       word1 := FIMemB(SpiBar+1);
+	       word1 := word1 shl 8;
+	       word1 := word1 or FIMemB(SpiBar);
+               if (word1 and ($01 shl 15))<>0 then
                   begin
                     LogWrite('WARNING: SPI Configuration Lockdown activated.');
                     ICHSpi_Lock := 1;
@@ -476,6 +547,60 @@ Begin
 
                ich_init_opcodes;
              end;
+	  SPI_TYPE_ICH8,
+          SPI_TYPE_ICH9:
+             begin
+	       word1 := FIMemB(SpiBar+5);
+	       word1 := word1 shl 8;
+	       word1 := word1 or FIMemB(SpiBar+4);
+	       LogWrite('HSFS='+Hw(word1));
+
+	       long := FIMemB(SpiBar+$53);
+	       long := (long shl 8) or FIMemB(SpiBar+$52);
+	       long := (long shl 8) or FIMemB(SpiBar+$51);
+	       long := (long shl 8) or FIMemB(SpiBar+$50);
+	       LogWrite('FRACC='+Hl(long));
+
+               LogWrite('FREG0='+Hb(FIMemB(SpiBar+$57))+Hb(FIMemB(SpiBar+$56))+
+                      Hb(FIMemB(SpiBar+$55))+Hb(FIMemB(SpiBar+$54)));
+               LogWrite('FREG1='+Hb(FIMemB(SpiBar+$5B))+Hb(FIMemB(SpiBar+$5A))+
+                      Hb(FIMemB(SpiBar+$59))+Hb(FIMemB(SpiBar+$58)));
+               LogWrite('FREG2='+Hb(FIMemB(SpiBar+$5F))+Hb(FIMemB(SpiBar+$5E))+
+                      Hb(FIMemB(SpiBar+$5D))+Hb(FIMemB(SpiBar+$5C)));
+               LogWrite('FREG3='+Hb(FIMemB(SpiBar+$63))+Hb(FIMemB(SpiBar+$62))+
+                      Hb(FIMemB(SpiBar+$61))+Hb(FIMemB(SpiBar+$60)));
+               LogWrite('FREG4='+Hb(FIMemB(SpiBar+$67))+Hb(FIMemB(SpiBar+$66))+
+                      Hb(FIMemB(SpiBar+$65))+Hb(FIMemB(SpiBar+$64)));
+               LogWrite('PR0='+Hb(FIMemB(SpiBar+$77))+Hb(FIMemB(SpiBar+$76))+
+                      Hb(FIMemB(SpiBar+$75))+Hb(FIMemB(SpiBar+$74)));
+               LogWrite('PR1='+Hb(FIMemB(SpiBar+$7B))+Hb(FIMemB(SpiBar+$7A))+
+                      Hb(FIMemB(SpiBar+$79))+Hb(FIMemB(SpiBar+$78)));
+               LogWrite('PR2='+Hb(FIMemB(SpiBar+$7F))+Hb(FIMemB(SpiBar+$7E))+
+                      Hb(FIMemB(SpiBar+$7D))+Hb(FIMemB(SpiBar+$7C)));
+               LogWrite('PR3='+Hb(FIMemB(SpiBar+$83))+Hb(FIMemB(SpiBar+$82))+
+                      Hb(FIMemB(SpiBar+$81))+Hb(FIMemB(SpiBar+$80)));
+               LogWrite('PR4='+Hb(FIMemB(SpiBar+$87))+Hb(FIMemB(SpiBar+$86))+
+                      Hb(FIMemB(SpiBar+$85))+Hb(FIMemB(SpiBar+$84)));
+               LogWrite('SSFS,SSFC='+Hb(FIMemB(SpiBar+$93))+Hb(FIMemB(SpiBar+$92))+
+                      Hb(FIMemB(SpiBar+$91))+Hb(FIMemB(SpiBar+$90)));
+               LogWrite('PREOP='+Hb(FIMemB(SpiBar+$95))+Hb(FIMemB(SpiBar+$94)));
+               LogWrite('OPTYPE='+Hb(FIMemB(SpiBar+$97))+Hb(FIMemB(SpiBar+$96)));
+               LogWrite('OPMENU='+Hb(FIMemB(SpiBar+$9B))+Hb(FIMemB(SpiBar+$9A))+
+                      Hb(FIMemB(SpiBar+$99))+Hb(FIMemB(SpiBar+$98)));
+               LogWrite('OPMENU+4='+Hb(FIMemB(SpiBar+$9F))+Hb(FIMemB(SpiBar+$9E))+
+                      Hb(FIMemB(SpiBar+$9D))+Hb(FIMemB(SpiBar+$9C)));
+               LogWrite('BBAR='+Hb(FIMemB(SpiBar+$A3))+Hb(FIMemB(SpiBar+$A2))+
+                      Hb(FIMemB(SpiBar+$A1))+Hb(FIMemB(SpiBar+$A0)));
+               LogWrite('FDOC='+Hb(FIMemB(SpiBar+$B3))+Hb(FIMemB(SpiBar+$B2))+
+                      Hb(FIMemB(SpiBar+$B1))+Hb(FIMemB(SpiBar+$B0)));
+
+	       if (word1 and ($01 shl 15))<>0 then
+                  begin
+                    LogWrite('WARNING: SPI Configuration Lockdown activated.');
+                    ICHSpi_Lock := 1;
+                  end;
+	       ich_init_opcodes;
+	     end;
      end;
 
      long := GetPCIRegD( $00, SouthPos shr 3, SouthPos and $07, $DC);
@@ -641,6 +766,159 @@ begin
      ich7_run_opcode := 0;
 end;
 
+function ich9_run_opcode(op:opcode; offset:longint; datalength:byte; data:PSpiPacket; maxdata:integer):integer;
+var
+   write_cmd:byte;
+   timeout:integer;
+   temp32:longint;
+   temp16:word;
+   a:longint;
+   opmenu:array[1..2]of longint;
+   opcode_index:integer;
+   bt:byte;
+   find:boolean;
+begin
+     LogWrite('Enter ich9_run_opcode: opcode='+Hb(op.code)+
+     ' offset='+Hl(offset)+' count='+Hb(datalength));
+     write_cmd := 0;
+     temp32 := 0;
+     (* Is it a write command? *)
+     if ((op.spi_type = SPI_OPCODE_TYPE_WRITE_NO_ADDRESS)
+	    or (op.spi_type = SPI_OPCODE_TYPE_WRITE_WITH_ADDRESS)) then
+		write_cmd := 1;
+     (* Programm Offset in Flash into FADDR *)
+     REGWRITE32(ICH9_REG_FADDR, (offset and $00FFFFFF));	(* SPI addresses are 24 BIT only *)
+
+     (* Program data into FDATA0 to N *)
+     if ((write_cmd = 1) and (datalength <> 0)) then
+        begin
+		temp32 := 0;
+		for a := 0 to datalength-1 do
+                    begin
+			if ((a mod 4) = 0) then
+			   temp32 := 0;
+
+			temp32 := temp32 or (data^[a+1] shl ((a mod 4) * 8));
+
+			if ((a mod 4) = 3) then
+                           begin
+			     REGWRITE32(ICH9_REG_FDATA0 + (a - (a mod 4)), temp32);
+                           end;
+		    end;
+		if (((a - 1) mod 4) <> 3) then
+                   begin
+		     REGWRITE32(ICH9_REG_FDATA0 + ((a - 1) - ((a - 1) mod 4)), temp32);
+                   end;
+        end;
+
+     (* Assemble SSFS + SSFC *)
+     temp32 := 0;
+     (* clear error status registers *)
+     temp32 := temp32 or (SSFS_CDS + SSFS_FCERR);
+     (* Use 20 MHz *)
+     temp32 := temp32 or SSFC_SCF_20MHZ;
+     if (datalength <> 0) then
+        begin
+          temp32 := temp32 or SSFC_DS;
+          a:=(((datalength - 1) and $3F));
+          a:=a shl 16;
+	  temp32 := temp32 or a;
+	end;
+
+     (* Select opcode *)
+     opmenu[1] := REGREAD32(ICH9_REG_OPMENU);
+     {LogWrite('Read OPMENU[0]='+Hl(opmenu[1]));}
+     opmenu[2] := REGREAD32(ICH9_REG_OPMENU + 4);
+     {LogWrite('Read OPMENU[1]='+Hl(opmenu[2]));}
+
+     find := false;
+     for opcode_index:=0 to 3 do
+         begin
+           bt := (opmenu[1] and $FF);
+           if (bt = op.code) then
+              begin
+                find := true;
+	        break;
+              end;
+	   opmenu[1] := opmenu[1] shr 8;
+	end;
+     if (not find) then
+        for opcode_index:=4 to 7 do
+            begin
+              bt := (opmenu[2] and $ff);
+              if (bt = op.code) then
+                 begin
+                   find := true;
+	           break;
+                 end;
+	      opmenu[2] := opmenu[2] shr 8;
+	    end;
+     if (not find) then
+        begin
+	  LogWrite('Opcode '+Hb(op.code)+' not found.');
+	  ich9_run_opcode := 2;
+          exit;
+	end;
+     temp32 := temp32 or ((opcode_index and $07) shl 12);
+
+     (* Handle Atomic *)
+     if (op.atomic <> 0) then
+        begin
+	  (* Select atomic command *)
+	  temp32 := temp32 or SSFC_ACS;
+	  (* Select prefix opcode *)
+	  if ((op.atomic - 1) = 1) then
+	     (*Select prefix opcode 2 *)
+	     temp32 := temp32 or SSFC_SPOP;
+	end;
+
+     (* Start *)
+     temp32 := temp32 or SSFC_SCGO;
+
+     (* write it *)
+     LogWrite('Write SSFS='+Hl(temp32));
+     {REGWRITE32(ICH9_REG_SSFS, temp32);}
+     {change byte write sequence because write to spibar+1 start spi transfer}
+     FOMemB(SpiBar+ICH9_REG_SSFS, temp32 and $FF);
+     FOMemB(SpiBar+ICH9_REG_SSFS+2, (temp32 shr 16) and $FF);
+     FOMemB(SpiBar+ICH9_REG_SSFS+3, (temp32 shr 24) and $FF);
+     FOMemB(SpiBar+ICH9_REG_SSFS+1, (temp32 shr 8) and $FF);
+
+
+     (* wait for cycle complete *)
+     timeout := 100*60;	{60s is a looong timeout}
+     while (((REGREAD32(ICH9_REG_SSFS) and SSFS_CDS) = 0) and (timeout <> 0)) do
+           begin
+                {temp32 := maxlongint;
+                while temp32 > 0 do dec(temp32);}
+		delay(10);
+                dec(timeout);
+	   end;
+     if (timeout = 0) then
+        LogWrite('timeout');
+
+     if ((REGREAD32(ICH9_REG_SSFS) and SSFS_FCERR) <> 0) then
+        begin
+		LogWrite('Transaction error!');
+                LogWrite('SSFS='+Hl(REGREAD32(ICH9_REG_SSFS)));
+                ich9_run_opcode := 1;
+		exit;
+	end;
+
+     if ((write_cmd = 0) and (datalength <> 0)) then
+        for a := 0 to datalength-1 do
+            begin
+	      if ((a mod 4) = 0) then
+                 begin
+	          temp32 := REGREAD32(ICH9_REG_FDATA0 + (a));
+                  LogWrite('Read result FDATA='+Hl(temp32));
+                 end;
+
+	      data^[a+1] := (temp32 and (($ff) shl ((a mod 4) * 8))) shr ((a mod 4) * 8);
+	    end;
+     ich9_run_opcode := 0;
+end;
+
 function run_opcode(op:opcode; offset:longint; datalength:byte; data:PSpiPacket):integer;
 begin
      run_opcode := 1;
@@ -648,6 +926,11 @@ begin
           SPI_TYPE_ICH7:
              begin
                run_opcode := ich7_run_opcode(op, offset, datalength, data, 64);
+             end;
+	  SPI_TYPE_ICH8,
+	  SPI_TYPE_ICH9:
+             begin
+               run_opcode := ich9_run_opcode(op, offset, datalength, data, 64);
              end;
      end;
 end;

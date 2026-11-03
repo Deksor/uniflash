@@ -46,9 +46,9 @@ Begin
   X:=Flash_Read(Pos+127);    {Read last byte written}
   Wait(100);
   Dec(TimeOut);
- Until ( ( X and $A0 ) <> 0 ) or (TimeOut<1);
+ Until ( X = $FF ) or (TimeOut<1); {fixed: a finished erase reads $FF; busy reads have DQ7=0}
  if TimeOut<1 then FlashError:=3;
- If ( ( X and $A0 ) <> $80 ) then
+ If ( X <> $FF ) then
   Begin
    FlashError := 3; {erasing error}
    Flash_Write(0,$FF); {reset}
@@ -72,18 +72,19 @@ Begin
     Ld := FIMemB( Data + X );
     Flash_Write(0,$10);       {program setup}
     Flash_Write(Pos+X,Ld);    {program data byte}
-    Ld := Ld and $80;
-    TimeOut:=60;
+    {fixed: keep the whole byte. While busy the chip returns it with DQ7 inverted (DQ6 toggling), when done}
+    {it returns the data itself, so DQ5 is just data bit 5 and must not be used as a timeout flag}
+    TimeOut:=250;
     Repeat
      Y:=Flash_Read(Pos+X);    {Read last byte written}
      Wait(1);
      Dec(TimeOut);
-    Until ( ( Y and $80 ) = Ld ) or ( ( Y and $20 ) <> 0 ) or (TimeOut<1);
+    Until ( Y = Ld ) or (TimeOut<1);
     if TimeOut<1 then FlashError:=2;
     Y:=Flash_Read(Pos+X);    {Read last byte written}
     Inc( Attempt );
-   Until ( Attempt > 3 ) or  ( ( X and $A0 ) = Ld );
-   If ( ( X and $A0 ) <> Ld ) then
+   Until ( Attempt > 3 ) or  ( Y = Ld );
+   If ( Y <> Ld ) then
     Begin
      FlashError := 2; {programming error, timeout}
      Flash_Write(0,$FF); {reset}
